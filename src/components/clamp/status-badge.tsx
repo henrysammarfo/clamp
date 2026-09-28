@@ -4,5 +4,10 @@ import { cn } from "@/lib/utils";
 
 export function StatusBadge({ status }: { status: DecisionStatus }) {
   const Icon = status === "allow" ? CircleCheck : status === "block" ? CircleX : UserRoundCheck;
-  return <span className={cn("status-badge", `status-${status}`)}><Icon />{statusLabel(status)}</span>;
+  return (
+    <span className={cn("status-badge", `status-${status}`)}>
+      <Icon />
+      {statusLabel(status)}
+    </span>
+  );
 }

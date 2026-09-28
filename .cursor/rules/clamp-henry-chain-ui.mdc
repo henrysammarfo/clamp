@@ -1,0 +1,15 @@
+---
+description: Henry ownership patterns for UI, sessions, and Base Sepolia
+globs: src/**/*.{ts,tsx},contracts/**/*,scripts/**/*
+alwaysApply: false
+---
+
+# Henry chain and UI
+
+- Wire every public and app route. Do not leave orphan page components.
+- Sessions: httpOnly signed cookies with SESSION_SECRET. Scope all store access by tenantId.
+- Chain: ClampAudit on Base Sepolia via viem. Fail clearly if RPC, key, or contract address is missing.
+- Mandate create or revoke and decision receipts must persist server side and, when configured, write a real tx hash.
+- Consume Song interfaces only from src/server/integrations/song/. Catch SongNotWiredError and show a clear UI error.
+- Client RPC belongs in src/api/* via createServerFn. Never import src/server/** from client components.
+- Prefer existing clamp components and TanStack Start patterns. Do not invent a second router.

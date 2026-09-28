@@ -1,0 +1,15 @@
+---
+description: Plain English CLAMP copy with no hyphens in user facing text
+alwaysApply: true
+---
+
+# CLAMP copy
+
+- Use short, easy sentences a non technical judge can follow.
+- No hyphens in user facing copy. Prefer spaces or rewrite the phrase.
+  - Bad: Needs-human, office-supplies, pre-built, on-chain in UI labels
+  - Good: Needs human, office supplies, built before the hack, on chain
+- Avoid em dashes. Use periods or commas.
+- Brand CLAMP as a hero signal on marketing pages. Do not use generic AI SaaS headlines.
+- Soft: You set a spending mandate. The agent asked outside it. Nothing paid. The refuse is on the audit trail.
+- Technical ids in code may use kebab case when required by routers. User visible labels must not.

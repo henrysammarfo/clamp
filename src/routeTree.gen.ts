@@ -10,33 +10,258 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuditRouteImport } from './routes/audit'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as DocsRouteImport } from './routes/docs'
+import { Route as MetricsRouteImport } from './routes/metrics'
+import { Route as ProductRouteImport } from './routes/product'
+import { Route as ReviewsRouteImport } from './routes/reviews'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as CaseStudiesIndexRouteImport } from './routes/case-studies/index'
+import { Route as CaseStudiesSlugRouteImport } from './routes/case-studies/$slug'
+import { Route as DecisionsIndexRouteImport } from './routes/decisions/index'
+import { Route as DecisionsIdRouteImport } from './routes/decisions/$id'
+import { Route as MandatesIndexRouteImport } from './routes/mandates/index'
+import { Route as MandatesIdRouteImport } from './routes/mandates/$id'
+import { Route as MandatesNewRouteImport } from './routes/mandates/new'
+import { Route as RequestsNewRouteImport } from './routes/requests/new'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuditRoute = AuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocsRoute = DocsRouteImport.update({
+  id: '/docs',
+  path: '/docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MetricsRoute = MetricsRouteImport.update({
+  id: '/metrics',
+  path: '/metrics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProductRoute = ProductRouteImport.update({
+  id: '/product',
+  path: '/product',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReviewsRoute = ReviewsRouteImport.update({
+  id: '/reviews',
+  path: '/reviews',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignInRoute = SignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CaseStudiesIndexRoute = CaseStudiesIndexRouteImport.update({
+  id: '/case-studies/',
+  path: '/case-studies/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CaseStudiesSlugRoute = CaseStudiesSlugRouteImport.update({
+  id: '/case-studies/$slug',
+  path: '/case-studies/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DecisionsIndexRoute = DecisionsIndexRouteImport.update({
+  id: '/decisions/',
+  path: '/decisions/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DecisionsIdRoute = DecisionsIdRouteImport.update({
+  id: '/decisions/$id',
+  path: '/decisions/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MandatesIndexRoute = MandatesIndexRouteImport.update({
+  id: '/mandates/',
+  path: '/mandates/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MandatesIdRoute = MandatesIdRouteImport.update({
+  id: '/mandates/$id',
+  path: '/mandates/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MandatesNewRoute = MandatesNewRouteImport.update({
+  id: '/mandates/new',
+  path: '/mandates/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RequestsNewRoute = RequestsNewRouteImport.update({
+  id: '/requests/new',
+  path: '/requests/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/audit': typeof AuditRoute
+  '/contact': typeof ContactRoute
+  '/dashboard': typeof DashboardRoute
+  '/docs': typeof DocsRoute
+  '/metrics': typeof MetricsRoute
+  '/product': typeof ProductRoute
+  '/reviews': typeof ReviewsRoute
+  '/settings': typeof SettingsRoute
+  '/sign-in': typeof SignInRoute
+  '/case-studies/$slug': typeof CaseStudiesSlugRoute
+  '/decisions/$id': typeof DecisionsIdRoute
+  '/mandates/$id': typeof MandatesIdRoute
+  '/mandates/new': typeof MandatesNewRoute
+  '/requests/new': typeof RequestsNewRoute
+  '/case-studies/': typeof CaseStudiesIndexRoute
+  '/decisions/': typeof DecisionsIndexRoute
+  '/mandates/': typeof MandatesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/audit': typeof AuditRoute
+  '/contact': typeof ContactRoute
+  '/dashboard': typeof DashboardRoute
+  '/docs': typeof DocsRoute
+  '/metrics': typeof MetricsRoute
+  '/product': typeof ProductRoute
+  '/reviews': typeof ReviewsRoute
+  '/settings': typeof SettingsRoute
+  '/sign-in': typeof SignInRoute
+  '/case-studies/$slug': typeof CaseStudiesSlugRoute
+  '/decisions/$id': typeof DecisionsIdRoute
+  '/mandates/$id': typeof MandatesIdRoute
+  '/mandates/new': typeof MandatesNewRoute
+  '/requests/new': typeof RequestsNewRoute
+  '/case-studies': typeof CaseStudiesIndexRoute
+  '/decisions': typeof DecisionsIndexRoute
+  '/mandates': typeof MandatesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/audit': typeof AuditRoute
+  '/contact': typeof ContactRoute
+  '/dashboard': typeof DashboardRoute
+  '/docs': typeof DocsRoute
+  '/metrics': typeof MetricsRoute
+  '/product': typeof ProductRoute
+  '/reviews': typeof ReviewsRoute
+  '/settings': typeof SettingsRoute
+  '/sign-in': typeof SignInRoute
+  '/case-studies/$slug': typeof CaseStudiesSlugRoute
+  '/decisions/$id': typeof DecisionsIdRoute
+  '/mandates/$id': typeof MandatesIdRoute
+  '/mandates/new': typeof MandatesNewRoute
+  '/requests/new': typeof RequestsNewRoute
+  '/case-studies/': typeof CaseStudiesIndexRoute
+  '/decisions/': typeof DecisionsIndexRoute
+  '/mandates/': typeof MandatesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/audit'
+    | '/contact'
+    | '/dashboard'
+    | '/docs'
+    | '/metrics'
+    | '/product'
+    | '/reviews'
+    | '/settings'
+    | '/sign-in'
+    | '/case-studies/$slug'
+    | '/decisions/$id'
+    | '/mandates/$id'
+    | '/mandates/new'
+    | '/requests/new'
+    | '/case-studies/'
+    | '/decisions/'
+    | '/mandates/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/audit'
+    | '/contact'
+    | '/dashboard'
+    | '/docs'
+    | '/metrics'
+    | '/product'
+    | '/reviews'
+    | '/settings'
+    | '/sign-in'
+    | '/case-studies/$slug'
+    | '/decisions/$id'
+    | '/mandates/$id'
+    | '/mandates/new'
+    | '/requests/new'
+    | '/case-studies'
+    | '/decisions'
+    | '/mandates'
+  id:
+    | '__root__'
+    | '/'
+    | '/audit'
+    | '/contact'
+    | '/dashboard'
+    | '/docs'
+    | '/metrics'
+    | '/product'
+    | '/reviews'
+    | '/settings'
+    | '/sign-in'
+    | '/case-studies/$slug'
+    | '/decisions/$id'
+    | '/mandates/$id'
+    | '/mandates/new'
+    | '/requests/new'
+    | '/case-studies/'
+    | '/decisions/'
+    | '/mandates/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuditRoute: typeof AuditRoute
+  ContactRoute: typeof ContactRoute
+  DashboardRoute: typeof DashboardRoute
+  DocsRoute: typeof DocsRoute
+  MetricsRoute: typeof MetricsRoute
+  ProductRoute: typeof ProductRoute
+  ReviewsRoute: typeof ReviewsRoute
+  SettingsRoute: typeof SettingsRoute
+  SignInRoute: typeof SignInRoute
+  CaseStudiesSlugRoute: typeof CaseStudiesSlugRoute
+  DecisionsIdRoute: typeof DecisionsIdRoute
+  MandatesIdRoute: typeof MandatesIdRoute
+  MandatesNewRoute: typeof MandatesNewRoute
+  RequestsNewRoute: typeof RequestsNewRoute
+  CaseStudiesIndexRoute: typeof CaseStudiesIndexRoute
+  DecisionsIndexRoute: typeof DecisionsIndexRoute
+  MandatesIndexRoute: typeof MandatesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +273,147 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/audit': {
+      id: '/audit'
+      path: '/audit'
+      fullPath: '/audit'
+      preLoaderRoute: typeof AuditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/docs': {
+      id: '/docs'
+      path: '/docs'
+      fullPath: '/docs'
+      preLoaderRoute: typeof DocsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/metrics': {
+      id: '/metrics'
+      path: '/metrics'
+      fullPath: '/metrics'
+      preLoaderRoute: typeof MetricsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/product': {
+      id: '/product'
+      path: '/product'
+      fullPath: '/product'
+      preLoaderRoute: typeof ProductRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reviews': {
+      id: '/reviews'
+      path: '/reviews'
+      fullPath: '/reviews'
+      preLoaderRoute: typeof ReviewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-in': {
+      id: '/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof SignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/case-studies/': {
+      id: '/case-studies/'
+      path: '/case-studies'
+      fullPath: '/case-studies/'
+      preLoaderRoute: typeof CaseStudiesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/case-studies/$slug': {
+      id: '/case-studies/$slug'
+      path: '/case-studies/$slug'
+      fullPath: '/case-studies/$slug'
+      preLoaderRoute: typeof CaseStudiesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/decisions/': {
+      id: '/decisions/'
+      path: '/decisions'
+      fullPath: '/decisions/'
+      preLoaderRoute: typeof DecisionsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/decisions/$id': {
+      id: '/decisions/$id'
+      path: '/decisions/$id'
+      fullPath: '/decisions/$id'
+      preLoaderRoute: typeof DecisionsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mandates/': {
+      id: '/mandates/'
+      path: '/mandates'
+      fullPath: '/mandates/'
+      preLoaderRoute: typeof MandatesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mandates/$id': {
+      id: '/mandates/$id'
+      path: '/mandates/$id'
+      fullPath: '/mandates/$id'
+      preLoaderRoute: typeof MandatesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mandates/new': {
+      id: '/mandates/new'
+      path: '/mandates/new'
+      fullPath: '/mandates/new'
+      preLoaderRoute: typeof MandatesNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/requests/new': {
+      id: '/requests/new'
+      path: '/requests/new'
+      fullPath: '/requests/new'
+      preLoaderRoute: typeof RequestsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuditRoute: AuditRoute,
+  ContactRoute: ContactRoute,
+  DashboardRoute: DashboardRoute,
+  DocsRoute: DocsRoute,
+  MetricsRoute: MetricsRoute,
+  ProductRoute: ProductRoute,
+  ReviewsRoute: ReviewsRoute,
+  SettingsRoute: SettingsRoute,
+  SignInRoute: SignInRoute,
+  CaseStudiesSlugRoute: CaseStudiesSlugRoute,
+  DecisionsIdRoute: DecisionsIdRoute,
+  MandatesIdRoute: MandatesIdRoute,
+  MandatesNewRoute: MandatesNewRoute,
+  RequestsNewRoute: RequestsNewRoute,
+  CaseStudiesIndexRoute: CaseStudiesIndexRoute,
+  DecisionsIndexRoute: DecisionsIndexRoute,
+  MandatesIndexRoute: MandatesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

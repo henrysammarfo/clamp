@@ -1,0 +1,15 @@
+---
+description: CLAMP Challenge B core contract for Team 14
+alwaysApply: true
+---
+
+# CLAMP core
+
+- Product: delegation control for AI agents that spend. Outcomes: Allow, Block, Needs human.
+- Organiser hero: Kiln parse or explain (Song) plus Base Sepolia on chain receipts (Henry).
+- Henry owns frontend, sessions, metrics UI, on chain mandate or decision receipts, README.
+- Song owns Kiln client, gate, metering, AuditTrail shape. Do not implement Song work in Henry passes.
+- Fail closed if Song APIs are unwired. No fake Kiln, no mock pays, no invented tx hashes.
+- No localStorage or sessionStorage for product state. Use signed server sessions and tenant scoping.
+- Never claim unhackable. Prefer hard controls and an inspectable trail.
+- AgentRouter, Tavily, and TinyFish are not on the spend path.

@@ -9,4 +9,7 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 
-- CLAMP uses shared client-side demo fixtures and session state; this keeps the hackathon demo deterministic without claiming live Kiln, payment, or blockchain activity.
+- CLAMP is live fail closed for Henry’s slice: signed server sessions (no localStorage for product state), tenant scoped stores, and real Base Sepolia mandate or decision receipts when chain env is set.
+- Song owns Kiln parse or explain, the code gate, metering, and AuditTrail shape. Henry ships typed Song contracts that throw if unwired. Never fake Kiln calls, payments, or chain hashes.
+- Do not claim the system is unhackable. Market hard controls plus an inspectable audit trail.
+- Read docs/memory/ and .cursor/skills/clamp-gwdc-build/ before changing product behavior.

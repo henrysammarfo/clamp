@@ -1,35 +1,1038 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Activity, ArrowRight, Check, CircleDollarSign, Clock3, Copy, ExternalLink, FileCheck2, Filter, LockKeyhole, Search, Shield, ShieldX, Sparkles, UserRoundCheck, WalletCards, X } from "lucide-react";
-import { useMemo, useState, type FormEvent } from "react";
+import {
+  Activity,
+  ArrowRight,
+  Check,
+  CircleDollarSign,
+  Clock3,
+  Copy,
+  ExternalLink,
+  FileCheck2,
+  Filter,
+  LockKeyhole,
+  Search,
+  Shield,
+  ShieldX,
+  Sparkles,
+  UserRoundCheck,
+  X,
+} from "lucide-react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
+import {
+  explorerTxUrl,
+  statusLabel,
+  type Decision,
+  type DecisionStatus,
+  type EfficiencyMetrics,
+  type Mandate,
+} from "@/lib/clamp-types";
+import { getDashboardFn } from "@/api/dashboard";
+import {
+  getDecisionFn,
+  getMetricsFn,
+  listDecisionsFn,
+  resolveReviewFn,
+  submitAgentRequestFn,
+} from "@/api/decisions";
+import { createMandateFn, getMandateFn, listMandatesFn, revokeMandateFn } from "@/api/mandates";
+import { getRuntimeStatusFn } from "@/api/settings";
 import { AppShell } from "./app-shell";
 import { StatusBadge } from "./status-badge";
-import { decisions, mandates, statusLabel, type DecisionStatus } from "@/lib/clamp-data";
 
-export function DashboardPage(){return <AppShell title="Control room" eyebrow="Monday · 28 September"><div className="metric-grid">{[["Available","$18.80","of $50 mandate"],["Decisions","4","today"],["Model calls","2","parse + explain"],["Pending","1","human review"]].map(x=><div className="metric-cell" key={x[0]}><p>{x[0]}</p><strong>{x[1]}</strong><span>{x[2]}</span></div>)}</div><div className="panel-grid"><div className="panel"><div className="panel-head"><h2>Recent decisions</h2><Link to="/decisions">View ledger</Link></div><DecisionList items={decisions.slice(0,3)}/></div><div className="mandate-card"><div className="panel-head"><div><p className="eyebrow">Active mandate</p><h2>Office essentials</h2></div><StatusBadge status="allow"/></div><p className="text-sm text-muted-foreground">Office supplies · Amazon, Apple, Uber</p><div className="budget-track"><span style={{width:"62.4%"}}/></div><div className="flex justify-between text-sm"><strong>$31.20 spent</strong><span className="text-muted-foreground">$18.80 left</span></div><ul className="rule-list mt-6"><li><Check/> Ends tonight at 23:59 KST</li><li><Check/> Fees count toward total</li><li><Check/> Revocable at any time</li></ul><Button asChild variant="outline" className="mt-5 w-full"><Link to="/mandates/$id" params={{id:"office-supplies"}}>Inspect mandate <ArrowRight/></Link></Button></div></div><div className="panel mt-5"><div className="panel-head"><div><h2>CLAMP vs all-AI</h2><p className="text-sm text-muted-foreground mt-1">Illustrative comparison on the same three demo cases</p></div><Link to="/metrics">Open analysis</Link></div><div className="grid grid-cols-3 gap-3 text-center">{[["LLM calls","6 → 2"],["Tokens","3,820 → 1,140"],["Gate latency","940 → 4ms"]].map(x=><div className="bg-muted p-5" key={x[0]}><strong className="text-xl">{x[1]}</strong><p className="mt-1 text-xs text-muted-foreground">{x[0]}</p></div>)}</div></div></AppShell>}
+function errMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "Request failed";
+}
 
-function DecisionList({items}:{items:typeof decisions}){return <div className="decision-list">{items.map(d=><Link to="/decisions/$id" params={{id:d.id}} className="decision-row" key={d.id}><div><h3>{d.merchant}</h3><p>{d.reason}</p></div><StatusBadge status={d.status}/><strong>${(d.amount+d.fee).toFixed(2)}</strong><time>{d.time}</time></Link>)}</div>}
+function DecisionList({ items }: { items: Decision[] }) {
+  if (!items.length) {
+    return <p className="text-sm text-muted-foreground">No decisions yet for this tenant.</p>;
+  }
+  return (
+    <div className="decision-list">
+      {items.map((d) => (
+        <Link to="/decisions/$id" params={{ id: d.id }} className="decision-row" key={d.id}>
+          <div>
+            <h3>{d.merchant}</h3>
+            <p>{d.reason}</p>
+          </div>
+          <StatusBadge status={d.status} />
+          <strong>${(d.amount + d.fee).toFixed(2)}</strong>
+          <time>{new Date(d.time).toLocaleString()}</time>
+        </Link>
+      ))}
+    </div>
+  );
+}
 
-export function MandatesPage(){return <AppShell title="Mandates" eyebrow="Delegated authority"><div className="page-actions"><Button asChild><Link to="/mandates/new">Create mandate</Link></Button></div><div className="grid gap-4 md:grid-cols-2">{mandates.map(m=><Link to="/mandates/$id" params={{id:m.id}} className="mandate-card transition-colors hover:bg-accent" key={m.id}><div className="flex justify-between gap-4"><div><p className="eyebrow">{m.status}</p><h2 className="mt-2 text-xl font-semibold">{m.name}</h2></div><Shield className={m.status==="active"?"text-success":"text-muted-foreground"}/></div><p className="mt-3 text-sm text-muted-foreground">{m.purpose} · {m.merchants.join(", ")}</p><div className="budget-track"><span style={{width:`${Math.min(100,m.spent/m.budget*100)}%`}}/></div><div className="flex justify-between text-sm"><strong>${m.spent.toFixed(2)} / ${m.budget}</strong><span className="text-muted-foreground">{m.expires}</span></div></Link>)}</div></AppShell>}
+export function DashboardPage() {
+  const [loading, setLoading] = useState(true);
+  const [active, setActive] = useState<Mandate | null>(null);
+  const [recent, setRecent] = useState<Decision[]>([]);
+  const [pending, setPending] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
-export function NewMandatePage(){const nav=useNavigate();const submit=(e:FormEvent)=>{e.preventDefault();toast.success("Mandate created in demo");nav({to:"/mandates/$id",params:{id:"office-supplies"}})};return <AppShell title="Create mandate" eyebrow="New delegated authority"><form className="panel form-grid" onSubmit={submit}><div className="field field-full"><label htmlFor="mandate-name">Mandate name</label><Input id="mandate-name" defaultValue="Office essentials" required/></div><div className="field field-full"><label htmlFor="purpose">Purpose</label><Input id="purpose" defaultValue="Office supplies" required/><small>The agent may act only for this purpose.</small></div><div className="field"><label htmlFor="budget">Total budget including fees</label><Input id="budget" type="number" defaultValue="50" min="1" required/></div><div className="field"><label htmlFor="expiry">Expiry</label><Input id="expiry" type="datetime-local" defaultValue="2026-09-28T23:59" required/></div><div className="field field-full"><label htmlFor="merchants">Allowed merchants</label><Input id="merchants" defaultValue="Amazon, Apple, Uber" required/><small>Separate merchants with commas.</small></div><div className="field-full flex justify-end gap-2"><Button asChild variant="outline"><Link to="/mandates">Cancel</Link></Button><Button type="submit"><LockKeyhole/> Commit mandate</Button></div></form></AppShell>}
+  useEffect(() => {
+    getDashboardFn()
+      .then((data) => {
+        setActive(data.activeMandate);
+        setRecent(data.recentDecisions);
+        setPending(data.totals.pending);
+      })
+      .catch((e) => setError(errMessage(e)))
+      .finally(() => setLoading(false));
+  }, []);
 
-export function MandateDetailPage({id}:{id:string}){const [revoked,setRevoked]=useState(false);const m=mandates.find(x=>x.id===id)??mandates[0];if(!m)return null;return <AppShell title={m.name} eyebrow={`Mandate · ${m.id}`} action={<Button asChild variant="outline"><Link to="/requests/new">Test request</Link></Button>}><div className="panel-grid"><div className="panel"><div className="panel-head"><h2>Enforced rules</h2><span className={`status-badge ${revoked?"status-block":"status-allow"}`}>{revoked?<><ShieldX/> Revoked</>:<><Shield/> Active</>}</span></div><ul className="rule-list"><li><Check/> Purpose: {m.purpose}</li><li><Check/> Budget: ${m.budget.toFixed(2)}, including fees</li><li><Check/> Merchants: {m.merchants.join(", ")}</li><li><Check/> Expires: {m.expires}</li></ul><div className="budget-track"><span style={{width:`${m.spent/m.budget*100}%`}}/></div><div className="flex justify-between text-sm"><strong>${m.spent.toFixed(2)} committed</strong><span>${(m.budget-m.spent).toFixed(2)} remaining</span></div></div><div className="panel"><p className="eyebrow">On-chain commitment</p><h2 className="mt-3 font-mono text-sm">0x1f4a…b92c</h2><p className="my-5 text-sm leading-relaxed text-muted-foreground">Base Sepolia example · created 14:40:11 KST. This demo does not broadcast transactions.</p><Button variant="destructive" className="w-full" disabled={revoked||m.status!=="active"} onClick={()=>{setRevoked(true);toast.error("Mandate revoked in this demo session")}}><ShieldX/>{revoked?"Mandate revoked":"Revoke mandate"}</Button></div></div><div className="panel mt-5"><div className="panel-head"><h2>Decision activity</h2></div><DecisionList items={decisions}/></div></AppShell>}
+  const available = active ? Math.max(0, active.budget - active.spent) : 0;
 
-export function NewRequestPage(){const [text,setText]=useState("Buy a $22 USB-C hub on BestBuy");const [result,setResult]=useState<DecisionStatus|undefined>();const run=(e:FormEvent)=>{e.preventDefault();const lower=text.toLowerCase();const next:DecisionStatus=lower.includes("bestbuy")||lower.includes("62")?"block":lower.includes("17")||lower.includes("cable")?"review":"allow";setResult(next);toast(statusLabel(next))};return <AppShell title="Agent request" eyebrow="Parse → gate → receipt"><form onSubmit={run} className="panel"><div className="field"><label htmlFor="request">What does the agent want to do?</label><Textarea id="request" value={text} onChange={e=>setText(e.target.value)} className="min-h-32 text-lg"/><small>Try Amazon for an Allow, BestBuy for a Block, or a $17 cable for Needs human.</small></div><div className="mt-5 flex flex-wrap gap-2"><Button type="submit"><Sparkles/> Evaluate request</Button>{["Buy $30 of printer paper on Amazon","Buy a $22 USB-C hub on BestBuy","Buy a $17 charging cable from Apple"].map(x=><Button type="button" variant="outline" onClick={()=>setText(x)} key={x}>{x.split(" ").slice(-1)}</Button>)}</div></form>{result&&<div className="panel mt-5 animate-fade-in"><div className="receipt-hero"><div><p className="eyebrow">Deterministic gate</p><h2>{statusLabel(result)}.</h2></div><StatusBadge status={result}/></div><div className="timeline">{[["01","Kiln parse","qwen3-32b · one illustrative parse call"],["02","Code gate",result==="allow"?"All checks passed · zero inference":result==="block"?"Merchant is not allowed · zero inference":"Budget margin needs human judgment · zero inference"],["03","Action",result==="allow"?"Example settlement receipt prepared":result==="block"?"Nothing paid · stop receipt prepared":"Payment held · sent to Reviews"]].map(x=><div className="timeline-item" key={x[0]}><span>{x[0]}</span><div><h3>{x[1]}</h3><p>{x[2]}</p></div></div>)}</div></div>}</AppShell>}
+  return (
+    <AppShell title="Control room" eyebrow="Tenant workspace">
+      {error && (
+        <div className="panel mb-5">
+          <p className="text-sm">{error}</p>
+          <Button asChild className="mt-4">
+            <Link to="/sign-in">Sign in</Link>
+          </Button>
+        </div>
+      )}
+      {loading ? (
+        <p className="text-sm text-muted-foreground">Loading tenant state…</p>
+      ) : (
+        <>
+          <div className="metric-grid">
+            {[
+              [
+                "Available",
+                active ? `$${available.toFixed(2)}` : "—",
+                active ? `of $${active.budget.toFixed(2)} mandate` : "Create a mandate",
+              ],
+              ["Decisions", String(recent.length), "recent"],
+              ["Pending", String(pending), "human review"],
+              ["Network", "Base Sepolia", "live when env is set"],
+            ].map((x) => (
+              <div className="metric-cell" key={x[0]}>
+                <p>{x[0]}</p>
+                <strong>{x[1]}</strong>
+                <span>{x[2]}</span>
+              </div>
+            ))}
+          </div>
+          <div className="panel-grid">
+            <div className="panel">
+              <div className="panel-head">
+                <h2>Recent decisions</h2>
+                <Link to="/decisions">View ledger</Link>
+              </div>
+              <DecisionList items={recent.slice(0, 3)} />
+            </div>
+            <div className="mandate-card">
+              <div className="panel-head">
+                <div>
+                  <p className="eyebrow">Active mandate</p>
+                  <h2>{active?.name ?? "None yet"}</h2>
+                </div>
+                <StatusBadge status={active?.status === "active" ? "allow" : "block"} />
+              </div>
+              {active ? (
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    {active.purpose} · {active.merchants.join(", ")}
+                  </p>
+                  <div className="budget-track">
+                    <span
+                      style={{ width: `${Math.min(100, (active.spent / active.budget) * 100)}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <strong>${active.spent.toFixed(2)} spent</strong>
+                    <span className="text-muted-foreground">${available.toFixed(2)} left</span>
+                  </div>
+                  <Button asChild variant="outline" className="mt-5 w-full">
+                    <Link to="/mandates/$id" params={{ id: active.id }}>
+                      Inspect mandate <ArrowRight />
+                    </Link>
+                  </Button>
+                </>
+              ) : (
+                <Button asChild className="mt-5 w-full">
+                  <Link to="/mandates/new">Create mandate</Link>
+                </Button>
+              )}
+            </div>
+          </div>
+          <div className="panel mt-5">
+            <div className="panel-head">
+              <div>
+                <h2>CLAMP vs all AI</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Metrics load from Song metering. Fail closed until wired.
+                </p>
+              </div>
+              <Link to="/metrics">Open analysis</Link>
+            </div>
+          </div>
+        </>
+      )}
+    </AppShell>
+  );
+}
 
-export function DecisionsPage(){const [filter,setFilter]=useState<DecisionStatus|"all">("all");const shown=filter==="all"?decisions:decisions.filter(d=>d.status===filter);return <AppShell title="Decisions" eyebrow="Policy ledger"><div className="page-actions filter-row">{(["all","allow","block","review"] as const).map(f=><Button key={f} size="sm" variant={filter===f?"default":"outline"} onClick={()=>setFilter(f)}><Filter/>{f==="all"?"All":statusLabel(f)}</Button>)}</div><div className="panel"><DecisionList items={shown}/></div></AppShell>}
+export function MandatesPage() {
+  const [mandates, setMandates] = useState<Mandate[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-export function DecisionDetailPage({id}:{id:string}){const d=decisions.find(x=>x.id===id)??decisions[0];if(!d)return null;const copy=()=>{navigator.clipboard?.writeText(`${d.request}\n${statusLabel(d.status)} — ${d.reason}\n${d.tx}`);toast.success("Evidence summary copied")};return <AppShell title="Decision receipt" eyebrow={`Receipt · ${d.id}`} action={<Button variant="outline" onClick={copy}><Copy/> Copy evidence</Button>}><div className="receipt-hero"><div><p className="eyebrow">{d.merchant} · {d.time}</p><h2>{statusLabel(d.status)}.</h2></div><StatusBadge status={d.status}/></div><div className="panel-grid"><div className="panel"><div className="timeline">{[["01","Original request",d.request],["02","Parsed action",`${d.merchant} · $${d.amount.toFixed(2)} + $${d.fee.toFixed(2)} fees`],["03","Matched rule",d.rule],["04","Decision reason",d.reason],["05",d.status==="allow"?"Settlement":"Stop / hold",d.status==="allow"?"Example payment receipt recorded":d.status==="block"?"Nothing paid. Stop recorded.":"No payment. Awaiting a person."]].map(x=><div className="timeline-item" key={x[0]}><span>{x[0]}</span><div><h3>{x[1]}</h3><p>{x[2]}</p></div></div>)}</div></div><div className="panel h-max"><p className="eyebrow">Transaction reference</p><p className="my-4 font-mono text-sm">{d.tx}</p><p className="text-sm leading-relaxed text-muted-foreground">Base Sepolia example. Fees and clocks can change before live settlement; this receipt represents demo behavior.</p><Button variant="outline" className="mt-5 w-full" onClick={copy}><Copy/> Copy summary</Button></div></div></AppShell>}
+  useEffect(() => {
+    listMandatesFn()
+      .then((data) => setMandates(data.mandates))
+      .catch((e) => setError(errMessage(e)));
+  }, []);
 
-export function ReviewsPage(){const [done,setDone]=useState<DecisionStatus>();return <AppShell title="Human review" eyebrow="1 request waiting"><div className="panel"><div className="flex flex-wrap items-start justify-between gap-5"><div><StatusBadge status={done??"review"}/><h2 className="mt-5 text-2xl font-semibold">$17 charging cable · Apple</h2><p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">Apple is allowed and the purpose matches, but $18.10 including fees is close to the $18.80 remaining budget.</p></div><Clock3 className="text-warning"/></div><ul className="rule-list mt-7"><li><Check/> Merchant allowlist: Apple</li><li><Check/> Purpose: office supplies</li><li><UserRoundCheck/> Budget safety margin: person required</li></ul>{!done?<div className="mt-6 flex gap-3"><Button onClick={()=>{setDone("allow");toast.success("Approved in demo")}}><Check/> Approve</Button><Button variant="destructive" onClick={()=>{setDone("block");toast.error("Blocked in demo")}}><X/> Block</Button></div>:<p className="mt-6 text-sm font-semibold">Decision recorded as {statusLabel(done)} for this demo session.</p>}</div></AppShell>}
+  return (
+    <AppShell title="Mandates" eyebrow="Delegated authority">
+      <div className="page-actions">
+        <Button asChild>
+          <Link to="/mandates/new">Create mandate</Link>
+        </Button>
+      </div>
+      {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
+      <div className="grid gap-4 md:grid-cols-2">
+        {mandates.map((m) => (
+          <Link
+            to="/mandates/$id"
+            params={{ id: m.id }}
+            className="mandate-card transition-colors hover:bg-accent"
+            key={m.id}
+          >
+            <div className="flex justify-between gap-4">
+              <div>
+                <p className="eyebrow">{m.status}</p>
+                <h2 className="mt-2 text-xl font-semibold">{m.name}</h2>
+              </div>
+              <Shield
+                className={m.status === "active" ? "text-success" : "text-muted-foreground"}
+              />
+            </div>
+            <p className="mt-3 text-sm text-muted-foreground">
+              {m.purpose} · {m.merchants.join(", ")}
+            </p>
+            <div className="budget-track">
+              <span style={{ width: `${Math.min(100, (m.spent / m.budget) * 100)}%` }} />
+            </div>
+            <div className="flex justify-between text-sm">
+              <strong>
+                ${m.spent.toFixed(2)} / ${m.budget}
+              </strong>
+              <span className="text-muted-foreground">
+                {new Date(m.expiresAt).toLocaleString()}
+              </span>
+            </div>
+          </Link>
+        ))}
+        {!mandates.length && !error && (
+          <p className="text-sm text-muted-foreground">
+            No mandates yet. Create one to commit on chain.
+          </p>
+        )}
+      </div>
+    </AppShell>
+  );
+}
 
-export function AuditPage(){const [q,setQ]=useState("");const shown=useMemo(()=>decisions.filter(d=>`${d.request} ${d.reason} ${d.tx}`.toLowerCase().includes(q.toLowerCase())),[q]);return <AppShell title="Audit trail" eyebrow="Reconstruct every decision"><div className="panel"><div className="page-actions"><div className="relative max-w-md flex-1"><Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground"/><Input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search request, reason, or hash" className="pl-9"/></div><Button variant="outline" onClick={()=>toast.success("Audit summary prepared for demo")}><FileCheck2/> Export summary</Button></div><div className="table-wrap"><table className="data-table"><thead><tr><th>Time</th><th>Request</th><th>Rule</th><th>Decision</th><th>Receipt</th></tr></thead><tbody>{shown.map(d=><tr key={d.id}><td>{d.time}</td><td><Link to="/decisions/$id" params={{id:d.id}} className="font-semibold hover:text-signal">{d.request}</Link></td><td>{d.rule}</td><td><StatusBadge status={d.status}/></td><td className="font-mono">{d.tx}</td></tr>)}</tbody></table></div></div></AppShell>}
+export function NewMandatePage() {
+  const nav = useNavigate();
+  const [busy, setBusy] = useState(false);
 
-export function MetricsPage(){return <AppShell title="Efficiency" eyebrow="Illustrative demo baseline"><div className="metric-grid">{[["CLAMP calls","2","parse + explain"],["All-AI calls","6","judge every step"],["Token reduction","70%","illustrative"],["Gate latency","4ms","local code"]].map(x=><div className="metric-cell" key={x[0]}><p>{x[0]}</p><strong>{x[1]}</strong><span>{x[2]}</span></div>)}</div><div className="panel mt-5"><div className="panel-head"><div><h2>Same three cases</h2><p className="mt-1 text-sm text-muted-foreground">Example values for pitch comparison—not live Kiln telemetry.</p></div><Activity/></div><div className="table-wrap"><table className="data-table"><thead><tr><th>Approach</th><th>LLM calls</th><th>Tokens</th><th>Decision latency</th><th>Policy source</th></tr></thead><tbody><tr><td><strong>CLAMP</strong></td><td>2</td><td>1,140</td><td>4ms gate</td><td>Deterministic code</td></tr><tr><td>All-AI baseline</td><td>6</td><td>3,820</td><td>940ms avg</td><td>Model judgment</td></tr></tbody></table></div></div><div className="grid gap-4 md:grid-cols-3 mt-5">{[[CircleDollarSign,"Fewer calls","Parse once and explain once."],[LockKeyhole,"Hard boundary","The model never grants permission."],[Activity,"Energy thesis","Lower token demand implies less inference work; hardware energy is not measured here."]].map(([Icon,t,d])=>{const I=Icon as typeof Activity;return <div className="panel" key={t as string}><I className="text-signal"/><h3 className="mt-8 font-semibold">{t as string}</h3><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{d as string}</p></div>})}</div></AppShell>}
+  const submit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget);
+    const merchants = String(form.get("merchants") ?? "")
+      .split(",")
+      .map((m) => m.trim())
+      .filter(Boolean);
+    setBusy(true);
+    try {
+      const { mandate } = await createMandateFn({
+        data: {
+          name: String(form.get("name") ?? ""),
+          purpose: String(form.get("purpose") ?? ""),
+          budget: Number(form.get("budget")),
+          merchants,
+          expiresAt: String(form.get("expiry") ?? ""),
+        },
+      });
+      toast.success("Mandate committed on Base Sepolia");
+      nav({ to: "/mandates/$id", params: { id: mandate.id } });
+    } catch (error) {
+      toast.error(errMessage(error));
+    } finally {
+      setBusy(false);
+    }
+  };
 
-export function SettingsPage(){const [notices,setNotices]=useState(true);return <AppShell title="Settings" eyebrow="Demo configuration"><div className="panel max-w-3xl"><div className="panel-head"><h2>Runtime labels</h2></div>{[["Mode","Deterministic demo"],["Model","qwen3-32b via Kiln (illustrative)"],["Network","Base Sepolia (example receipts)"],["Gate","Local policy code · 0 inference"]].map(x=><div className="flex justify-between gap-5 border-t border-border py-4 text-sm" key={x[0]}><span className="text-muted-foreground">{x[0]}</span><strong className="text-right">{x[1]}</strong></div>)}<div className="flex items-center justify-between border-t border-border py-4"><div><strong className="text-sm">Review notifications</strong><p className="text-xs text-muted-foreground">Show local alerts for requests needing a person.</p></div><Switch checked={notices} onCheckedChange={setNotices}/></div></div><div className="panel mt-5 max-w-3xl"><h2 className="font-semibold">Integration status</h2><p className="mt-3 text-sm leading-relaxed text-muted-foreground">This build is a complete front-end demonstration. It does not send money, call Kiln, or publish blockchain transactions.</p></div></AppShell>}
+  return (
+    <AppShell title="Create mandate" eyebrow="New delegated authority">
+      <form className="panel form-grid" onSubmit={submit}>
+        <div className="field field-full">
+          <label htmlFor="mandate-name">Mandate name</label>
+          <Input id="mandate-name" name="name" defaultValue="Office essentials" required />
+        </div>
+        <div className="field field-full">
+          <label htmlFor="purpose">Purpose</label>
+          <Input id="purpose" name="purpose" defaultValue="Office supplies" required />
+          <small>The agent may act only for this purpose.</small>
+        </div>
+        <div className="field">
+          <label htmlFor="budget">Total budget including fees</label>
+          <Input id="budget" name="budget" type="number" defaultValue="50" min="1" required />
+        </div>
+        <div className="field">
+          <label htmlFor="expiry">Expiry</label>
+          <Input id="expiry" name="expiry" type="datetime-local" required />
+        </div>
+        <div className="field field-full">
+          <label htmlFor="merchants">Allowed merchants</label>
+          <Input id="merchants" name="merchants" defaultValue="Amazon, Apple, Uber" required />
+          <small>Separate merchants with commas.</small>
+        </div>
+        <div className="field-full flex justify-end gap-2">
+          <Button asChild variant="outline">
+            <Link to="/mandates">Cancel</Link>
+          </Button>
+          <Button type="submit" disabled={busy}>
+            <LockKeyhole /> {busy ? "Committing…" : "Commit mandate"}
+          </Button>
+        </div>
+      </form>
+    </AppShell>
+  );
+}
+
+export function MandateDetailPage({ id }: { id: string }) {
+  const [mandate, setMandate] = useState<Mandate | null>(null);
+  const [decisions, setDecisions] = useState<Decision[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const load = () => {
+    Promise.all([getMandateFn({ data: { id } }), listDecisionsFn()])
+      .then(([m, d]) => {
+        setMandate(m.mandate);
+        setDecisions(d.decisions.filter((x) => x.mandateId === id));
+      })
+      .catch((e) => setError(errMessage(e)));
+  };
+
+  useEffect(load, [id]);
+
+  const revoke = async () => {
+    setBusy(true);
+    try {
+      const { mandate: next } = await revokeMandateFn({ data: { id } });
+      setMandate(next);
+      toast.success("Mandate revoked on chain");
+      load();
+    } catch (e) {
+      toast.error(errMessage(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (error) {
+    return (
+      <AppShell title="Mandate" eyebrow={id}>
+        <p className="text-sm text-destructive">{error}</p>
+      </AppShell>
+    );
+  }
+  if (!mandate) {
+    return (
+      <AppShell title="Mandate" eyebrow={id}>
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      </AppShell>
+    );
+  }
+
+  return (
+    <AppShell
+      title={mandate.name}
+      eyebrow={`Mandate · ${mandate.id}`}
+      action={
+        <Button asChild variant="outline">
+          <Link to="/requests/new">Test request</Link>
+        </Button>
+      }
+    >
+      <div className="panel-grid">
+        <div className="panel">
+          <div className="panel-head">
+            <h2>Enforced rules</h2>
+            <span
+              className={`status-badge ${mandate.status === "active" ? "status-allow" : "status-block"}`}
+            >
+              {mandate.status === "active" ? (
+                <>
+                  <Shield /> Active
+                </>
+              ) : (
+                <>
+                  <ShieldX /> {mandate.status}
+                </>
+              )}
+            </span>
+          </div>
+          <ul className="rule-list">
+            <li>
+              <Check /> Purpose: {mandate.purpose}
+            </li>
+            <li>
+              <Check /> Budget: ${mandate.budget.toFixed(2)}, including fees
+            </li>
+            <li>
+              <Check /> Merchants: {mandate.merchants.join(", ")}
+            </li>
+            <li>
+              <Check /> Expires: {new Date(mandate.expiresAt).toLocaleString()}
+            </li>
+          </ul>
+          <div className="budget-track">
+            <span style={{ width: `${Math.min(100, (mandate.spent / mandate.budget) * 100)}%` }} />
+          </div>
+          <div className="flex justify-between text-sm">
+            <strong>${mandate.spent.toFixed(2)} committed</strong>
+            <span>${(mandate.budget - mandate.spent).toFixed(2)} remaining</span>
+          </div>
+        </div>
+        <div className="panel">
+          <p className="eyebrow">On chain commitment</p>
+          <h2 className="mt-3 font-mono text-sm break-all">{mandate.commitTxHash ?? "Pending"}</h2>
+          <p className="my-5 text-sm leading-relaxed text-muted-foreground">
+            Base Sepolia · hash {mandate.mandateHash.slice(0, 18)}…
+          </p>
+          {mandate.commitTxHash && (
+            <Button asChild variant="outline" className="mb-3 w-full">
+              <a href={explorerTxUrl(mandate.commitTxHash)} target="_blank" rel="noreferrer">
+                <ExternalLink /> View on Basescan
+              </a>
+            </Button>
+          )}
+          <Button
+            variant="destructive"
+            className="w-full"
+            disabled={busy || mandate.status !== "active"}
+            onClick={revoke}
+          >
+            <ShieldX />
+            {mandate.status === "revoked" ? "Mandate revoked" : "Revoke mandate"}
+          </Button>
+        </div>
+      </div>
+      <div className="panel mt-5">
+        <div className="panel-head">
+          <h2>Decision activity</h2>
+        </div>
+        <DecisionList items={decisions} />
+      </div>
+    </AppShell>
+  );
+}
+
+export function NewRequestPage() {
+  const [text, setText] = useState("Buy a $22 USB C hub on BestBuy");
+  const [mandateId, setMandateId] = useState("");
+  const [mandates, setMandates] = useState<Mandate[]>([]);
+  const [decision, setDecision] = useState<Decision | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    listMandatesFn()
+      .then((data) => {
+        setMandates(data.mandates.filter((m) => m.status === "active"));
+        setMandateId(data.mandates.find((m) => m.status === "active")?.id ?? "");
+      })
+      .catch((e) => toast.error(errMessage(e)));
+  }, []);
+
+  const run = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!mandateId) {
+      toast.error("Create an active mandate first.");
+      return;
+    }
+    setBusy(true);
+    setDecision(null);
+    try {
+      const result = await submitAgentRequestFn({
+        data: { mandateId, text },
+      });
+      setDecision(result.decision);
+      toast(statusLabel(result.decision.status));
+    } catch (error) {
+      toast.error(errMessage(error));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <AppShell title="Agent request" eyebrow="Parse then gate then receipt">
+      <form onSubmit={run} className="panel">
+        <div className="field">
+          <label htmlFor="mandate">Mandate</label>
+          <select
+            id="mandate"
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            value={mandateId}
+            onChange={(e) => setMandateId(e.target.value)}
+            required
+          >
+            <option value="">Select mandate</option>
+            {mandates.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="field mt-4">
+          <label htmlFor="request">What does the agent want to do?</label>
+          <Textarea
+            id="request"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            className="min-h-32 text-lg"
+          />
+          <small>
+            Evaluation calls Song parse and Song gate. If Song is not wired, this fails closed. No
+            keyword demo gate.
+          </small>
+        </div>
+        <div className="mt-5 flex flex-wrap gap-2">
+          <Button type="submit" disabled={busy}>
+            <Sparkles /> {busy ? "Evaluating…" : "Evaluate request"}
+          </Button>
+          {[
+            "Buy $30 of printer paper on Amazon",
+            "Buy a $22 USB C hub on BestBuy",
+            "Buy a $17 charging cable from Apple",
+          ].map((x) => (
+            <Button type="button" variant="outline" onClick={() => setText(x)} key={x}>
+              {x.split(" ").slice(-1)}
+            </Button>
+          ))}
+        </div>
+      </form>
+      {decision && (
+        <div className="panel mt-5 animate-fade-in">
+          <div className="receipt-hero">
+            <div>
+              <p className="eyebrow">Code gate</p>
+              <h2>{statusLabel(decision.status)}.</h2>
+            </div>
+            <StatusBadge status={decision.status} />
+          </div>
+          <div className="timeline">
+            {[
+              ["01", "Request", decision.request],
+              ["02", "Parsed action", `${decision.merchant} · $${decision.amount.toFixed(2)}`],
+              ["03", "Matched rule", `${decision.rule}: ${decision.reason}`],
+              [
+                "04",
+                "Receipt",
+                decision.txHash ??
+                  (decision.status === "review"
+                    ? "Held for human review. No pay yet."
+                    : "Waiting for chain write"),
+              ],
+            ].map((x) => (
+              <div className="timeline-item" key={x[0]}>
+                <span>{x[0]}</span>
+                <div>
+                  <h3>{x[1]}</h3>
+                  <p>{x[2]}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          {decision.txHash && (
+            <Button asChild variant="outline" className="mt-4">
+              <a href={explorerTxUrl(decision.txHash)} target="_blank" rel="noreferrer">
+                <ExternalLink /> View tx
+              </a>
+            </Button>
+          )}
+        </div>
+      )}
+    </AppShell>
+  );
+}
+
+export function DecisionsPage() {
+  const [filter, setFilter] = useState<DecisionStatus | "all">("all");
+  const [decisions, setDecisions] = useState<Decision[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    listDecisionsFn()
+      .then((data) => setDecisions(data.decisions))
+      .catch((e) => setError(errMessage(e)));
+  }, []);
+
+  const shown = filter === "all" ? decisions : decisions.filter((d) => d.status === filter);
+
+  return (
+    <AppShell title="Decisions" eyebrow="Policy ledger">
+      <div className="page-actions filter-row">
+        {(["all", "allow", "block", "review"] as const).map((f) => (
+          <Button
+            key={f}
+            size="sm"
+            variant={filter === f ? "default" : "outline"}
+            onClick={() => setFilter(f)}
+          >
+            <Filter />
+            {f === "all" ? "All" : statusLabel(f)}
+          </Button>
+        ))}
+      </div>
+      {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
+      <div className="panel">
+        <DecisionList items={shown} />
+      </div>
+    </AppShell>
+  );
+}
+
+export function DecisionDetailPage({ id }: { id: string }) {
+  const [decision, setDecision] = useState<Decision | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    getDecisionFn({ data: { id } })
+      .then((data) => setDecision(data.decision))
+      .catch((e) => setError(errMessage(e)));
+  }, [id]);
+
+  if (error) {
+    return (
+      <AppShell title="Decision receipt" eyebrow={id}>
+        <p className="text-sm text-destructive">{error}</p>
+      </AppShell>
+    );
+  }
+  if (!decision) {
+    return (
+      <AppShell title="Decision receipt" eyebrow={id}>
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      </AppShell>
+    );
+  }
+
+  const copy = () => {
+    navigator.clipboard?.writeText(
+      `${decision.request}\n${statusLabel(decision.status)}: ${decision.reason}\n${decision.txHash ?? "no tx yet"}`,
+    );
+    toast.success("Evidence summary copied");
+  };
+
+  return (
+    <AppShell
+      title="Decision receipt"
+      eyebrow={`Receipt · ${decision.id}`}
+      action={
+        <Button variant="outline" onClick={copy}>
+          <Copy /> Copy evidence
+        </Button>
+      }
+    >
+      <div className="receipt-hero">
+        <div>
+          <p className="eyebrow">
+            {decision.merchant} · {new Date(decision.time).toLocaleString()}
+          </p>
+          <h2>{statusLabel(decision.status)}.</h2>
+        </div>
+        <StatusBadge status={decision.status} />
+      </div>
+      <div className="panel-grid">
+        <div className="panel">
+          <div className="timeline">
+            {[
+              ["01", "Original request", decision.request],
+              [
+                "02",
+                "Parsed action",
+                `${decision.merchant} · $${decision.amount.toFixed(2)} + $${decision.fee.toFixed(2)} fees`,
+              ],
+              ["03", "Matched rule", decision.rule],
+              ["04", "Decision reason", decision.reason],
+              [
+                "05",
+                decision.status === "allow" ? "Settlement" : "Stop or hold",
+                decision.status === "allow"
+                  ? "Payment receipt recorded"
+                  : decision.status === "block"
+                    ? "Nothing paid. Stop recorded."
+                    : "No payment. Awaiting a person.",
+              ],
+            ].map((x) => (
+              <div className="timeline-item" key={x[0]}>
+                <span>{x[0]}</span>
+                <div>
+                  <h3>{x[1]}</h3>
+                  <p>{x[2]}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="panel h-max">
+          <p className="eyebrow">Transaction reference</p>
+          <p className="my-4 font-mono text-sm break-all">{decision.txHash ?? "Pending or held"}</p>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Base Sepolia. Fees and clocks can change before settlement. This receipt shows the
+            recorded decision.
+          </p>
+          {decision.txHash && (
+            <Button asChild variant="outline" className="mt-5 w-full">
+              <a href={explorerTxUrl(decision.txHash)} target="_blank" rel="noreferrer">
+                <ExternalLink /> Open Basescan
+              </a>
+            </Button>
+          )}
+          <Button variant="outline" className="mt-3 w-full" onClick={copy}>
+            <Copy /> Copy summary
+          </Button>
+        </div>
+      </div>
+    </AppShell>
+  );
+}
+
+export function ReviewsPage() {
+  const [items, setItems] = useState<Decision[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = () => {
+    listDecisionsFn()
+      .then((data) => setItems(data.decisions.filter((d) => d.status === "review")))
+      .catch((e) => setError(errMessage(e)));
+  };
+
+  useEffect(load, []);
+
+  const resolve = async (decisionId: string, status: "allow" | "block") => {
+    try {
+      await resolveReviewFn({ data: { decisionId, status } });
+      toast.success(status === "allow" ? "Approved on chain" : "Blocked on chain");
+      load();
+    } catch (e) {
+      toast.error(errMessage(e));
+    }
+  };
+
+  return (
+    <AppShell title="Human review" eyebrow={`${items.length} waiting`}>
+      {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
+      {!items.length && !error && (
+        <div className="panel">
+          <p className="text-sm text-muted-foreground">
+            No Needs human items. Requests reach this queue only after Song gate returns review.
+          </p>
+        </div>
+      )}
+      <div className="space-y-4">
+        {items.map((item) => (
+          <div className="panel" key={item.id}>
+            <div className="flex flex-wrap items-start justify-between gap-5">
+              <div>
+                <StatusBadge status="review" />
+                <h2 className="mt-5 text-2xl font-semibold">
+                  ${item.amount.toFixed(2)} · {item.merchant}
+                </h2>
+                <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
+                  {item.reason}
+                </p>
+              </div>
+              <Clock3 className="text-warning" />
+            </div>
+            <ul className="rule-list mt-7">
+              <li>
+                <Check /> Request: {item.request}
+              </li>
+              <li>
+                <UserRoundCheck /> Rule: {item.rule}
+              </li>
+            </ul>
+            <div className="mt-6 flex gap-3">
+              <Button onClick={() => resolve(item.id, "allow")}>
+                <Check /> Approve
+              </Button>
+              <Button variant="destructive" onClick={() => resolve(item.id, "block")}>
+                <X /> Block
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </AppShell>
+  );
+}
+
+export function AuditPage() {
+  const [q, setQ] = useState("");
+  const [decisions, setDecisions] = useState<Decision[]>([]);
+
+  useEffect(() => {
+    listDecisionsFn()
+      .then((data) => setDecisions(data.decisions))
+      .catch((e) => toast.error(errMessage(e)));
+  }, []);
+
+  const shown = useMemo(
+    () =>
+      decisions.filter((d) =>
+        `${d.request} ${d.reason} ${d.txHash ?? ""}`.toLowerCase().includes(q.toLowerCase()),
+      ),
+    [decisions, q],
+  );
+
+  const exportSummary = () => {
+    const body = shown
+      .map(
+        (d) =>
+          `${d.time}\t${statusLabel(d.status)}\t${d.request}\t${d.rule}\t${d.reason}\t${d.txHash ?? ""}`,
+      )
+      .join("\n");
+    navigator.clipboard?.writeText(body);
+    toast.success("Audit summary copied");
+  };
+
+  return (
+    <AppShell title="Audit trail" eyebrow="Reconstruct every decision">
+      <div className="panel">
+        <div className="page-actions">
+          <div className="relative max-w-md flex-1">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search request, reason, or hash"
+              className="pl-9"
+            />
+          </div>
+          <Button variant="outline" onClick={exportSummary}>
+            <FileCheck2 /> Export summary
+          </Button>
+        </div>
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Request</th>
+                <th>Rule</th>
+                <th>Decision</th>
+                <th>Receipt</th>
+              </tr>
+            </thead>
+            <tbody>
+              {shown.map((d) => (
+                <tr key={d.id}>
+                  <td>{new Date(d.time).toLocaleString()}</td>
+                  <td>
+                    <Link
+                      to="/decisions/$id"
+                      params={{ id: d.id }}
+                      className="font-semibold hover:text-signal"
+                    >
+                      {d.request}
+                    </Link>
+                  </td>
+                  <td>{d.rule}</td>
+                  <td>
+                    <StatusBadge status={d.status} />
+                  </td>
+                  <td className="font-mono">{d.txHash ?? "held"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </AppShell>
+  );
+}
+
+export function MetricsPage() {
+  const [metrics, setMetrics] = useState<EfficiencyMetrics | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    getMetricsFn()
+      .then((data) => setMetrics(data.metrics))
+      .catch((e) => setError(errMessage(e)));
+  }, []);
+
+  return (
+    <AppShell title="Efficiency" eyebrow="CLAMP versus all AI">
+      {error && (
+        <div className="panel mb-5">
+          <p className="text-sm text-destructive">{error}</p>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Henry owns this panel. Song owns live token and latency numbers. No illustrative fake
+            table.
+          </p>
+        </div>
+      )}
+      {metrics && (
+        <>
+          <div className="metric-grid">
+            {[
+              ["CLAMP calls", String(metrics.clampCalls), "parse + explain"],
+              ["All AI calls", String(metrics.allAiCalls), "judge every step"],
+              ["CLAMP tokens", String(metrics.clampTokens), "measured"],
+              ["Gate latency", `${metrics.clampGateLatencyMs}ms`, "local code"],
+            ].map((x) => (
+              <div className="metric-cell" key={x[0]}>
+                <p>{x[0]}</p>
+                <strong>{x[1]}</strong>
+                <span>{x[2]}</span>
+              </div>
+            ))}
+          </div>
+          <div className="panel mt-5">
+            <div className="panel-head">
+              <div>
+                <h2>Same three cases</h2>
+                <p className="mt-1 text-sm text-muted-foreground">{metrics.notes}</p>
+              </div>
+              <Activity />
+            </div>
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Approach</th>
+                    <th>LLM calls</th>
+                    <th>Tokens</th>
+                    <th>Decision latency</th>
+                    <th>Policy source</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <strong>CLAMP</strong>
+                    </td>
+                    <td>{metrics.clampCalls}</td>
+                    <td>{metrics.clampTokens}</td>
+                    <td>{metrics.clampGateLatencyMs}ms gate</td>
+                    <td>Code</td>
+                  </tr>
+                  <tr>
+                    <td>All AI baseline</td>
+                    <td>{metrics.allAiCalls}</td>
+                    <td>{metrics.allAiTokens}</td>
+                    <td>{metrics.allAiLatencyMs}ms avg</td>
+                    <td>Model judgment</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+      <div className="grid gap-4 md:grid-cols-3 mt-5">
+        {[
+          [CircleDollarSign, "Fewer calls", "Parse once and explain once."],
+          [LockKeyhole, "Hard boundary", "The model never grants permission."],
+          [
+            Activity,
+            "Energy thesis",
+            "Lower token demand implies less inference work. Hardware energy is stated, not guessed.",
+          ],
+        ].map(([Icon, t, d]) => {
+          const I = Icon as typeof Activity;
+          return (
+            <div className="panel" key={t as string}>
+              <I className="text-signal" />
+              <h3 className="mt-8 font-semibold">{t as string}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{d as string}</p>
+            </div>
+          );
+        })}
+      </div>
+    </AppShell>
+  );
+}
+
+export function SettingsPage() {
+  const [status, setStatus] = useState<Awaited<ReturnType<typeof getRuntimeStatusFn>> | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    getRuntimeStatusFn()
+      .then(setStatus)
+      .catch((e) => setError(errMessage(e)));
+  }, []);
+
+  return (
+    <AppShell title="Settings" eyebrow="Runtime configuration">
+      {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
+      {status && (
+        <>
+          <div className="panel max-w-3xl">
+            <div className="panel-head">
+              <h2>Runtime labels</h2>
+            </div>
+            {[
+              ["Mode", status.session.mode],
+              ["Tenant", status.session.tenantId],
+              ["Operator", status.session.email],
+              ["Model", status.modelPreference],
+              ["Network", `${status.chain.network} (${status.chain.chainId})`],
+              ["Contract", status.chain.contractAddress ?? "Not deployed"],
+              ["Gate", status.gatePolicy],
+            ].map((x) => (
+              <div
+                className="flex justify-between gap-5 border-t border-border py-4 text-sm"
+                key={x[0]}
+              >
+                <span className="text-muted-foreground">{x[0]}</span>
+                <strong className="text-right break-all">{x[1]}</strong>
+              </div>
+            ))}
+          </div>
+          <div className="panel mt-5 max-w-3xl">
+            <h2 className="font-semibold">Integration status</h2>
+            <div className="mt-4 space-y-3">
+              <div className="flex justify-between gap-4 text-sm border-b border-border pb-3">
+                <span>Base Sepolia</span>
+                <strong>{status.chain.configured ? "Configured" : "Missing env"}</strong>
+              </div>
+              {status.song.map((item) => (
+                <div
+                  className="flex justify-between gap-4 text-sm border-b border-border pb-3"
+                  key={item.name}
+                >
+                  <span>{item.name}</span>
+                  <strong className="text-right max-w-md">
+                    {item.wired ? "Wired" : "Not wired (fail closed)"}
+                  </strong>
+                </div>
+              ))}
+            </div>
+            <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+              CLAMP does not claim to be unhackable. It uses hard controls, tenant sessions, and an
+              inspectable trail.
+            </p>
+          </div>
+        </>
+      )}
+    </AppShell>
+  );
+}
