@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- CLAMP uses shared client-side demo fixtures and session state; this keeps the hackathon demo deterministic without claiming live Kiln, payment, or blockchain activity.

@@ -1,24 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import { PublicHeader } from "@/components/clamp/public-header";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
-export const Route = createFileRoute("/")({
-  component: Index,
-});
-
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
-  );
-}
+export const Route=createFileRoute("/")({head:()=>({meta:[{title:"CLAMP — Intelligence Designed To Evolve"},{name:"description",content:"Delegation control for AI agents: hard spending mandates, deterministic decisions, and reconstructable audit receipts."},{property:"og:title",content:"CLAMP — Intelligence Designed To Evolve"},{property:"og:description",content:"Control before action for AI agents that spend."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary_large_image"}]}),component:Index});
+const stats=[{symbol:"<",target:120,suffix:"ms",decimals:0,label:"Inference Time"},{symbol:"%",target:99.99,suffix:"%",decimals:2,label:"Platform Uptime"},{symbol:"*",target:24,suffix:"/7",decimals:0,label:"Autonomous Runtime"},{symbol:"#",target:2.4,suffix:"M",decimals:1,label:"Context Windows"}];
+function Index(){const [values,setValues]=useState(stats.map(()=>"0"));const ref=useRef<HTMLDivElement>(null);useEffect(()=>{const node=ref.current;if(!node)return;let started=false;const observer=new IntersectionObserver(entries=>{if(!entries[0]?.isIntersecting||started)return;started=true;stats.forEach((s,i)=>{setTimeout(()=>{const begin=performance.now(),duration=1500+i*80;const tick=(now:number)=>{const p=Math.min(1,(now-begin)/duration);const eased=1-Math.pow(1-p,3);setValues(old=>old.map((v,j)=>j===i?(s.target*eased).toFixed(s.decimals):v));if(p<1)requestAnimationFrame(tick)};requestAnimationFrame(tick)},480+i*90)});observer.disconnect()},{threshold:.25});observer.observe(node);return()=>observer.disconnect()},[]);return <div className="landing"><div className="bg"><video className="bg-video" autoPlay muted loop playsInline><source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260809_012548_ef22562c-c0ae-4816-ad9d-f8922af4e6a7.mp4" type="video/mp4"/></video></div><PublicHeader/><main className="hero"><div className="trust-row anim" style={{"--d":".05s"} as React.CSSProperties}>{["microsoft","amazon","google"].map(x=><div className="avatar-ring" key={x}><span><i className={`fa-brands fa-${x}`}/></span></div>)}<div className="trust-pill">Trusted by 2000+ Enterprises</div></div><h1 className="headline"><span>Intelligence</span><span>Designed To Evolve</span></h1><p className="hero-copy anim" style={{"--d":".28s"} as React.CSSProperties}>Build applications that reason, adapt and collaborate using a modular AI platform designed for production.</p><Link to="/dashboard" className="hero-cta anim" style={{"--d":".4s"} as React.CSSProperties}>Get Started</Link></main><footer className="stats" ref={ref}>{stats.map((s,i)=><div className="stat" style={{animationDelay:`${.5+i*.08}s`}} key={s.label}><span className="stat-symbol">{s.symbol}</span><strong>{values[i]}{s.suffix}</strong><small>{s.label}</small></div>)}</footer></div>}
