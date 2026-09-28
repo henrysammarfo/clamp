@@ -34,12 +34,13 @@ export function CaseStudyPage({ slug }: { slug: string }) {
 }
 
 export function DocsPage() {
-  return <PublicPage eyebrow="Documentation" title="Before the tool call." intro="A concise guide to CLAMP’s mandates, deterministic policy gate, human reviews, and audit receipts.">{[
+  const sections: Array<[string, string, string]> = [
     ["01 · Model","Natural language → action","Kiln qwen3-32b parses merchant, amount, fees, purpose, and requested time. It does not decide permission."],
     ["02 · Gate","Rules → decision","Code evaluates budget including fees, merchant allowlist, deadline, and purpose. It uses zero model calls."],
     ["03 · Human","Uncertainty → hold","Requests near a limit or with a fuzzy purpose become Needs human. Payment remains stopped."],
     ["04 · Chain","Outcome → receipt","Mandate commitments and decision references produce an inspectable Base testnet audit trail."],
-  ].map(([k,t,d])=><Section kicker={k} title={t} key={k}><p className="max-w-2xl text-xl leading-relaxed text-muted-foreground">{d}</p></Section>)}</PublicPage>;
+  ];
+  return <PublicPage eyebrow="Documentation" title="Before the tool call." intro="A concise guide to CLAMP’s mandates, deterministic policy gate, human reviews, and audit receipts.">{sections.map(([k,t,d])=><Section kicker={k} title={t} key={k}><p className="max-w-2xl text-xl leading-relaxed text-muted-foreground">{d}</p></Section>)}</PublicPage>;
 }
 
 export function ContactPage() {
