@@ -1,4 +1,16 @@
 
+## 2026-09-29 submit split locked with Song
+
+Song keeps product improvements: human reject/revoke, purpose controls, benchmark, Base verification, final docs, final branch name, verified tx links.
+
+Henry owns submit package:
+- pitch deck draft (`docs/submit/PITCH_DECK.md`)
+- demo video script (`docs/submit/DEMO_VIDEO_SCRIPT.md`)
+- submit checklist/form (`docs/submit/SUBMIT_CHECKLIST.md`)
+- booth pitch + Q and A (`docs/submit/BOOTH_PITCH_QA.md`)
+
+Personal note: Song is open to talking more outside the code after the grind. Keep it calm and respectful.
+
 ## 2026-09-29 Song live E2E success
 
 Song confirmed recorder access, funded her Base Sepolia wallet, and completed live E2E:

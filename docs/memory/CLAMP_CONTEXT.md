@@ -21,8 +21,14 @@ Delete either and the entry is weak for Challenge B.
 
 | Owner | Owns |
 | --- | --- |
-| Song Hyewon | Kiln client, parse, explain, code gate, unit tests, token or latency metering, vs all AI baseline, AuditTrail shape. GitHub: [20223096](https://github.com/20223096) |
-| Henry Sam Marfo | On chain mandate or decision receipts, frontend mandate or watch or block or Needs human UI, metrics panel UI, demo video, pitch PDF, README |
+| Song Hyewon | Kiln, FastAPI source of truth, gate, budget, reject/revoke, purpose controls, benchmark, Base verification polish, final product docs, final branch + tx links. GitHub: [20223096](https://github.com/20223096) |
+| Henry Sam Marfo | Product UI/session/chain foundation, pitch deck, demo video, submit form/checklist, 5 min booth pitch + Q and A |
+
+## Integration lock (2026-09-29)
+
+`React UI → thin TanStack adapters → FastAPI → ClampAudit v2 → confirmed tx → FastAPI /chain`
+
+Live E2E already green. Henry pauses integration file edits unless Song asks.
 
 ## Repo access
 
