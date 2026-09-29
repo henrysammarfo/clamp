@@ -27,10 +27,15 @@ Team 14 · GWDC 2026 Korea · Challenge B · FuriosaAI x Bricksum
 
 ## Live Base Sepolia (hackathon)
 
+Hardened ClampAudit v2 (access controlled writers, revoke terminal state, outcomes 1..4):
+
 - Deployer: `0x9ADd0ac311e9E528800afc3F4A04e9cDe52C9cE0`
-- ClampAudit: [`0xebf79a18105f43730d6b54fc53144499c8050287`](https://sepolia.basescan.org/address/0xebf79a18105f43730d6b54fc53144499c8050287)
-- Deploy tx: [`0x6c1bc4c64080e737a387ffb15a7e4fad3e41b06684f900ca35c00097e83e7d98`](https://sepolia.basescan.org/tx/0x6c1bc4c64080e737a387ffb15a7e4fad3e41b06684f900ca35c00097e83e7d98)
-- Example mandate commit: [`0x8c2e412f46d33d515c25b643f0f8e1b615e7f85b7aa8b967231eaadb47a0be4a`](https://sepolia.basescan.org/tx/0x8c2e412f46d33d515c25b643f0f8e1b615e7f85b7aa8b967231eaadb47a0be4a)
+- ClampAudit: [`0x4648520fe2b192791c9ae13e46e0cba9544c42d6`](https://sepolia.basescan.org/address/0x4648520fe2b192791c9ae13e46e0cba9544c42d6)
+- Deploy tx: [`0xb7bfa077bad8fea9aecc679b7feba0429138a8983123dd2a0be1be9a6a2b8797`](https://sepolia.basescan.org/tx/0xb7bfa077bad8fea9aecc679b7feba0429138a8983123dd2a0be1be9a6a2b8797)
+- Live invariant script: `bun scripts/audit-clamp-live.ts` (10/10 passed)
+- Audit notes: [`docs/memory/CHAIN_AUDIT.md`](docs/memory/CHAIN_AUDIT.md)
+
+Superseded open v1 (do not use): `0xebf79a18105f43730d6b54fc53144499c8050287`
 
 ## Setup
 

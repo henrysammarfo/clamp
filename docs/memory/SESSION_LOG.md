@@ -1,11 +1,11 @@
 
-## 2026-09-29 chain live
+## 2026-09-29 chain audit and harden
 
-- Deployer: 0x9ADd0ac311e9E528800afc3F4A04e9cDe52C9cE0
-- ClampAudit: 0xebf79a18105f43730d6b54fc53144499c8050287
-- Deploy tx: 0x6c1bc4c64080e737a387ffb15a7e4fad3e41b06684f900ca35c00097e83e7d98
-- Explorer: https://sepolia.basescan.org/address/0xebf79a18105f43730d6b54fc53144499c8050287
-- Private key stays in local .env only. Rotate after the hack.
+- Audited v1: open writers, post revoke writes, outcome 0 ambiguity.
+- Shipped ClampAudit v2 with owner/recorder ACL, revoke terminal state, outcomes 1..4.
+- New address: 0x4648520fe2b192791c9ae13e46e0cba9544c42d6
+- Live script `bun run audit:live` passed 10/10.
+- See docs/memory/CHAIN_AUDIT.md. Private key stays in local .env only.
 
 # Session log
 

@@ -22,15 +22,15 @@ Never commit these. Put them in local .env or host secrets only.
 
 ## Live Base Sepolia (2026-09-29)
 
-Public only. Never commit private keys.
+Public only. Never commit private keys. See [`CHAIN_AUDIT.md`](CHAIN_AUDIT.md).
 
 | Item | Value |
 | --- | --- |
 | Deployer | `0x9ADd0ac311e9E528800afc3F4A04e9cDe52C9cE0` |
-| ClampAudit | `0xebf79a18105f43730d6b54fc53144499c8050287` |
-| Deploy tx | `0x6c1bc4c64080e737a387ffb15a7e4fad3e41b06684f900ca35c00097e83e7d98` |
-| Smoke mandate tx | `0x8c2e412f46d33d515c25b643f0f8e1b615e7f85b7aa8b967231eaadb47a0be4a` |
-| Explorer | https://sepolia.basescan.org/address/0xebf79a18105f43730d6b54fc53144499c8050287 |
+| ClampAudit v2 | `0x4648520fe2b192791c9ae13e46e0cba9544c42d6` |
+| Deploy tx | `0xb7bfa077bad8fea9aecc679b7feba0429138a8983123dd2a0be1be9a6a2b8797` |
+| Explorer | https://sepolia.basescan.org/address/0x4648520fe2b192791c9ae13e46e0cba9544c42d6 |
+| Retired v1 | `0xebf79a18105f43730d6b54fc53144499c8050287` |
 
 ## Research env (agents only)
 

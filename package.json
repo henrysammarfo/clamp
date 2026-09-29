@@ -12,7 +12,8 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "compile:audit": "bun scripts/compile-clamp-audit.ts",
-    "deploy:audit": "bun scripts/deploy-clamp-audit.ts"
+    "deploy:audit": "bun scripts/deploy-clamp-audit.ts",
+    "audit:live": "bun scripts/audit-clamp-live.ts"
   },
   "overrides": {
     "rolldown": "1.2.1"
