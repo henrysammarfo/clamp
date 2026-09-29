@@ -72,10 +72,10 @@ Persistence test mandate:
 
 ## Final local verification
 
+- Frontend unit tests: `4 passed` across 2 test files
 - Frontend production build: passed
 - Backend tests: `12 passed`
-- Lint: expected to be rerun after final copy-only cleanup before main merge
-- Frontend unit tests: expected to be rerun after final copy-only cleanup before main merge
+- Lint: rerun separately after final copy-only cleanup; only merge once it exits without errors
 
 ## Capture checklist for README / demo / submission
 
