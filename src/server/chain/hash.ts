@@ -1,5 +1,9 @@
 import { keccak256, stringToHex } from "viem";
-import type { AuditPayload, FastApiMandate } from "@/server/fastapi/types";
+import type {
+  AuditPayload,
+  FastApiMandate,
+  FastApiRevocationAuditPayload,
+} from "@/server/fastapi/types";
 
 function canonicalize(value: unknown): string {
   if (value === null || typeof value !== "object") return JSON.stringify(value);
@@ -30,5 +34,12 @@ export function hashMandate(mandate: FastApiMandate): `0x${string}` {
 }
 
 export function hashAuditPayload(payload: AuditPayload): `0x${string}` {
+  return keccak256(stringToHex(canonicalize(payload)));
+}
+
+
+export function hashRevocationAuditPayload(
+  payload: FastApiRevocationAuditPayload,
+): `0x${string}` {
   return keccak256(stringToHex(canonicalize(payload)));
 }
