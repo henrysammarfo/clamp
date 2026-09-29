@@ -54,7 +54,7 @@ function errMessage(error: unknown): string {
 
 function DecisionList({ items }: { items: Decision[] }) {
   if (!items.length) {
-    return <p className="text-sm text-muted-foreground">No decisions yet for this tenant.</p>;
+    return <p className="text-sm text-muted-foreground">No decisions yet.</p>;
   }
   return (
     <div className="decision-list">
