@@ -3,11 +3,15 @@
 Form: https://forms.gle/iiDRR7e3qbaXfetp7  
 Deadline: 30 Sep 2026 12:00 noon KST = **03:00 AM Ghana GMT** (not midnight)
 
-## Pitch slot if selected
+## Presentation slots (Song-corrected 2026-09-29)
 
-- Organiser top-3 pitch window: **30 Sep 2026 15:00 KST** = **06:00 AM Ghana GMT**
-- Remote teams present on Zoom
-- Henry confirmed available for Zoom if Team 14 is called
+| Event | KST | Ghana GMT | Who |
+| --- | --- | --- | --- |
+| Booth judging | **13:00 KST** | **04:00 AM** | Hard for both: Henry asleep; Song at work |
+| Final pitch if selected | **16:00 KST** | **07:00 AM** | **Song presents** |
+| Possible booth move (Song asking organisers) | ~13:30–14:00 KST? | ~04:30–05:00 AM | Still early for Henry (wakes ~06:30 for intern) |
+
+Remote teams on Zoom. Ideal booth time for Henry closer to **06:30 AM Ghana ≈ 15:30 KST**.
 
 ## Ownership now
 

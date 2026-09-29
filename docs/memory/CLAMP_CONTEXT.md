@@ -42,8 +42,9 @@ Live E2E already green. Henry pauses integration file edits unless Song asks.
 - Organiser deadline: **30 Sep 2026 at 12:00 noon (not midnight)**
 - Timezone for the event clock: **KST** (GWDC Korea / bible lock)
 - **Ghana (GMT):** form must be in by **30 Sep 2026 03:00 AM GMT**
-- Top 3 pitch that afternoon after review (bible: 30 Sep 15:00 KST = 06:00 AM GMT)
-- After close: judges pick three projects per ecosystem; selected teams present that afternoon for 1st/2nd/3rd
+- Booth judging: **30 Sep 13:00 KST = 04:00 AM Ghana GMT** (Song may ask organisers to move later)
+- Final pitch if selected: **30 Sep 16:00 KST = 07:00 AM Ghana GMT** — Song presents
+- Henry wakes ~06:30 Ghana for intern work; booth at 04:00 is not clean for him
 
 ## Honesty
 

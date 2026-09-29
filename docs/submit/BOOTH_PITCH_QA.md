@@ -1,8 +1,10 @@
 # 5 minute booth pitch + Q and A
 
-## Slot
+## Slots (Song-corrected)
 
-If selected: **30 Sep 2026 15:00 KST** on Zoom (= 06:00 AM Ghana GMT). Henry presents if called.
+- Booth judging: **13:00 KST** (= 04:00 AM Ghana). Song asking organisers if it can move later.
+- Final pitch if selected: **16:00 KST** (= 07:00 AM Ghana). **Song presents.**
+- Henry preps deck, demo script, and Q and A; wakes ~06:30 Ghana for intern work.
 
 ## Spoken pitch (about 5 minutes)
 

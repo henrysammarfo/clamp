@@ -1,7 +1,11 @@
 
+## 2026-09-29 presentation timezone corrected
+
+Song corrected: booth judging is **13:00 KST (= 04:00 AM Ghana)**, not 15:00. Final pitch if selected is **16:00 KST** and Song can take that. Booth at 13:00 is hard for Song (work). Henry sleeps until ~06:30 for intern work, so 04:00 and even 04:30–05:00 are too early; he asked Song to push organisers toward closer to 06:30 Ghana if possible. Song still sending final branch + verified tx links before form deadline.
+
 ## 2026-09-29 Song asks Henry Zoom availability
 
-Song asked if Henry can present at 3 PM tomorrow (30 Sep) via Zoom if needed. That maps to organiser top-3 window **15:00 KST = 06:00 AM Ghana GMT**. Henry confirms available. Song also said she will send final branch name + verified tx links with time before the form deadline.
+Earlier ask used wrong 15:00 KST time; corrected above.
 
 ## 2026-09-29 submit package committed
 
