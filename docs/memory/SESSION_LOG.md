@@ -1,4 +1,14 @@
 
+## 2026-09-29 submit package committed
+
+Drafts landed under `docs/submit/`:
+- `PITCH_DECK.md` (10 slide script)
+- `DEMO_VIDEO_SCRIPT.md` (<=3 min, open on Block)
+- `SUBMIT_CHECKLIST.md` (form fields + waiting on Song)
+- `BOOTH_PITCH_QA.md` (5 min spoken + likely Q and A)
+
+Still waiting on Song for final branch name, verified Basescan links, and optional benchmark numbers before form/video/PDF lock.
+
 ## 2026-09-29 submit split locked with Song
 
 Song keeps product improvements: human reject/revoke, purpose controls, benchmark, Base verification, final docs, final branch name, verified tx links.
