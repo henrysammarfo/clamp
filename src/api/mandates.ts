@@ -92,7 +92,7 @@ export const revokeMandateFn = createServerFn({ method: "POST" })
       throw new Error("Only an active mandate can be revoked.");
     }
 
-    const decisionId = `revoke${mandate.id}${Date.now()}`;
+    const decisionId = `revoke${mandate.id}${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`;
     const decision = {
       id: decisionId,
       tenantId: session.tenantId,
@@ -101,7 +101,7 @@ export const revokeMandateFn = createServerFn({ method: "POST" })
       request: `Revoke mandate ${mandate.name}`,
       amount: 0,
       fee: 0,
-      status: "block" as const,
+      status: "revoke" as const,
       reason: "Mandate revoked by operator.",
       rule: "Revocation",
       time: new Date().toISOString(),

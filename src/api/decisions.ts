@@ -61,7 +61,7 @@ export const submitAgentRequestFn = createServerFn({ method: "POST" })
       });
       const gate = await songGateClient.evaluateGate({ mandate, action });
 
-      const decisionId = `dec${Date.now()}`;
+      const decisionId = `dec${Date.now()}${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`;
       const decision: Decision = {
         id: decisionId,
         tenantId: session.tenantId,
@@ -80,11 +80,6 @@ export const submitAgentRequestFn = createServerFn({ method: "POST" })
       };
       decision.decisionHash = hashDecision(decision);
 
-      if (gate.status === "review") {
-        saveDecision(decision);
-        return { decision, explanation: null as string | null };
-      }
-
       const { txHash } = await recordDecisionOnChain({
         mandateHash: mandate.mandateHash as `0x${string}`,
         decisionHash: decision.decisionHash as `0x${string}`,
@@ -98,6 +93,10 @@ export const submitAgentRequestFn = createServerFn({ method: "POST" })
       }
 
       saveDecision(decision);
+
+      if (gate.status === "review") {
+        return { decision, explanation: null as string | null };
+      }
 
       let explanation: string | null = null;
       try {

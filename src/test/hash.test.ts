@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { hashDecision, hashMandate } from "@/server/chain/hash";
 
 describe("clamp hashes", () => {
-  it("hashes mandates stably", () => {
+  it("hashes mandates stably with sorted merchants", () => {
     const base = {
       id: "office",
       tenantId: "tenant_a",
@@ -14,10 +14,10 @@ describe("clamp hashes", () => {
     const a = hashMandate(base);
     const b = hashMandate({ ...base, merchants: ["Apple", "Amazon", "Uber"] });
     expect(a).toBe(b);
-    expect(a.startsWith("0x")).toBe(true);
+    expect(a).toMatch(/^0x[a-f0-9]{64}$/);
   });
 
-  it("changes when budget changes", () => {
+  it("changes when budget cents change", () => {
     const a = hashMandate({
       id: "office",
       tenantId: "tenant_a",
@@ -30,14 +30,14 @@ describe("clamp hashes", () => {
       id: "office",
       tenantId: "tenant_a",
       purpose: "Office supplies",
-      budget: 51,
+      budget: 50.01,
       merchants: ["Amazon"],
       expiresAt: "2026-09-28T23:59:00.000Z",
     });
     expect(a).not.toBe(b);
   });
 
-  it("hashes decisions", () => {
+  it("hashes decisions with chain id domain", () => {
     const hash = hashDecision({
       id: "d1",
       tenantId: "tenant_a",

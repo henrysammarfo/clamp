@@ -1,72 +1,27 @@
-export const clampAuditAbi = [
-  {
-    type: "function",
-    name: "commitMandate",
-    stateMutability: "nonpayable",
-    inputs: [{ name: "mandateHash", type: "bytes32" }],
-    outputs: [],
-  },
-  {
-    type: "function",
-    name: "recordDecision",
-    stateMutability: "nonpayable",
-    inputs: [
-      { name: "mandateHash", type: "bytes32" },
-      { name: "decisionHash", type: "bytes32" },
-      { name: "outcome", type: "uint8" },
-    ],
-    outputs: [],
-  },
-  {
-    type: "function",
-    name: "mandateExists",
-    stateMutability: "view",
-    inputs: [{ name: "", type: "bytes32" }],
-    outputs: [{ name: "", type: "bool" }],
-  },
-  {
-    type: "function",
-    name: "decisionExists",
-    stateMutability: "view",
-    inputs: [{ name: "", type: "bytes32" }],
-    outputs: [{ name: "", type: "bool" }],
-  },
-  {
-    type: "function",
-    name: "decisionOutcome",
-    stateMutability: "view",
-    inputs: [{ name: "", type: "bytes32" }],
-    outputs: [{ name: "", type: "uint8" }],
-  },
-  {
-    type: "event",
-    name: "MandateCommitted",
-    inputs: [
-      { name: "mandateHash", type: "bytes32", indexed: true },
-      { name: "actor", type: "address", indexed: true },
-      { name: "timestamp", type: "uint256", indexed: false },
-    ],
-  },
-  {
-    type: "event",
-    name: "DecisionRecorded",
-    inputs: [
-      { name: "mandateHash", type: "bytes32", indexed: true },
-      { name: "decisionHash", type: "bytes32", indexed: true },
-      { name: "outcome", type: "uint8", indexed: false },
-      { name: "actor", type: "address", indexed: true },
-      { name: "timestamp", type: "uint256", indexed: false },
-    ],
-  },
-] as const;
+import type { Abi } from "viem";
+import artifactAbi from "./clamp-audit-abi.json";
 
-export type DecisionOutcomeCode = 0 | 1 | 2 | 3;
+// Compiled solc ABI plus custom errors.
+export const clampAuditAbi = artifactAbi as Abi;
+
+/** On chain codes: 1 allow, 2 block, 3 review, 4 revoke. Zero means unset. */
+export type DecisionOutcomeCode = 1 | 2 | 3 | 4;
 
 export function outcomeFromStatus(
   status: "allow" | "block" | "review" | "revoke",
 ): DecisionOutcomeCode {
-  if (status === "allow") return 0;
-  if (status === "block") return 1;
-  if (status === "review") return 2;
-  return 3;
+  if (status === "allow") return 1;
+  if (status === "block") return 2;
+  if (status === "review") return 3;
+  return 4;
+}
+
+export function statusFromOutcome(
+  outcome: number,
+): "allow" | "block" | "review" | "revoke" | "unset" {
+  if (outcome === 1) return "allow";
+  if (outcome === 2) return "block";
+  if (outcome === 3) return "review";
+  if (outcome === 4) return "revoke";
+  return "unset";
 }

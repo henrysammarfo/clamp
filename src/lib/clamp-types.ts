@@ -1,4 +1,4 @@
-export type DecisionStatus = "allow" | "block" | "review";
+export type DecisionStatus = "allow" | "block" | "review" | "revoke";
 
 export type MandateStatus = "active" | "expired" | "revoked";
 
@@ -78,6 +78,7 @@ export type CaseStudy = {
 export function statusLabel(status: DecisionStatus): string {
   if (status === "allow") return "Allow";
   if (status === "block") return "Block";
+  if (status === "revoke") return "Revoked";
   return "Needs human";
 }
 
