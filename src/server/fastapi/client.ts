@@ -68,13 +68,10 @@ export const fastApiClient = {
   getMandateRevocation: (id: string) =>
     request<FastApiMandateRevocation>(`/api/mandates/${encodeURIComponent(id)}/revoke`),
   attachMandateRevocationChain: (id: string, input: { network: string; tx_hash: string }) =>
-    request<FastApiMandateRevocation>(
-      `/api/mandates/${encodeURIComponent(id)}/revoke/chain`,
-      {
-        method: "POST",
-        body: JSON.stringify(input),
-      },
-    ),
+    request<FastApiMandateRevocation>(`/api/mandates/${encodeURIComponent(id)}/revoke/chain`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
   listDecisions: () => request<FastApiDecision[]>("/api/decisions"),
   getDecision: (id: string) => request<FastApiDecision>(`/api/decisions/${encodeURIComponent(id)}`),
   createDecision: (input: { mandate_id: string; request: string }) =>
