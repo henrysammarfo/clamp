@@ -29,12 +29,12 @@ const features = [
   {
     icon: Code2,
     title: "Gate in code",
-    text: "Budget including fees, merchant, purpose, and deadline use zero model calls.",
+    text: "Budget, merchant, purpose, and deadline are enforced by deterministic code after parsing.",
   },
   {
     icon: UserRoundCheck,
     title: "Escalate uncertainty",
-    text: "Borderline requests wait. Nothing is paid until a person decides.",
+    text: "Requests above the configured threshold wait for a person before authorization is finalized.",
   },
   {
     icon: Fingerprint,
@@ -65,7 +65,7 @@ export function ProductPage() {
         <div className="space-y-3">
           {(
             [
-              ["allow", "Clearly inside", "Proceed and record settlement."],
+              ["allow", "Clearly inside", "Authorize and record an audit receipt."],
               ["block", "Clearly outside", "Stop, pay nothing, and record why."],
               ["review", "A person should decide", "Hold all action until approval or rejection."],
             ] as const
@@ -93,7 +93,7 @@ export function ProductPage() {
           <div>
             <StatusBadge status="block" />
             <p className="mt-4 max-w-xs text-sm text-muted-foreground">
-              Merchant not on list. Nothing paid. Stop receipt recorded on Base Sepolia when the
+              Merchant not on list. The request is blocked and its audit receipt is recorded on Base Sepolia when the
               chain is configured.
             </p>
           </div>
@@ -178,17 +178,17 @@ export function DocsPage() {
     [
       "01 · Model",
       "Natural language to action",
-      "Kiln parses merchant, amount, fees, purpose, and time. It does not decide permission. Song owns this.",
+      "Kiln parses merchant, amount, currency, item, and purpose. It does not decide permission. Song owns this.",
     ],
     [
       "02 · Gate",
       "Rules to decision",
-      "Code evaluates budget including fees, merchant allowlist, deadline, and purpose. It uses zero model calls.",
+      "Code evaluates budget, merchant allowlist, deadline, purpose, and approval threshold. It uses zero model calls.",
     ],
     [
       "03 · Human",
       "Uncertainty to hold",
-      "Requests near a limit or with a fuzzy purpose become Needs human. Payment stays stopped.",
+      "Requests at or above the configured approval threshold become Needs human. Authorization stays pending.",
     ],
     [
       "04 · Chain",
