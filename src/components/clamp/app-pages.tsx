@@ -3,7 +3,6 @@ import {
   Activity,
   ArrowRight,
   Check,
-  CircleDollarSign,
   Clock3,
   Copy,
   ExternalLink,
@@ -52,6 +51,7 @@ import {
 import { getRuntimeStatusFn } from "@/api/settings";
 import { AppShell } from "./app-shell";
 import { StatusBadge } from "./status-badge";
+import benchmarkSummary from "../../../backend/benchmarks/results/summary_latest.json";
 
 function errMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Request failed";
@@ -1148,18 +1148,23 @@ export function MetricsPage() {
       .catch((e) => setError(errMessage(e)));
   }, []);
 
+  const benchmark = benchmarkSummary;
+
   return (
-    <AppShell title="Efficiency" eyebrow="CLAMP versus all AI">
-      {error && (
-        <div className="panel mb-5">
-          <p className="text-sm text-destructive">{error}</p>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Live token and latency numbers come from FastAPI. No illustrative fake table.
-          </p>
+    <AppShell title="Efficiency" eyebrow="Operational metrics and benchmark">
+      <div className="panel mb-5">
+        <div className="panel-head">
+          <div>
+            <h2>Live operational FastAPI metrics</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Persisted Kiln usage from live CLAMP activity. This data is separate from the fixed
+              benchmark below.
+            </p>
+          </div>
+          <Activity />
         </div>
-      )}
-      {metrics && (
-        <>
+        {error && <p className="mt-5 text-sm text-destructive">{error}</p>}
+        {metrics && (
           <div className="metric-grid">
             {[
               ["Kiln calls", String(metrics.kilnCalls), "measured"],
@@ -1174,69 +1179,70 @@ export function MetricsPage() {
               </div>
             ))}
           </div>
-          <div className="panel mt-5">
-            <div className="panel-head">
-              <div>
-                <h2>Measured backend activity</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Persisted Kiln usage and decision counts from FastAPI.
-                </p>
-              </div>
-              <Activity />
-            </div>
-            <div className="table-wrap">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Approach</th>
-                    <th>LLM calls</th>
-                    <th>Tokens</th>
-                    <th>Decision latency</th>
-                    <th>Policy source</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>
-                      <strong>CLAMP</strong>
-                    </td>
-                    <td>{metrics.kilnCalls}</td>
-                    <td>{metrics.totalTokens}</td>
-                    <td>{metrics.averageLatencyMs.toFixed(2)}ms avg</td>
-                    <td>FastAPI deterministic policy</td>
-                  </tr>
-                  <tr>
-                    <td>All AI baseline</td>
-                    <td>Unavailable</td>
-                    <td>Unavailable</td>
-                    <td>Not yet measured</td>
-                    <td>No backend data</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+        )}
+      </div>
+
+      <div className="panel">
+        <div className="panel-head">
+          <div>
+            <h2>Adversarial benchmark — 30 cases × 3 runs</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Fixed checked-in snapshot. Token count and latency are measured proxies for inference
+              work; no energy savings are claimed.
+            </p>
           </div>
-        </>
-      )}
-      <div className="grid gap-4 md:grid-cols-3 mt-5">
-        {[
-          [CircleDollarSign, "Fewer calls", "Parse once and explain once."],
-          [LockKeyhole, "Hard boundary", "The model never grants permission."],
-          [
-            Activity,
-            "Energy thesis",
-            "Lower token demand implies less inference work. Hardware energy is stated, not guessed.",
-          ],
-        ].map(([Icon, t, d]) => {
-          const I = Icon as typeof Activity;
-          return (
-            <div className="panel" key={t as string}>
-              <I className="text-signal" />
-              <h3 className="mt-8 font-semibold">{t as string}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{d as string}</p>
-            </div>
-          );
-        })}
+          <LockKeyhole />
+        </div>
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Metric</th>
+                <th>CLAMP</th>
+                <th>All-AI baseline</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Decision accuracy</td>
+                <td>{benchmark.CLAMP.decision_accuracy_pct.toFixed(1)}%</td>
+                <td>{benchmark.ALL_AI.decision_accuracy_pct.toFixed(1)}%</td>
+              </tr>
+              <tr>
+                <td>Reason-code accuracy</td>
+                <td>{benchmark.CLAMP.reason_accuracy_pct.toFixed(1)}%</td>
+                <td>{benchmark.ALL_AI.reason_accuracy_pct.toFixed(2)}%</td>
+              </tr>
+              <tr>
+                <td>Consistency</td>
+                <td>{benchmark.CLAMP.consistency_pct.toFixed(1)}%</td>
+                <td>{benchmark.ALL_AI.consistency_pct.toFixed(1)}%</td>
+              </tr>
+              <tr>
+                <td>Total tokens</td>
+                <td>{benchmark.CLAMP.total_tokens.toLocaleString()}</td>
+                <td>{benchmark.ALL_AI.total_tokens.toLocaleString()}</td>
+              </tr>
+              <tr>
+                <td>Average LLM latency</td>
+                <td>{benchmark.CLAMP.average_latency_ms.toLocaleString()} ms</td>
+                <td>{benchmark.ALL_AI.average_latency_ms.toLocaleString()} ms</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div className="mt-5 grid gap-2 text-sm leading-relaxed">
+          <p>
+            Both approaches achieved <strong>100% final decision accuracy</strong>.
+          </p>
+          <p>
+            CLAMP matched the all-AI baseline&apos;s decision accuracy while using 44.4% fewer
+            tokens in this benchmark.
+          </p>
+          <p className="text-muted-foreground">
+            CLAMP achieved 100% reason-code accuracy versus 97.78% for the all-AI baseline.
+          </p>
+        </div>
       </div>
     </AppShell>
   );
