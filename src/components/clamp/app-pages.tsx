@@ -653,7 +653,8 @@ export function NewRequestPage() {
           </div>
           {decision.chainSyncPending && (
             <p className="mt-3 text-xs text-warning">
-              The chain transaction is confirmed. Do not submit the purchase request again; retry only receipt sync.
+              The chain transaction is confirmed. Do not submit the purchase request again; retry
+              only receipt sync.
             </p>
           )}
         </div>
