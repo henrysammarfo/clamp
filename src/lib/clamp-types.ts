@@ -20,6 +20,7 @@ export type Mandate = {
   revokedAt: string | null;
   revokeTxHash: string | null;
   revokeBlockchainNetwork: string | null;
+  revokeChainSyncPending: boolean;
   createdAt: string;
 };
 
