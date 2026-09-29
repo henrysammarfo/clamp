@@ -34,8 +34,18 @@ class KilnInterpreter:
         client = OpenAI(api_key=api_key, base_url=KILN_BASE_URL)
         prompt = (
             "Extract the purchase request into exactly one JSON object with these keys: "
-            "merchant, amount, currency, item, purpose. amount must be a positive JSON number; "
+            "merchant, amount, currency, item, purpose, purpose_category. amount must be a positive JSON number; "
             "currency must be a 3-letter code. Output JSON only, with no markdown or commentary. "
+            "Classify purpose_category using exactly one of: "
+            "OFFICE (office supplies, work equipment, work hardware, furniture, peripherals); "
+            "SOFTWARE (SaaS, cloud, software subscriptions, licenses, developer tools); "
+            "TRAVEL (flights, hotels, lodging, business travel); "
+            "FOOD (meals, catering, groceries, food delivery); "
+            "TRANSPORT (rides, fuel, taxis, local transit); "
+            "MARKETING (ads, campaigns, promotional spend, creative media buying); "
+            "PROFESSIONAL_SERVICES (contractors, consulting, legal, accounting, agencies); "
+            "OTHER (only when none of the other categories clearly applies). "
+            "Classify using only the purchase request. Do not authorize or deny the purchase. "
             f"If currency is implied, use {mandate_currency}. Purchase request: {request}"
         )
         started = time.perf_counter()

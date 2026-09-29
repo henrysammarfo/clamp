@@ -18,9 +18,21 @@ class DecisionValue(str, Enum):
     NEEDS_HUMAN = "NEEDS_HUMAN"
 
 
+class PurposeCategory(str, Enum):
+    OFFICE = "OFFICE"
+    SOFTWARE = "SOFTWARE"
+    TRAVEL = "TRAVEL"
+    FOOD = "FOOD"
+    TRANSPORT = "TRANSPORT"
+    MARKETING = "MARKETING"
+    PROFESSIONAL_SERVICES = "PROFESSIONAL_SERVICES"
+    OTHER = "OTHER"
+
+
 class MandateCreate(BaseModel):
     name: str = Field(min_length=1, max_length=120)
     purpose: str = Field(min_length=1, max_length=500)
+    purpose_category: PurposeCategory
     total_budget: Decimal = Field(gt=0)
     currency: str = Field(min_length=3, max_length=3)
     allowed_merchants: list[str] = Field(min_length=1)
@@ -54,6 +66,7 @@ class Mandate(BaseModel):
     id: str
     name: str
     purpose: str
+    purpose_category: PurposeCategory | None = None
     total_budget: Decimal
     remaining_budget: Decimal
     currency: str
@@ -96,6 +109,7 @@ class StructuredPurchaseRequest(BaseModel):
     currency: str = Field(min_length=3, max_length=3)
     item: str = Field(min_length=1, max_length=500)
     purpose: str = Field(min_length=1, max_length=500)
+    purpose_category: PurposeCategory | None = None
 
     @field_validator("currency")
     @classmethod
@@ -158,4 +172,3 @@ class KilnCallMetric(BaseModel):
     completion_tokens: int = 0
     total_tokens: int = 0
     latency_ms: int
-

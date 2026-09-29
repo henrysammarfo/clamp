@@ -31,6 +31,7 @@ def utcnow() -> datetime:
 def _mandate_from_row(row: sqlite3.Row) -> Mandate:
     return Mandate(
         id=row["id"], name=row["name"], purpose=row["purpose"],
+        purpose_category=row["purpose_category"],
         total_budget=Decimal(row["total_budget"]), remaining_budget=Decimal(row["remaining_budget"]),
         currency=row["currency"], allowed_merchants=json.loads(row["allowed_merchants"]),
         expires_at=datetime.fromisoformat(row["expires_at"]),
@@ -43,7 +44,14 @@ def _mandate_from_row(row: sqlite3.Row) -> Mandate:
 
 
 def _normalized_hash(purchase: StructuredPurchaseRequest) -> str:
-    normalized = json.dumps(purchase.model_dump(mode="json"), sort_keys=True, separators=(",", ":"))
+    # Legacy receipts were hashed before purpose_category existed. Omitting only
+    # null fields preserves their exact request hash while new classified
+    # requests include the non-null category in the commitment.
+    normalized = json.dumps(
+        purchase.model_dump(mode="json", exclude_none=True),
+        sort_keys=True,
+        separators=(",", ":"),
+    )
     return "0x" + hashlib.sha256(normalized.encode()).hexdigest()
 
 
@@ -72,8 +80,8 @@ class ClampService:
         mandate_id, created = str(uuid4()), utcnow()
         with self.db.transaction() as connection:
             connection.execute(
-                "INSERT INTO mandates (id, name, purpose, total_budget, remaining_budget, currency, allowed_merchants, expires_at, human_approval_threshold, status, created_at, blockchain_network, tx_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL)",
-                (mandate_id, data.name, data.purpose, str(data.total_budget), str(data.total_budget),
+                "INSERT INTO mandates (id, name, purpose, purpose_category, total_budget, remaining_budget, currency, allowed_merchants, expires_at, human_approval_threshold, status, created_at, blockchain_network, tx_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL)",
+                (mandate_id, data.name, data.purpose, data.purpose_category.value, str(data.total_budget), str(data.total_budget),
                  data.currency, json.dumps(data.allowed_merchants), data.expires_at.isoformat(),
                  str(data.human_approval_threshold), MandateStatus.ACTIVE.value, created.isoformat()),
             )

@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS mandates (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     purpose TEXT NOT NULL,
+    purpose_category TEXT,
     total_budget TEXT NOT NULL,
     remaining_budget TEXT NOT NULL,
     currency TEXT NOT NULL,
@@ -67,6 +68,8 @@ class Database:
         with self.connect() as connection:
             connection.executescript(SCHEMA)
             columns = {row["name"] for row in connection.execute("PRAGMA table_info(mandates)")}
+            if "purpose_category" not in columns:
+                connection.execute("ALTER TABLE mandates ADD COLUMN purpose_category TEXT")
             if "blockchain_network" not in columns:
                 connection.execute("ALTER TABLE mandates ADD COLUMN blockchain_network TEXT")
             if "tx_hash" not in columns:

@@ -1,9 +1,20 @@
 export type FastApiMandateStatus = "ACTIVE" | "EXPIRED" | "REVOKED";
 
+export type PurposeCategory =
+  | "OFFICE"
+  | "SOFTWARE"
+  | "TRAVEL"
+  | "FOOD"
+  | "TRANSPORT"
+  | "MARKETING"
+  | "PROFESSIONAL_SERVICES"
+  | "OTHER";
+
 export type FastApiMandate = {
   id: string;
   name: string;
   purpose: string;
+  purpose_category: PurposeCategory | null;
   total_budget: string;
   remaining_budget: string;
   currency: string;
@@ -23,6 +34,7 @@ export type FastApiMandate = {
 export type FastApiMandateCreate = {
   name: string;
   purpose: string;
+  purpose_category: PurposeCategory;
   total_budget: number;
   currency: string;
   allowed_merchants: string[];
@@ -72,6 +84,7 @@ export type FastApiDecision = {
     currency: string;
     item: string;
     purpose: string;
+    purpose_category: PurposeCategory | null;
   };
   decision: FastApiDecisionValue;
   matched_rule: string;

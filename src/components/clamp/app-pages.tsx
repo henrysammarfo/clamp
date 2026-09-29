@@ -28,6 +28,7 @@ import {
   type DecisionStatus,
   type EfficiencyMetrics,
   type Mandate,
+  type PurposeCategory,
 } from "@/lib/clamp-types";
 import { getDashboardFn } from "@/api/dashboard";
 import {
@@ -54,6 +55,21 @@ import { StatusBadge } from "./status-badge";
 
 function errMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Request failed";
+}
+
+const purposeCategories: PurposeCategory[] = [
+  "OFFICE",
+  "SOFTWARE",
+  "TRAVEL",
+  "FOOD",
+  "TRANSPORT",
+  "MARKETING",
+  "PROFESSIONAL_SERVICES",
+  "OTHER",
+];
+
+function purposeCategoryLabel(category: PurposeCategory | null): string {
+  return category ?? "Legacy / unenforced";
 }
 
 function DecisionList({ items }: { items: Decision[] }) {
@@ -225,7 +241,7 @@ export function MandatesPage() {
               />
             </div>
             <p className="mt-3 text-sm text-muted-foreground">
-              {m.purpose} · {m.merchants.join(", ")}
+              {m.purpose} · {purposeCategoryLabel(m.purposeCategory)} · {m.merchants.join(", ")}
             </p>
             <div className="budget-track">
               <span style={{ width: `${Math.min(100, (m.spent / m.budget) * 100)}%` }} />
@@ -268,6 +284,7 @@ export function NewMandatePage() {
         data: {
           name: String(form.get("name") ?? ""),
           purpose: String(form.get("purpose") ?? ""),
+          purposeCategory: String(form.get("purposeCategory") ?? "OFFICE") as PurposeCategory,
           budget: Number(form.get("budget")),
           currency: String(form.get("currency") ?? "USD"),
           merchants,
@@ -299,7 +316,26 @@ export function NewMandatePage() {
         <div className="field field-full">
           <label htmlFor="purpose">Purpose</label>
           <Input id="purpose" name="purpose" defaultValue="Office supplies" required />
-          <small>The agent may act only for this purpose.</small>
+          <small>A human-readable description of the delegated purpose.</small>
+        </div>
+        <div className="field field-full">
+          <label htmlFor="purpose-category">Purpose category</label>
+          <select
+            id="purpose-category"
+            name="purposeCategory"
+            defaultValue="OFFICE"
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            required
+          >
+            {purposeCategories.map((category) => (
+              <option key={category} value={category}>
+                {category.replaceAll("_", " ")}
+              </option>
+            ))}
+          </select>
+          <small>
+            Kiln classifies the request purpose; deterministic code enforces the mandate category.
+          </small>
         </div>
         <div className="field">
           <label htmlFor="budget">Total budget</label>
@@ -450,6 +486,9 @@ export function MandateDetailPage({ id }: { id: string }) {
           <ul className="rule-list">
             <li>
               <Check /> Purpose: {mandate.purpose}
+            </li>
+            <li>
+              <Check /> Purpose category: {purposeCategoryLabel(mandate.purposeCategory)}
             </li>
             <li>
               <Check /> Budget: ${mandate.budget.toFixed(2)}
@@ -653,7 +692,7 @@ export function NewRequestPage() {
             className="min-h-32 text-lg"
           />
           <small>
-            Evaluation is performed by FastAPI using Kiln parsing and deterministic policy.
+            Kiln classifies the request purpose; deterministic code enforces the mandate category.
           </small>
         </div>
         <div className="mt-5 flex flex-wrap gap-2">
@@ -683,7 +722,11 @@ export function NewRequestPage() {
           <div className="timeline">
             {[
               ["01", "Request", decision.request],
-              ["02", "Parsed action", `${decision.merchant} · $${decision.amount.toFixed(2)}`],
+              [
+                "02",
+                "Parsed action",
+                `${decision.merchant} · $${decision.amount.toFixed(2)} · ${purposeCategoryLabel(decision.purposeCategory)}`,
+              ],
               ["03", "Matched rule", `${decision.rule}: ${decision.reason}`],
               [
                 "04",
@@ -834,7 +877,11 @@ export function DecisionDetailPage({ id }: { id: string }) {
           <div className="timeline">
             {[
               ["01", "Original request", decision.request],
-              ["02", "Parsed action", `${decision.merchant} · ${decision.amount.toFixed(2)}`],
+              [
+                "02",
+                "Parsed action",
+                `${decision.merchant} · ${decision.amount.toFixed(2)} · ${purposeCategoryLabel(decision.purposeCategory)}`,
+              ],
               ["03", "Matched rule", decision.rule],
               ["04", "Decision reason", decision.reason],
               [

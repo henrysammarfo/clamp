@@ -2,10 +2,21 @@ export type DecisionStatus = "allow" | "block" | "review" | "revoke";
 
 export type MandateStatus = "active" | "expired" | "revoked";
 
+export type PurposeCategory =
+  | "OFFICE"
+  | "SOFTWARE"
+  | "TRAVEL"
+  | "FOOD"
+  | "TRANSPORT"
+  | "MARKETING"
+  | "PROFESSIONAL_SERVICES"
+  | "OTHER";
+
 export type Mandate = {
   id: string;
   name: string;
   purpose: string;
+  purposeCategory: PurposeCategory | null;
   budget: number;
   spent: number;
   currency: string;
@@ -42,6 +53,7 @@ export type Decision = {
   blockchainNetwork: string | null;
   chainSyncPending: boolean;
   purpose: string;
+  purposeCategory: PurposeCategory | null;
   auditPayload: {
     decision_id: string;
     mandate_id: string;

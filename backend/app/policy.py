@@ -26,6 +26,24 @@ def evaluate_policy(
             matched_rule="expired_mandate",
             reason="This spending mandate has expired.",
         )
+    if mandate.purpose_category is not None:
+        if purchase.purpose_category is None:
+            return PolicyResult(
+                decision=DecisionValue.BLOCK,
+                reason_code="PURPOSE_UNCLASSIFIED",
+                matched_rule="purpose_category",
+                reason="The request purpose could not be classified into a controlled category.",
+            )
+        if purchase.purpose_category != mandate.purpose_category:
+            return PolicyResult(
+                decision=DecisionValue.BLOCK,
+                reason_code="PURPOSE_NOT_ALLOWED",
+                matched_rule="purpose_category",
+                reason=(
+                    f"Requested purpose category {purchase.purpose_category.value} is not allowed; "
+                    f"this mandate permits {mandate.purpose_category.value}."
+                ),
+            )
     allowed = {merchant.casefold() for merchant in mandate.allowed_merchants}
     if purchase.merchant.casefold() not in allowed:
         return PolicyResult(
