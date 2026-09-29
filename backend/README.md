@@ -26,10 +26,11 @@ Interactive API documentation is available at `http://localhost:8000/docs` and h
 
 ## Flow
 
-1. `POST /api/mandates` creates an ACTIVE mandate.
+1. `POST /api/mandates` creates an ACTIVE mandate. After its Base Sepolia commitment is confirmed, `POST /api/mandates/{id}/chain` persists the confirmed network and transaction hash.
 2. `POST /api/decisions` sends only the interpretation task to Kiln, parses its JSON with `json.loads`, validates it with Pydantic, and passes it to the deterministic policy engine.
 3. An ALLOW reserves the amount immediately. NEEDS_HUMAN reserves it only after `POST /api/decisions/{id}/approve` succeeds.
-4. The response includes an unsigned `audit_payload`. After the frontend writes it on-chain, `POST /api/decisions/{id}/chain` attaches `{ "network": "base-sepolia", "tx_hash": "0x..." }`.
+4. The response includes an unsigned `audit_payload`. After the frontend writes it on-chain, `POST /api/decisions/{id}/chain` persists `{ "network": "base-sepolia", "tx_hash": "0x..." }`.
+5. Both chain attachment endpoints are retry-safe for the same receipt. Repeating the same `network + tx_hash` returns 200; a conflicting replacement returns 409. Never retry `POST /api/decisions` as receipt recovery.
 
 Kiln is never asked whether a purchase should be allowed. Malformed/empty Kiln output returns HTTP 502. Calls that reach Kiln are recorded even when the response is invalid; failed interpretations have no decision ID because no receipt exists yet.
 
@@ -63,6 +64,7 @@ curl -X POST http://localhost:8000/api/decisions \
 - `POST /api/mandates`
 - `GET /api/mandates`
 - `GET /api/mandates/{id}`
+- `POST /api/mandates/{id}/chain`
 - `POST /api/decisions`
 - `GET /api/decisions`
 - `GET /api/decisions/{id}`
