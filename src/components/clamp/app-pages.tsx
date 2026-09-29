@@ -94,7 +94,7 @@ export function DashboardPage() {
   const available = active ? Math.max(0, active.budget - active.spent) : 0;
 
   return (
-    <AppShell title="Control room" eyebrow="Tenant workspace">
+    <AppShell title="Control room" eyebrow="Delegation workspace">
       {error && (
         <div className="panel mb-5">
           <p className="text-sm">{error}</p>
@@ -104,7 +104,7 @@ export function DashboardPage() {
         </div>
       )}
       {loading ? (
-        <p className="text-sm text-muted-foreground">Loading tenant state…</p>
+        <p className="text-sm text-muted-foreground">Loading workspace state…</p>
       ) : (
         <>
           <div className="metric-grid">
@@ -447,7 +447,7 @@ export function MandateDetailPage({ id }: { id: string }) {
               <Check /> Purpose: {mandate.purpose}
             </li>
             <li>
-              <Check /> Budget: ${mandate.budget.toFixed(2)}, including fees
+              <Check /> Budget: ${mandate.budget.toFixed(2)}
             </li>
             <li>
               <UserRoundCheck /> Human approval at ${mandate.humanApprovalThreshold.toFixed(2)}
@@ -764,8 +764,8 @@ export function DecisionDetailPage({ id }: { id: string }) {
                 decision.status === "allow"
                   ? "Decision receipt recorded"
                   : decision.status === "block"
-                    ? "Nothing paid. Stop recorded."
-                    : "No payment. Awaiting a person.",
+                    ? "Request blocked. Audit receipt recorded."
+                    : "Authorization pending. Awaiting a person.",
               ],
             ].map((x) => (
               <div className="timeline-item" key={x[0]}>
@@ -1125,7 +1125,7 @@ export function SettingsPage() {
             </div>
             {[
               ["Mode", status.session.mode],
-              ["Tenant", status.session.tenantId],
+              ["Workspace", status.session.tenantId],
               ["Operator", status.session.email],
               ["Model", status.modelPreference],
               ["Network", `${status.chain.network} (${status.chain.chainId})`],
@@ -1156,8 +1156,8 @@ export function SettingsPage() {
               </div>
             </div>
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-              CLAMP does not claim to be unhackable. It uses hard controls, tenant sessions, and an
-              inspectable trail.
+              CLAMP does not claim to be unhackable. It uses hard controls, signed sessions, and an
+              inspectable audit trail.
             </p>
           </div>
         </>
