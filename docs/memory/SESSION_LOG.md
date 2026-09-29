@@ -1,5 +1,12 @@
 # Session log
 
+## 2026-09-29 submit deadline confirm
+
+- Final form: https://forms.gle/iiDRR7e3qbaXfetp7
+- Organiser text: Deadline September 30 at 12:00 p.m. (noon), not midnight.
+- Event clock is KST → Ghana GMT = **30 Sep 2026 03:00 AM**.
+- After close: top three per ecosystem pitch that afternoon.
+
 ## 2026-09-28 Henry live build
 
 - Locked plan: Henry only, live Base Sepolia, fail closed Song contracts, no localStorage, plain copy with no hyphens in user facing text.

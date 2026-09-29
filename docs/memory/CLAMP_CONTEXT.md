@@ -26,9 +26,12 @@ Delete either and the entry is weak for Challenge B.
 
 ## Submit window
 
-- Form opens 29 Sep 21:00 KST
-- Form closes 30 Sep 12:00 KST
-- Top 3 pitch 30 Sep 15:00 KST
+- Form: https://forms.gle/iiDRR7e3qbaXfetp7
+- Organiser deadline: **30 Sep 2026 at 12:00 noon (not midnight)**
+- Timezone for the event clock: **KST** (GWDC Korea / bible lock)
+- **Ghana (GMT):** form must be in by **30 Sep 2026 03:00 AM GMT**
+- Top 3 pitch that afternoon after review (bible: 30 Sep 15:00 KST = 06:00 AM GMT)
+- After close: judges pick three projects per ecosystem; selected teams present that afternoon for 1st/2nd/3rd
 
 ## Honesty
 

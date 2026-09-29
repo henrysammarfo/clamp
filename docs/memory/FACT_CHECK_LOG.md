@@ -1,5 +1,12 @@
 # Fact check log
 
+## 2026-09-29
+
+### Submission form and deadline
+
+Source: organiser notice + https://forms.gle/iiDRR7e3qbaXfetp7  
+Result: Deadline is 30 Sep at 12:00 noon, not midnight. GWDC Korea clock is KST, so Ghana GMT is 30 Sep 03:00. Selected teams pitch that afternoon after review.
+
 ## 2026-09-28
 
 ### GWDC Challenge B
