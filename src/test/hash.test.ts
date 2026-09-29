@@ -14,6 +14,8 @@ const mandate: FastApiMandate = {
   human_approval_threshold: "40",
   status: "ACTIVE",
   created_at: "2026-09-29T03:00:00Z",
+  blockchain_network: null,
+  tx_hash: null,
 };
 
 describe("clamp hashes", () => {

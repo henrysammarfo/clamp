@@ -25,7 +25,7 @@ Team 14 · GWDC 2026 Korea · Challenge B · FuriosaAI x Bricksum
 - FastAPI + SQLite authoritative persistence
 - Base Sepolia + access-controlled `ClampAudit` v2 via viem
 
-Final Allow and Block receipts commit the complete backend `audit_payload` to Base Sepolia. Needs human receipts remain off chain until approval. The backend currently exposes approval only, so human rejection and mandate revocation are disabled in the UI rather than implemented locally.
+Final Allow and Block receipts commit the complete backend `audit_payload` to Base Sepolia. Needs human receipts remain off chain until approval. Confirmed mandate and decision transaction hashes are persisted back to FastAPI. If a chain write succeeds but receipt persistence fails, the UI preserves the confirmed transaction hash and retries only the receipt sync; it never recreates the mandate or purchase decision. The backend currently exposes approval only, so human rejection and mandate revocation are disabled in the UI rather than implemented locally.
 
 ## Live Base Sepolia
 

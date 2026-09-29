@@ -12,6 +12,8 @@ export type FastApiMandate = {
   human_approval_threshold: string;
   status: FastApiMandateStatus;
   created_at: string;
+  blockchain_network: string | null;
+  tx_hash: string | null;
 };
 
 export type FastApiMandateCreate = {

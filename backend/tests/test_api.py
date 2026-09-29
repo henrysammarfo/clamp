@@ -74,6 +74,24 @@ def test_approval_is_not_applied_twice(tmp_path):
         assert client.get(f"/api/mandates/{mandate['id']}").json()["remaining_budget"] == "110"
 
 
+def test_mandate_chain_attachment_is_idempotent_for_same_receipt(tmp_path):
+    app = create_app(str(tmp_path / "mandate-chain.db"))
+    with TestClient(app) as client:
+        mandate = create_test_mandate(client)
+        url = f"/api/mandates/{mandate['id']}/chain"
+
+        first = client.post(url, json={"network": "base-sepolia", "tx_hash": "0xmandate"})
+        same = client.post(url, json={"network": "base-sepolia", "tx_hash": "0xmandate"})
+        conflict = client.post(url, json={"network": "base-sepolia", "tx_hash": "0xother"})
+        stored = client.get(f"/api/mandates/{mandate['id']}").json()
+
+        assert first.status_code == 200
+        assert same.status_code == 200
+        assert conflict.status_code == 409
+        assert stored["blockchain_network"] == "base-sepolia"
+        assert stored["tx_hash"] == "0xmandate"
+
+
 def test_chain_attachment_cannot_be_overwritten(tmp_path):
     app = create_app(str(tmp_path / "chain.db"))
     app.state.interpreter = FakeInterpreter()
@@ -83,10 +101,12 @@ def test_chain_attachment_cannot_be_overwritten(tmp_path):
         url = f"/api/decisions/{receipt['decision_id']}/chain"
 
         first = client.post(url, json={"network": "base-sepolia", "tx_hash": "0xfirst"})
+        same = client.post(url, json={"network": "base-sepolia", "tx_hash": "0xfirst"})
         second = client.post(url, json={"network": "other", "tx_hash": "0xsecond"})
         stored = client.get(f"/api/decisions/{receipt['decision_id']}").json()
 
         assert first.status_code == 200
+        assert same.status_code == 200
         assert second.status_code == 409
         assert stored["blockchain_network"] == "base-sepolia"
         assert stored["tx_hash"] == "0xfirst"

@@ -58,6 +58,10 @@ def create_app(db_path: str | None = None) -> FastAPI:
     def get_mandate(mandate_id: str, request: Request):
         return request.app.state.service.get_mandate(mandate_id)
 
+    @app.post("/api/mandates/{mandate_id}/chain", response_model=Mandate)
+    def attach_mandate_chain(mandate_id: str, data: ChainAttachment, request: Request):
+        return request.app.state.service.attach_mandate_chain(mandate_id, data)
+
     @app.post("/api/decisions", response_model=DecisionReceipt, status_code=201)
     def create_decision(data: DecisionCreate, request: Request):
         service = request.app.state.service

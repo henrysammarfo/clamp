@@ -35,9 +35,15 @@ import {
   getMetricsFn,
   listDecisionsFn,
   approveReviewFn,
+  retryDecisionChainSyncFn,
   submitAgentRequestFn,
 } from "@/api/decisions";
-import { createMandateFn, getMandateFn, listMandatesFn } from "@/api/mandates";
+import {
+  createMandateFn,
+  getMandateFn,
+  listMandatesFn,
+  retryMandateChainSyncFn,
+} from "@/api/mandates";
 import { getRuntimeStatusFn } from "@/api/settings";
 import { AppShell } from "./app-shell";
 import { StatusBadge } from "./status-badge";
@@ -48,7 +54,7 @@ function errMessage(error: unknown): string {
 
 function DecisionList({ items }: { items: Decision[] }) {
   if (!items.length) {
-    return <p className="text-sm text-muted-foreground">No decisions yet for this tenant.</p>;
+    return <p className="text-sm text-muted-foreground">No decisions yet.</p>;
   }
   return (
     <div className="decision-list">
@@ -59,7 +65,7 @@ function DecisionList({ items }: { items: Decision[] }) {
             <p>{d.reason}</p>
           </div>
           <StatusBadge status={d.status} />
-          <strong>${(d.amount + d.fee).toFixed(2)}</strong>
+          <strong>${d.amount.toFixed(2)}</strong>
           <time>{new Date(d.time).toLocaleString()}</time>
         </Link>
       ))}
@@ -146,7 +152,7 @@ export function DashboardPage() {
                     />
                   </div>
                   <div className="flex justify-between text-sm">
-                    <strong>${active.spent.toFixed(2)} spent</strong>
+                    <strong>${active.spent.toFixed(2)} committed</strong>
                     <span className="text-muted-foreground">${available.toFixed(2)} left</span>
                   </div>
                   <Button asChild variant="outline" className="mt-5 w-full">
@@ -243,6 +249,7 @@ export function MandatesPage() {
 export function NewMandatePage() {
   const nav = useNavigate();
   const [busy, setBusy] = useState(false);
+  const [pendingSync, setPendingSync] = useState<Mandate | null>(null);
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -264,8 +271,13 @@ export function NewMandatePage() {
           humanApprovalThreshold: Number(form.get("humanApprovalThreshold")),
         },
       });
-      toast.success("Mandate committed on Base Sepolia");
-      nav({ to: "/mandates/$id", params: { id: mandate.id } });
+      if (mandate.chainSyncPending && mandate.commitTxHash) {
+        setPendingSync(mandate);
+        toast.error("Mandate is on chain, but the backend receipt still needs to sync.");
+      } else {
+        toast.success("Mandate committed and receipt persisted");
+        nav({ to: "/mandates/$id", params: { id: mandate.id } });
+      }
     } catch (error) {
       toast.error(errMessage(error));
     } finally {
@@ -286,7 +298,7 @@ export function NewMandatePage() {
           <small>The agent may act only for this purpose.</small>
         </div>
         <div className="field">
-          <label htmlFor="budget">Total budget including fees</label>
+          <label htmlFor="budget">Total budget</label>
           <Input id="budget" name="budget" type="number" defaultValue="50" min="1" required />
         </div>
         <div className="field">
@@ -325,11 +337,48 @@ export function NewMandatePage() {
           <Button asChild variant="outline">
             <Link to="/mandates">Cancel</Link>
           </Button>
-          <Button type="submit" disabled={busy}>
+          <Button type="submit" disabled={busy || Boolean(pendingSync)}>
             <LockKeyhole /> {busy ? "Committing…" : "Commit mandate"}
           </Button>
         </div>
       </form>
+      {pendingSync?.commitTxHash && (
+        <div className="panel mt-5">
+          <p className="eyebrow">Receipt sync required</p>
+          <h2 className="mt-2 font-semibold">Mandate is confirmed on Base Sepolia.</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Do not create the mandate again. Retry only the backend receipt sync.
+          </p>
+          <p className="mt-3 break-all font-mono text-xs">{pendingSync.commitTxHash}</p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button
+              type="button"
+              onClick={async () => {
+                try {
+                  const { mandate } = await retryMandateChainSyncFn({
+                    data: {
+                      mandateId: pendingSync.id,
+                      txHash: pendingSync.commitTxHash!,
+                    },
+                  });
+                  setPendingSync(null);
+                  toast.success("Mandate receipt synced");
+                  nav({ to: "/mandates/$id", params: { id: mandate.id } });
+                } catch (error) {
+                  toast.error(errMessage(error));
+                }
+              }}
+            >
+              Retry receipt sync
+            </Button>
+            <Button asChild variant="outline">
+              <a href={explorerTxUrl(pendingSync.commitTxHash)} target="_blank" rel="noreferrer">
+                <ExternalLink /> View tx
+              </a>
+            </Button>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }
@@ -421,7 +470,7 @@ export function MandateDetailPage({ id }: { id: string }) {
         <div className="panel">
           <p className="eyebrow">On chain commitment</p>
           <h2 className="mt-3 font-mono text-sm break-all">
-            {mandate.commitTxHash ?? "Transaction hash not stored by the mandate API"}
+            {mandate.commitTxHash ?? "No chain receipt attached yet"}
           </h2>
           <p className="my-5 text-sm leading-relaxed text-muted-foreground">
             Base Sepolia · hash {mandate.mandateHash.slice(0, 18)}…
@@ -575,12 +624,38 @@ export function NewRequestPage() {
               </div>
             ))}
           </div>
-          {decision.txHash && (
-            <Button asChild variant="outline" className="mt-4">
-              <a href={explorerTxUrl(decision.txHash)} target="_blank" rel="noreferrer">
-                <ExternalLink /> View tx
-              </a>
-            </Button>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {decision.chainSyncPending && decision.txHash && (
+              <Button
+                type="button"
+                onClick={async () => {
+                  try {
+                    const result = await retryDecisionChainSyncFn({
+                      data: { decisionId: decision.id, txHash: decision.txHash! },
+                    });
+                    setDecision(result.decision);
+                    toast.success("Decision receipt synced");
+                  } catch (error) {
+                    toast.error(errMessage(error));
+                  }
+                }}
+              >
+                Retry receipt sync
+              </Button>
+            )}
+            {decision.txHash && (
+              <Button asChild variant="outline">
+                <a href={explorerTxUrl(decision.txHash)} target="_blank" rel="noreferrer">
+                  <ExternalLink /> View tx
+                </a>
+              </Button>
+            )}
+          </div>
+          {decision.chainSyncPending && (
+            <p className="mt-3 text-xs text-warning">
+              The chain transaction is confirmed. Do not submit the purchase request again; retry
+              only receipt sync.
+            </p>
           )}
         </div>
       )}
@@ -680,18 +755,14 @@ export function DecisionDetailPage({ id }: { id: string }) {
           <div className="timeline">
             {[
               ["01", "Original request", decision.request],
-              [
-                "02",
-                "Parsed action",
-                `${decision.merchant} · $${decision.amount.toFixed(2)} + $${decision.fee.toFixed(2)} fees`,
-              ],
+              ["02", "Parsed action", `${decision.merchant} · ${decision.amount.toFixed(2)}`],
               ["03", "Matched rule", decision.rule],
               ["04", "Decision reason", decision.reason],
               [
                 "05",
-                decision.status === "allow" ? "Settlement" : "Stop or hold",
+                decision.status === "allow" ? "On-chain audit" : "Stop or hold",
                 decision.status === "allow"
-                  ? "Payment receipt recorded"
+                  ? "Decision receipt recorded"
                   : decision.status === "block"
                     ? "Nothing paid. Stop recorded."
                     : "No payment. Awaiting a person.",
@@ -711,8 +782,8 @@ export function DecisionDetailPage({ id }: { id: string }) {
           <p className="eyebrow">Transaction reference</p>
           <p className="my-4 font-mono text-sm break-all">{decision.txHash ?? "Pending or held"}</p>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            Base Sepolia. Fees and clocks can change before settlement. This receipt shows the
-            recorded decision.
+            Base Sepolia audit anchor. This transaction records the decision receipt; it does not
+            execute payment.
           </p>
           {decision.txHash && (
             <Button asChild variant="outline" className="mt-5 w-full">
@@ -732,6 +803,7 @@ export function DecisionDetailPage({ id }: { id: string }) {
 
 export function ReviewsPage() {
   const [items, setItems] = useState<Decision[]>([]);
+  const [pendingSync, setPendingSync] = useState<Decision | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = () => {
@@ -744,8 +816,13 @@ export function ReviewsPage() {
 
   const approve = async (decisionId: string) => {
     try {
-      await approveReviewFn({ data: { decisionId } });
-      toast.success("Approved on chain");
+      const result = await approveReviewFn({ data: { decisionId } });
+      if (result.decision.chainSyncPending) {
+        setPendingSync(result.decision);
+        toast.error("Approval is on chain, but the backend receipt still needs to sync.");
+      } else {
+        toast.success("Approved on chain");
+      }
       load();
     } catch (e) {
       toast.error(errMessage(e));
@@ -755,7 +832,38 @@ export function ReviewsPage() {
   return (
     <AppShell title="Human review" eyebrow={`${items.length} waiting`}>
       {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
-      {!items.length && !error && (
+      {pendingSync?.txHash && (
+        <div className="panel mb-4">
+          <p className="eyebrow">Receipt sync required</p>
+          <h2 className="mt-2 font-semibold">Approval is confirmed on Base Sepolia.</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Do not approve or submit the purchase again. Retry only the receipt sync.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button
+              onClick={async () => {
+                try {
+                  await retryDecisionChainSyncFn({
+                    data: { decisionId: pendingSync.id, txHash: pendingSync.txHash! },
+                  });
+                  setPendingSync(null);
+                  toast.success("Approval receipt synced");
+                } catch (error) {
+                  toast.error(errMessage(error));
+                }
+              }}
+            >
+              Retry receipt sync
+            </Button>
+            <Button asChild variant="outline">
+              <a href={explorerTxUrl(pendingSync.txHash)} target="_blank" rel="noreferrer">
+                <ExternalLink /> View tx
+              </a>
+            </Button>
+          </div>
+        </div>
+      )}
+      {!items.length && !error && !pendingSync && (
         <div className="panel">
           <p className="text-sm text-muted-foreground">
             No Needs human items. Requests reach this queue only after FastAPI returns Needs human.

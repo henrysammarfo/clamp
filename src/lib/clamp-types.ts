@@ -15,6 +15,7 @@ export type Mandate = {
   status: MandateStatus;
   mandateHash: string;
   commitTxHash: string | null;
+  chainSyncPending: boolean;
   createdAt: string;
 };
 
@@ -34,6 +35,7 @@ export type Decision = {
   decisionHash: string;
   txHash: string | null;
   blockchainNetwork: string | null;
+  chainSyncPending: boolean;
   purpose: string;
   auditPayload: {
     decision_id: string;

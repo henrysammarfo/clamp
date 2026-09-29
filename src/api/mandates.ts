@@ -43,5 +43,37 @@ export const createMandateFn = createServerFn({ method: "POST" })
     });
     const mandate = mapMandate(source);
     const { txHash } = await commitMandateOnChain(hashMandate(source));
-    return { mandate: { ...mandate, commitTxHash: txHash } };
+    try {
+      const attached = await fastApiClient.attachMandateChain(source.id, {
+        network: "base-sepolia",
+        tx_hash: txHash,
+      });
+      return { mandate: mapMandate(attached) };
+    } catch {
+      // The on-chain commit is already confirmed. Preserve the real tx hash in
+      // the response so the operator can retry only the backend receipt sync.
+      return {
+        mandate: {
+          ...mandate,
+          commitTxHash: txHash,
+          chainSyncPending: true,
+        },
+      };
+    }
+  });
+
+export const retryMandateChainSyncFn = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      mandateId: z.string().min(1),
+      txHash: z.string().regex(/^0x[0-9a-fA-F]+$/),
+    }),
+  )
+  .handler(async ({ data }) => {
+    await requireClampSession();
+    const attached = await fastApiClient.attachMandateChain(data.mandateId, {
+      network: "base-sepolia",
+      tx_hash: data.txHash,
+    });
+    return { mandate: mapMandate(attached) };
   });
