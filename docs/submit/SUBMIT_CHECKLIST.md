@@ -18,12 +18,19 @@ Deadline: 30 Sep 2026 12:00 noon KST = **03:00 AM Ghana GMT** (not midnight)
 | --- | --- | --- |
 | Public GitHub repo | Ready | https://github.com/henrysammarfo/clamp |
 | Submission evidence | Ready on main | https://github.com/henrysammarfo/clamp/blob/main/docs/SUBMISSION_EVIDENCE.md |
-| Pitch deck PPTX | Draft ready · needs final polish pass | `docs/submit/view/CLAMP_Team14_Pitch.pptx` |
-| Pitch deck PDF | Regenerated with deck | `docs/submit/view/CLAMP_Team14_Pitch.pdf` |
-| Demo video ≤ 3 min | **NOT DONE** · must record final flow | — |
-| Booth Q and A | Updated from evidence · Song also made Judge QA docx | `docs/submit/BOOTH_PITCH_QA.md` |
-| Song technical report docx | On Song machine / Telegram | `CLAMP_v0.3_FINAL_Report.docx` |
-| Song Judge QA docx | On Song machine / Telegram | `CLAMP_Judge_QA_Preparation_FINAL.docx` |
+| Pitch deck PPTX | Ready for Song form | `docs/submit/view/CLAMP_Team14_Pitch.pptx` |
+| Pitch deck PDF | Ready | `docs/submit/view/CLAMP_Team14_Pitch.pdf` |
+| Demo video ≤ 3 min | **NEXT · Henry records** | need `KILN_API_KEY` for live decisions |
+| Booth Q and A | Ready | `docs/submit/BOOTH_PITCH_QA.md` |
+| Form submit | Song captain | Henry sends deck + video + field answers |
+| Live web deploy | Unknown · ask Song | repo + video + deck may be enough |
+
+## Local demo stack (this machine)
+
+- Backend health: `http://127.0.0.1:8000/health` (up)
+- Frontend: `http://127.0.0.1:3000/` (up)
+- Branch has Song `main` merged in for recording
+- **Blocker:** `backend/.env` still needs `KILN_API_KEY` before live Allow/Block/Needs human recording
 
 ## Form draft fields
 
