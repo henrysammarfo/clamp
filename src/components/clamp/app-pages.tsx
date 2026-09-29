@@ -35,6 +35,7 @@ import {
   getMetricsFn,
   listDecisionsFn,
   approveReviewFn,
+  rejectReviewFn,
   retryDecisionChainSyncFn,
   submitAgentRequestFn,
 } from "@/api/decisions";
@@ -43,6 +44,9 @@ import {
   getMandateFn,
   listMandatesFn,
   retryMandateChainSyncFn,
+  retryMandateRevocationChainSyncFn,
+  retryMandateRevocationFn,
+  revokeMandateFn,
 } from "@/api/mandates";
 import { getRuntimeStatusFn } from "@/api/settings";
 import { AppShell } from "./app-shell";
@@ -387,6 +391,7 @@ export function MandateDetailPage({ id }: { id: string }) {
   const [mandate, setMandate] = useState<Mandate | null>(null);
   const [decisions, setDecisions] = useState<Decision[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [revoking, setRevoking] = useState(false);
 
   const load = () => {
     Promise.all([getMandateFn({ data: { id } }), listDecisionsFn()])
@@ -482,19 +487,93 @@ export function MandateDetailPage({ id }: { id: string }) {
               </a>
             </Button>
           )}
-          <Button
-            variant="destructive"
-            className="w-full"
-            disabled
-            title="The FastAPI contract does not currently expose mandate revocation."
-          >
-            <ShieldX />
-            {mandate.status === "revoked" ? "Mandate revoked" : "Revocation unavailable"}
-          </Button>
           {mandate.status === "active" && (
-            <p className="mt-2 text-xs text-muted-foreground">
-              The backend does not currently provide a revocation endpoint.
-            </p>
+            <Button
+              variant="destructive"
+              className="w-full"
+              disabled={revoking}
+              onClick={async () => {
+                if (!window.confirm("Revoke this mandate? Future requests will be blocked."))
+                  return;
+                setRevoking(true);
+                try {
+                  const result = await revokeMandateFn({ data: { mandateId: mandate.id } });
+                  setMandate(result.mandate);
+                  if (result.mandate.revokeChainSyncPending) {
+                    toast.error(
+                      "Revocation is on chain, but the backend receipt still needs to sync.",
+                    );
+                  } else {
+                    toast.success("Mandate revoked and recorded on Base Sepolia");
+                    load();
+                  }
+                } catch (error) {
+                  toast.error(errMessage(error));
+                  load();
+                } finally {
+                  setRevoking(false);
+                }
+              }}
+            >
+              <ShieldX />
+              {revoking ? "Revoking…" : "Revoke mandate"}
+            </Button>
+          )}
+          {mandate.status === "revoked" && (
+            <div className="space-y-2">
+              <Button variant="destructive" className="w-full" disabled>
+                <ShieldX /> Mandate revoked
+              </Button>
+              {mandate.revokeTxHash ? (
+                <>
+                  <Button asChild variant="outline" className="w-full">
+                    <a href={explorerTxUrl(mandate.revokeTxHash)} target="_blank" rel="noreferrer">
+                      <ExternalLink /> View revocation tx
+                    </a>
+                  </Button>
+                  {mandate.revokeChainSyncPending && (
+                    <Button
+                      className="w-full"
+                      onClick={async () => {
+                        try {
+                          const result = await retryMandateRevocationChainSyncFn({
+                            data: { mandateId: mandate.id, txHash: mandate.revokeTxHash! },
+                          });
+                          setMandate(result.mandate);
+                          toast.success("Revocation receipt synced");
+                        } catch (error) {
+                          toast.error(errMessage(error));
+                        }
+                      }}
+                    >
+                      Retry revocation receipt sync
+                    </Button>
+                  )}
+                </>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={async () => {
+                    try {
+                      const result = await retryMandateRevocationFn({
+                        data: { mandateId: mandate.id },
+                      });
+                      setMandate(result.mandate);
+                      toast.success(
+                        result.mandate.revokeChainSyncPending
+                          ? "Revocation recorded; receipt sync still required"
+                          : "Revocation recorded on Base Sepolia",
+                      );
+                    } catch (error) {
+                      toast.error(errMessage(error));
+                    }
+                  }}
+                >
+                  Record revocation on Base
+                </Button>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -829,15 +908,30 @@ export function ReviewsPage() {
     }
   };
 
+  const reject = async (decisionId: string) => {
+    try {
+      const result = await rejectReviewFn({ data: { decisionId } });
+      if (result.decision.chainSyncPending) {
+        setPendingSync(result.decision);
+        toast.error("Rejection is on chain, but the backend receipt still needs to sync.");
+      } else {
+        toast.success("Rejected and recorded on chain");
+      }
+      load();
+    } catch (e) {
+      toast.error(errMessage(e));
+    }
+  };
+
   return (
     <AppShell title="Human review" eyebrow={`${items.length} waiting`}>
       {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
       {pendingSync?.txHash && (
         <div className="panel mb-4">
           <p className="eyebrow">Receipt sync required</p>
-          <h2 className="mt-2 font-semibold">Approval is confirmed on Base Sepolia.</h2>
+          <h2 className="mt-2 font-semibold">Review decision is confirmed on Base Sepolia.</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Do not approve or submit the purchase again. Retry only the receipt sync.
+            Do not approve, reject, or submit the purchase again. Retry only the receipt sync.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Button
@@ -847,7 +941,7 @@ export function ReviewsPage() {
                     data: { decisionId: pendingSync.id, txHash: pendingSync.txHash! },
                   });
                   setPendingSync(null);
-                  toast.success("Approval receipt synced");
+                  toast.success("Review receipt synced");
                 } catch (error) {
                   toast.error(errMessage(error));
                 }
@@ -897,16 +991,13 @@ export function ReviewsPage() {
               <Button onClick={() => approve(item.id)}>
                 <Check /> Approve
               </Button>
-              <Button
-                variant="destructive"
-                disabled
-                title="Human rejection is not supported by the backend API."
-              >
-                Block unavailable
+              <Button variant="destructive" onClick={() => reject(item.id)}>
+                <ShieldX /> Reject
               </Button>
             </div>
             <p className="mt-3 text-xs text-muted-foreground">
-              The backend currently supports human approval only. Rejection is not yet available.
+              Approve deducts budget and records ALLOW. Reject keeps the budget unchanged and
+              records BLOCK.
             </p>
           </div>
         ))}

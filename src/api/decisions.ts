@@ -9,7 +9,13 @@ import type { FastApiDecision } from "@/server/fastapi/types";
 import { requireClampSession } from "@/server/session";
 
 async function recordFinalDecision(source: FastApiDecision) {
-  if (source.decision === "NEEDS_HUMAN" || source.tx_hash) return mapDecision(source);
+  if (
+    source.decision === "NEEDS_HUMAN" ||
+    source.tx_hash ||
+    source.reason_code === "MANDATE_REVOKED"
+  ) {
+    return mapDecision(source);
+  }
 
   const mandate = await fastApiClient.getMandate(source.mandate_id);
   const mandateHash = hashMandate(mandate);
@@ -67,6 +73,14 @@ export const approveReviewFn = createServerFn({ method: "POST" })
     await requireClampSession();
     const approved = await fastApiClient.approveDecision(data.decisionId);
     return { decision: await recordFinalDecision(approved) };
+  });
+
+export const rejectReviewFn = createServerFn({ method: "POST" })
+  .validator(z.object({ decisionId: z.string().min(1) }))
+  .handler(async ({ data }) => {
+    await requireClampSession();
+    const rejected = await fastApiClient.rejectDecision(data.decisionId);
+    return { decision: await recordFinalDecision(rejected) };
   });
 
 export const retryDecisionChainSyncFn = createServerFn({ method: "POST" })

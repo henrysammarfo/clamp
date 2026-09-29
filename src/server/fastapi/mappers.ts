@@ -19,6 +19,11 @@ export function mapMandate(source: FastApiMandate): Mandate {
     mandateHash: hashMandate(source),
     commitTxHash: source.tx_hash,
     chainSyncPending: false,
+    revocationId: source.revocation_id,
+    revokedAt: source.revoked_at,
+    revokeTxHash: source.revoke_tx_hash,
+    revokeBlockchainNetwork: source.revoke_blockchain_network,
+    revokeChainSyncPending: false,
     createdAt: source.created_at,
   };
 }

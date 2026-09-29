@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hashAuditPayload, hashMandate } from "@/server/chain/hash";
+import { hashAuditPayload, hashMandate, hashRevocationAuditPayload } from "@/server/chain/hash";
 import type { FastApiMandate } from "@/server/fastapi/types";
 
 const mandate: FastApiMandate = {
@@ -16,6 +16,10 @@ const mandate: FastApiMandate = {
   created_at: "2026-09-29T03:00:00Z",
   blockchain_network: null,
   tx_hash: null,
+  revocation_id: null,
+  revoked_at: null,
+  revoke_blockchain_network: null,
+  revoke_tx_hash: null,
 };
 
 describe("clamp hashes", () => {
@@ -33,6 +37,17 @@ describe("clamp hashes", () => {
 
   it("changes when the authoritative total budget changes", () => {
     expect(hashMandate(mandate)).not.toBe(hashMandate({ ...mandate, total_budget: "51" }));
+  });
+
+  it("canonically hashes mandate revocation payloads", () => {
+    const payload = {
+      revocation_id: "33333333-3333-4333-8333-333333333333",
+      mandate_id: mandate.id,
+      decision: "REVOKE" as const,
+      reason_code: "MANDATE_REVOKED" as const,
+      timestamp: "2026-09-29T04:00:00Z",
+    };
+    expect(hashRevocationAuditPayload(payload)).toMatch(/^0x[a-f0-9]{64}$/);
   });
 
   it("canonically hashes the complete backend audit payload", () => {

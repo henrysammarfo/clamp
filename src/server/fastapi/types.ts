@@ -14,6 +14,10 @@ export type FastApiMandate = {
   created_at: string;
   blockchain_network: string | null;
   tx_hash: string | null;
+  revocation_id: string | null;
+  revoked_at: string | null;
+  revoke_blockchain_network: string | null;
+  revoke_tx_hash: string | null;
 };
 
 export type FastApiMandateCreate = {
@@ -27,6 +31,26 @@ export type FastApiMandateCreate = {
 };
 
 export type FastApiDecisionValue = "ALLOW" | "BLOCK" | "NEEDS_HUMAN";
+
+export type FastApiRevocationAuditPayload = {
+  revocation_id: string;
+  mandate_id: string;
+  decision: "REVOKE";
+  reason_code: "MANDATE_REVOKED";
+  timestamp: string;
+};
+
+export type FastApiMandateRevocation = {
+  revocation_id: string;
+  mandate_id: string;
+  decision: "REVOKE";
+  reason_code: "MANDATE_REVOKED";
+  reason: string;
+  timestamp: string;
+  blockchain_network: string | null;
+  tx_hash: string | null;
+  audit_payload: FastApiRevocationAuditPayload;
+};
 
 export type AuditPayload = {
   decision_id: string;

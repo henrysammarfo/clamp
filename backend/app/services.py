@@ -16,7 +16,9 @@ from .models import (
     KilnCallMetric,
     Mandate,
     MandateCreate,
+    MandateRevocationReceipt,
     MandateStatus,
+    RevocationAuditPayload,
     StructuredPurchaseRequest,
 )
 from .policy import evaluate_policy
@@ -35,6 +37,8 @@ def _mandate_from_row(row: sqlite3.Row) -> Mandate:
         human_approval_threshold=Decimal(row["human_approval_threshold"]),
         status=row["status"], created_at=datetime.fromisoformat(row["created_at"]),
         blockchain_network=row["blockchain_network"], tx_hash=row["tx_hash"],
+        revocation_id=row["revocation_id"], revoked_at=datetime.fromisoformat(row["revoked_at"]) if row["revoked_at"] else None,
+        revoke_blockchain_network=row["revoke_blockchain_network"], revoke_tx_hash=row["revoke_tx_hash"],
     )
 
 
@@ -150,6 +154,79 @@ class ClampService:
                 (decision_id,),
             )
         return self.get_decision(decision_id)
+
+
+    def reject(self, decision_id: str) -> DecisionReceipt:
+        with self.db.transaction() as connection:
+            row = connection.execute("SELECT * FROM decisions WHERE decision_id = ?", (decision_id,)).fetchone()
+            if not row:
+                raise HTTPException(404, "Decision not found")
+            if row["decision"] != DecisionValue.NEEDS_HUMAN.value:
+                raise HTTPException(409, "Only NEEDS_HUMAN decisions can be rejected")
+            connection.execute(
+                "UPDATE decisions SET decision = 'BLOCK', matched_rule = 'human_rejection', reason_code = 'HUMAN_REJECTED', reason = 'A human rejected this purchase.' WHERE decision_id = ?",
+                (decision_id,),
+            )
+        return self.get_decision(decision_id)
+
+    def revoke_mandate(self, mandate_id: str) -> MandateRevocationReceipt:
+        revoked_at = utcnow()
+        revocation_id = str(uuid4())
+        with self.db.transaction() as connection:
+            row = connection.execute("SELECT * FROM mandates WHERE id = ?", (mandate_id,)).fetchone()
+            if not row:
+                raise HTTPException(404, "Mandate not found")
+            mandate = _mandate_from_row(row)
+            if mandate.status == MandateStatus.REVOKED:
+                raise HTTPException(409, "Mandate is already revoked")
+            if mandate.status == MandateStatus.EXPIRED or mandate.expires_at <= revoked_at:
+                raise HTTPException(409, "Expired mandate cannot be revoked")
+            connection.execute(
+                "UPDATE mandates SET status = 'REVOKED', revocation_id = ?, revoked_at = ? WHERE id = ?",
+                (revocation_id, revoked_at.isoformat(), mandate_id),
+            )
+        return self.get_mandate_revocation(mandate_id)
+
+    def get_mandate_revocation(self, mandate_id: str) -> MandateRevocationReceipt:
+        with self.db.connect() as connection:
+            row = connection.execute("SELECT * FROM mandates WHERE id = ?", (mandate_id,)).fetchone()
+        if not row:
+            raise HTTPException(404, "Mandate not found")
+        if not row["revocation_id"] or not row["revoked_at"]:
+            raise HTTPException(404, "Mandate revocation not found")
+        timestamp = datetime.fromisoformat(row["revoked_at"])
+        return MandateRevocationReceipt(
+            revocation_id=row["revocation_id"],
+            mandate_id=mandate_id,
+            timestamp=timestamp,
+            blockchain_network=row["revoke_blockchain_network"],
+            tx_hash=row["revoke_tx_hash"],
+            audit_payload=RevocationAuditPayload(
+                revocation_id=row["revocation_id"],
+                mandate_id=mandate_id,
+                timestamp=timestamp,
+            ),
+        )
+
+    def attach_mandate_revocation_chain(self, mandate_id: str, data: ChainAttachment) -> MandateRevocationReceipt:
+        with self.db.transaction() as connection:
+            row = connection.execute(
+                "SELECT status, revocation_id, revoke_blockchain_network, revoke_tx_hash FROM mandates WHERE id = ?",
+                (mandate_id,),
+            ).fetchone()
+            if not row:
+                raise HTTPException(404, "Mandate not found")
+            if row["status"] != MandateStatus.REVOKED.value or not row["revocation_id"]:
+                raise HTTPException(409, "Mandate must be revoked before blockchain attachment")
+            if row["revoke_tx_hash"]:
+                if row["revoke_blockchain_network"] != data.network or row["revoke_tx_hash"] != data.tx_hash:
+                    raise HTTPException(409, "Blockchain transaction is already attached")
+            else:
+                connection.execute(
+                    "UPDATE mandates SET revoke_blockchain_network = ?, revoke_tx_hash = ? WHERE id = ?",
+                    (data.network, data.tx_hash, mandate_id),
+                )
+        return self.get_mandate_revocation(mandate_id)
 
     def attach_mandate_chain(self, mandate_id: str, data: ChainAttachment) -> Mandate:
         with self.db.transaction() as connection:

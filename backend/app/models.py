@@ -64,6 +64,30 @@ class Mandate(BaseModel):
     created_at: datetime
     blockchain_network: str | None = None
     tx_hash: str | None = None
+    revocation_id: str | None = None
+    revoked_at: datetime | None = None
+    revoke_blockchain_network: str | None = None
+    revoke_tx_hash: str | None = None
+
+
+class RevocationAuditPayload(BaseModel):
+    revocation_id: str
+    mandate_id: str
+    decision: Literal["REVOKE"] = "REVOKE"
+    reason_code: Literal["MANDATE_REVOKED"] = "MANDATE_REVOKED"
+    timestamp: datetime
+
+
+class MandateRevocationReceipt(BaseModel):
+    revocation_id: str
+    mandate_id: str
+    decision: Literal["REVOKE"] = "REVOKE"
+    reason_code: Literal["MANDATE_REVOKED"] = "MANDATE_REVOKED"
+    reason: str = "A human revoked this spending mandate."
+    timestamp: datetime
+    blockchain_network: str | None = None
+    tx_hash: str | None = None
+    audit_payload: RevocationAuditPayload
 
 
 class StructuredPurchaseRequest(BaseModel):
