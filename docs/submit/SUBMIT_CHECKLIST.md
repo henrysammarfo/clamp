@@ -20,17 +20,24 @@ Deadline: 30 Sep 2026 12:00 noon KST = **03:00 AM Ghana GMT** (not midnight)
 | Submission evidence | Ready on main | https://github.com/henrysammarfo/clamp/blob/main/docs/SUBMISSION_EVIDENCE.md |
 | Pitch deck PPTX | Ready for Song form | `docs/submit/view/CLAMP_Team14_Pitch.pptx` |
 | Pitch deck PDF | Ready | `docs/submit/view/CLAMP_Team14_Pitch.pdf` |
-| Demo video ≤ 3 min | **NEXT · Henry records** | need `KILN_API_KEY` for live decisions |
+| Demo video ≤ 3 min | **NEXT · Henry records locally** | Kiln key set on this machine |
 | Booth Q and A | Ready | `docs/submit/BOOTH_PITCH_QA.md` |
 | Form submit | Song captain | Henry sends deck + video + field answers |
-| Live web deploy | Unknown · ask Song | repo + video + deck may be enough |
+| Live frontend (Vercel) | **Up** | https://clamp-eight.vercel.app |
+| Live FastAPI backend | **Not yet** | Neon cannot host it |
+
+## Deploy notes (2026-09-29)
+
+- Vercel project: `teamtitanlink/clamp` → https://clamp-eight.vercel.app (public; SSO protection off)
+- Env on Vercel: contract, RPC, session secret, private key, `FASTAPI_BASE_URL` (still localhost until API is hosted)
+- **Neon:** Vercel Marketplace Neon = serverless **Postgres only**. CLAMP API is FastAPI + **SQLite**. Neon does not run uvicorn / Python app code.
+- Next for live API: Render free web service (see `backend/Dockerfile`) or Fly / Cloud Run, then point Vercel `FASTAPI_BASE_URL` at that URL and allow CORS from `https://clamp-eight.vercel.app`
+- Demo video can still be recorded on local full stack (`:3000` + `:8000`)
 
 ## Local demo stack (this machine)
 
-- Backend health: `http://127.0.0.1:8000/health` (up)
+- Backend health: `http://127.0.0.1:8000/health` (up · Kiln key set locally)
 - Frontend: `http://127.0.0.1:3000/` (up)
-- Branch has Song `main` merged in for recording
-- **Blocker:** `backend/.env` still needs `KILN_API_KEY` before live Allow/Block/Needs human recording
 
 ## Form draft fields
 
@@ -39,6 +46,7 @@ Deadline: 30 Sep 2026 12:00 noon KST = **03:00 AM Ghana GMT** (not midnight)
 - Challenge: B · Controls and records for an AI agent that spends
 - One sentence: A delegation control layer for AI agents with temporary spending mandates, allow / block / needs human decisions, and an on chain audit trail.
 - Repo: https://github.com/henrysammarfo/clamp
+- Live demo URL (optional): https://clamp-eight.vercel.app
 - Demo video URL: _(record + upload)_
 - Pitch PDF / PPTX: `docs/submit/view/CLAMP_Team14_Pitch.pdf` (or Drive link after upload)
 - Contract: `0x4648520fe2b192791c9ae13e46e0cba9544c42d6`
