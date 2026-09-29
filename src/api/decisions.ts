@@ -3,6 +3,7 @@ import { z } from "zod";
 import { outcomeFromStatus } from "@/server/chain/abi";
 import { ensureMandateCommitted, recordDecisionOnChain } from "@/server/chain/clamp-audit";
 import { hashAuditPayload, hashMandate } from "@/server/chain/hash";
+import { verifyDecisionAgainstChain } from "@/server/chain/verification";
 import { fastApiClient } from "@/server/fastapi/client";
 import { mapDecision, mapMetrics } from "@/server/fastapi/mappers";
 import type { FastApiDecision } from "@/server/fastapi/types";
@@ -53,6 +54,15 @@ export const getDecisionFn = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     await requireClampSession();
     return { decision: mapDecision(await fastApiClient.getDecision(data.id)) };
+  });
+
+export const verifyDecisionOnBaseFn = createServerFn({ method: "GET" })
+  .validator(z.object({ decisionId: z.string().min(1) }))
+  .handler(async ({ data }) => {
+    await requireClampSession();
+    const decision = await fastApiClient.getDecision(data.decisionId);
+    const mandate = await fastApiClient.getMandate(decision.mandate_id);
+    return { verification: await verifyDecisionAgainstChain(decision, mandate) };
   });
 
 export const submitAgentRequestFn = createServerFn({ method: "POST" })
