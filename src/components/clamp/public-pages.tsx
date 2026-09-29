@@ -93,8 +93,8 @@ export function ProductPage() {
           <div>
             <StatusBadge status="block" />
             <p className="mt-4 max-w-xs text-sm text-muted-foreground">
-              Merchant not on list. The request is blocked and its audit receipt is recorded on Base Sepolia when the
-              chain is configured.
+              Merchant not on list. The request is blocked and its audit receipt is recorded on Base
+              Sepolia when the chain is configured.
             </p>
           </div>
         </div>
