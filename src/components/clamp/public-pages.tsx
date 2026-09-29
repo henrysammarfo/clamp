@@ -29,7 +29,7 @@ const features = [
   {
     icon: Code2,
     title: "Gate in code",
-    text: "Budget, merchant, purpose, and deadline are enforced by deterministic code after parsing.",
+    text: "Budget, merchant, purpose category, and deadline are enforced by deterministic code after parsing.",
   },
   {
     icon: UserRoundCheck,
@@ -178,12 +178,12 @@ export function DocsPage() {
     [
       "01 · Model",
       "Natural language to action",
-      "Kiln parses merchant, amount, currency, item, and purpose. It does not decide permission. Song owns this.",
+      "Kiln parses merchant, amount, currency, item, and classifies purpose. It does not decide permission.",
     ],
     [
       "02 · Gate",
       "Rules to decision",
-      "Code evaluates budget, merchant allowlist, deadline, purpose, and approval threshold. It uses zero model calls.",
+      "Code evaluates purpose category, merchant allowlist, budget, currency, deadline, and approval threshold. It uses zero model calls.",
     ],
     [
       "03 · Human",

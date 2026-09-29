@@ -6,6 +6,7 @@ const mandate: FastApiMandate = {
   id: "11111111-1111-4111-8111-111111111111",
   name: "Office supplies mandate",
   purpose: "Office supplies",
+  purpose_category: null,
   total_budget: "50",
   remaining_budget: "50",
   currency: "USD",
@@ -23,16 +24,28 @@ const mandate: FastApiMandate = {
 };
 
 describe("clamp hashes", () => {
-  it("hashes authoritative mandates stably", () => {
+  it("preserves the legacy hash when purpose category is null", () => {
     const a = hashMandate(mandate);
     const b = hashMandate({
       ...mandate,
       allowed_merchants: ["Apple", "Amazon", "Uber"],
       remaining_budget: "12",
       status: "EXPIRED",
+      revocation_id: "33333333-3333-4333-8333-333333333333",
+      revoked_at: "2026-09-30T03:00:00Z",
+      revoke_blockchain_network: "base-sepolia",
+      revoke_tx_hash: `0x${"b".repeat(64)}`,
     });
     expect(a).toBe(b);
+    expect(a).toBe("0x37cb5c291ee28792887731fb79b8f459964b6751ccf66da3f86e96502949821a");
     expect(a).toMatch(/^0x[a-f0-9]{64}$/);
+  });
+
+  it("changes when purpose category changes", () => {
+    const office = hashMandate({ ...mandate, purpose_category: "OFFICE" });
+    const food = hashMandate({ ...mandate, purpose_category: "FOOD" });
+    expect(office).not.toBe(food);
+    expect(office).not.toBe(hashMandate(mandate));
   });
 
   it("changes when the authoritative total budget changes", () => {

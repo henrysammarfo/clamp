@@ -44,6 +44,7 @@ def main() -> int:
                     json={
                         "name": f"Kiln smoke {label}",
                         "purpose": "Office supplies",
+                        "purpose_category": "OFFICE",
                         "total_budget": "100",
                         "currency": "USD",
                         "allowed_merchants": ["Amazon"],

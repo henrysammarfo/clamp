@@ -10,6 +10,17 @@ import { fastApiClient } from "@/server/fastapi/client";
 import { mapMandate } from "@/server/fastapi/mappers";
 import { requireClampSession } from "@/server/session";
 
+const purposeCategorySchema = z.enum([
+  "OFFICE",
+  "SOFTWARE",
+  "TRAVEL",
+  "FOOD",
+  "TRANSPORT",
+  "MARKETING",
+  "PROFESSIONAL_SERVICES",
+  "OTHER",
+]);
+
 export const listMandatesFn = createServerFn({ method: "GET" }).handler(async () => {
   await requireClampSession();
   return { mandates: (await fastApiClient.listMandates()).map(mapMandate) };
@@ -27,6 +38,7 @@ export const createMandateFn = createServerFn({ method: "POST" })
     z.object({
       name: z.string().min(1).max(120),
       purpose: z.string().min(1).max(500),
+      purposeCategory: purposeCategorySchema,
       budget: z.number().positive(),
       currency: z.string().length(3),
       merchants: z.array(z.string().min(1)).min(1),
@@ -39,6 +51,7 @@ export const createMandateFn = createServerFn({ method: "POST" })
     const source = await fastApiClient.createMandate({
       name: data.name.trim(),
       purpose: data.purpose.trim(),
+      purpose_category: data.purposeCategory,
       total_budget: data.budget,
       currency: data.currency.toUpperCase(),
       allowed_merchants: data.merchants.map((merchant) => merchant.trim()),

@@ -9,6 +9,7 @@ export function mapMandate(source: FastApiMandate): Mandate {
     id: source.id,
     name: source.name,
     purpose: source.purpose,
+    purposeCategory: source.purpose_category,
     budget,
     spent: budget - remaining,
     currency: source.currency,
@@ -49,6 +50,7 @@ export function mapDecision(source: FastApiDecision): Decision {
     blockchainNetwork: source.blockchain_network,
     chainSyncPending: false,
     purpose: source.structured_request.purpose,
+    purposeCategory: source.structured_request.purpose_category,
     auditPayload: source.audit_payload,
   };
 }
