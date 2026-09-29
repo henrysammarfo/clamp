@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const envSchema = z.object({
+  FASTAPI_BASE_URL: z.string().url().optional(),
   SESSION_SECRET: z.string().min(32).optional(),
   BASE_SEPOLIA_RPC_URL: z.string().url().optional(),
   BASE_SEPOLIA_PRIVATE_KEY: z
@@ -17,15 +18,16 @@ export type AppEnv = z.infer<typeof envSchema>;
 
 export function readEnv(): AppEnv {
   return envSchema.parse({
-    SESSION_SECRET: process.env.SESSION_SECRET,
-    BASE_SEPOLIA_RPC_URL: process.env.BASE_SEPOLIA_RPC_URL,
-    BASE_SEPOLIA_PRIVATE_KEY: process.env.BASE_SEPOLIA_PRIVATE_KEY,
-    CLAMP_AUDIT_ADDRESS: process.env.CLAMP_AUDIT_ADDRESS,
+    FASTAPI_BASE_URL: process.env["FASTAPI_BASE_URL"],
+    SESSION_SECRET: process.env["SESSION_SECRET"],
+    BASE_SEPOLIA_RPC_URL: process.env["BASE_SEPOLIA_RPC_URL"],
+    BASE_SEPOLIA_PRIVATE_KEY: process.env["BASE_SEPOLIA_PRIVATE_KEY"],
+    CLAMP_AUDIT_ADDRESS: process.env["CLAMP_AUDIT_ADDRESS"],
   });
 }
 
 export function requireSessionSecret(): string {
-  const secret = readEnv().SESSION_SECRET ?? process.env.SESSION_SECRET;
+  const secret = readEnv().SESSION_SECRET ?? process.env["SESSION_SECRET"];
   if (!secret || secret.length < 32) {
     throw new Error(
       "SESSION_SECRET is missing or shorter than 32 characters. Set it in .env before using sessions.",

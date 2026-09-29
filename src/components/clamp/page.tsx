@@ -24,7 +24,7 @@ export function PublicPage({
         {children}
       </main>
       <footer>
-        <span>CLAMP · Delegation control for AI agents</span>
+        <span>CLAMP · Authorization and audit control for AI agents that spend</span>
         <span>Team 14 · GWDC 2026 Korea</span>
       </footer>
     </div>

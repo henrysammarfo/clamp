@@ -1,0 +1,34 @@
+{
+  "CLAMP": {
+    "cases": 30,
+    "runs": 90,
+    "decision_correct": 90,
+    "decision_accuracy_pct": 100.0,
+    "reason_correct": 90,
+    "reason_accuracy_pct": 100.0,
+    "consistent_cases": 30,
+    "consistency_pct": 100.0,
+    "total_llm_calls": 90,
+    "prompt_tokens": 23301,
+    "completion_tokens": 15119,
+    "total_tokens": 38420,
+    "average_latency_ms": 3945.99,
+    "malformed_outputs": 0
+  },
+  "ALL_AI": {
+    "cases": 30,
+    "runs": 90,
+    "decision_correct": 90,
+    "decision_accuracy_pct": 100.0,
+    "reason_correct": 88,
+    "reason_accuracy_pct": 97.78,
+    "consistent_cases": 30,
+    "consistency_pct": 100.0,
+    "total_llm_calls": 90,
+    "prompt_tokens": 38433,
+    "completion_tokens": 30620,
+    "total_tokens": 69053,
+    "average_latency_ms": 4225.56,
+    "malformed_outputs": 0
+  }
+}

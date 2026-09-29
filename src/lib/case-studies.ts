@@ -7,7 +7,7 @@ export const caseStudies: CaseStudy[] = [
     title: "Amazon allowed",
     kicker: "Inside every boundary",
     description:
-      "A $30 office supply purchase passes merchant, purpose, time, and total checks before settlement.",
+      "A $30 office supply request passes merchant, purpose, time, and budget checks before authorization.",
     status: "allow",
     request: "Buy $30 of printer paper on Amazon",
     merchant: "Amazon",
@@ -19,7 +19,7 @@ export const caseStudies: CaseStudy[] = [
   {
     slug: "bestbuyBlock",
     title: "BestBuy blocked",
-    kicker: "Wrong merchant. Nothing paid.",
+    kicker: "Wrong merchant. Request blocked.",
     description:
       "The model parses the request, but code stops it because BestBuy is not on the mandate.",
     status: "block",
@@ -35,7 +35,7 @@ export const caseStudies: CaseStudy[] = [
     title: "Apple needs human",
     kicker: "Borderline by design",
     description:
-      "A valid merchant request approaches the budget edge, so CLAMP holds payment for a person.",
+      "A valid merchant request crosses the approval threshold, so CLAMP holds authorization for a person.",
     status: "review",
     request: "Buy a $17 charging cable from Apple",
     merchant: "Apple",

@@ -3,7 +3,6 @@ import {
   Activity,
   ArrowRight,
   Check,
-  CircleDollarSign,
   Clock3,
   Copy,
   ExternalLink,
@@ -15,7 +14,6 @@ import {
   ShieldX,
   Sparkles,
   UserRoundCheck,
-  X,
 } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { toast } from "sonner";
@@ -25,31 +23,62 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   explorerTxUrl,
   statusLabel,
+  type ChainDecisionVerification,
+  type ChainMandateVerification,
   type Decision,
   type DecisionStatus,
   type EfficiencyMetrics,
   type Mandate,
+  type PurposeCategory,
 } from "@/lib/clamp-types";
 import { getDashboardFn } from "@/api/dashboard";
 import {
   getDecisionFn,
   getMetricsFn,
   listDecisionsFn,
-  resolveReviewFn,
+  approveReviewFn,
+  rejectReviewFn,
+  retryDecisionChainSyncFn,
   submitAgentRequestFn,
+  verifyDecisionOnBaseFn,
 } from "@/api/decisions";
-import { createMandateFn, getMandateFn, listMandatesFn, revokeMandateFn } from "@/api/mandates";
+import {
+  createMandateFn,
+  getMandateFn,
+  listMandatesFn,
+  retryMandateChainSyncFn,
+  retryMandateRevocationChainSyncFn,
+  retryMandateRevocationFn,
+  revokeMandateFn,
+  verifyMandateOnBaseFn,
+} from "@/api/mandates";
 import { getRuntimeStatusFn } from "@/api/settings";
 import { AppShell } from "./app-shell";
 import { StatusBadge } from "./status-badge";
+import benchmarkSummary from "../../../backend/benchmarks/results/summary_latest.json";
 
 function errMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Request failed";
 }
 
+const purposeCategories: PurposeCategory[] = [
+  "OFFICE",
+  "SOFTWARE",
+  "TRAVEL",
+  "FOOD",
+  "TRANSPORT",
+  "MARKETING",
+  "PROFESSIONAL_SERVICES",
+  "OTHER",
+];
+
+function purposeCategoryLabel(category: PurposeCategory | null): string {
+  return category ?? "Legacy / unenforced";
+}
+
 function DecisionList({ items }: { items: Decision[] }) {
   if (!items.length) {
-    return <p className="text-sm text-muted-foreground">No decisions yet for this tenant.</p>;
+    return <p className="text-sm text-muted-foreground">No decisions yet.</p>;
   }
   return (
     <div className="decision-list">
@@ -60,7 +89,7 @@ function DecisionList({ items }: { items: Decision[] }) {
             <p>{d.reason}</p>
           </div>
           <StatusBadge status={d.status} />
-          <strong>${(d.amount + d.fee).toFixed(2)}</strong>
+          <strong>${d.amount.toFixed(2)}</strong>
           <time>{new Date(d.time).toLocaleString()}</time>
         </Link>
       ))}
@@ -89,7 +118,7 @@ export function DashboardPage() {
   const available = active ? Math.max(0, active.budget - active.spent) : 0;
 
   return (
-    <AppShell title="Control room" eyebrow="Tenant workspace">
+    <AppShell title="Control room" eyebrow="Delegation workspace">
       {error && (
         <div className="panel mb-5">
           <p className="text-sm">{error}</p>
@@ -99,7 +128,7 @@ export function DashboardPage() {
         </div>
       )}
       {loading ? (
-        <p className="text-sm text-muted-foreground">Loading tenant state…</p>
+        <p className="text-sm text-muted-foreground">Loading workspace state…</p>
       ) : (
         <>
           <div className="metric-grid">
@@ -147,7 +176,7 @@ export function DashboardPage() {
                     />
                   </div>
                   <div className="flex justify-between text-sm">
-                    <strong>${active.spent.toFixed(2)} spent</strong>
+                    <strong>${active.spent.toFixed(2)} committed</strong>
                     <span className="text-muted-foreground">${available.toFixed(2)} left</span>
                   </div>
                   <Button asChild variant="outline" className="mt-5 w-full">
@@ -216,7 +245,7 @@ export function MandatesPage() {
               />
             </div>
             <p className="mt-3 text-sm text-muted-foreground">
-              {m.purpose} · {m.merchants.join(", ")}
+              {m.purpose} · {purposeCategoryLabel(m.purposeCategory)} · {m.merchants.join(", ")}
             </p>
             <div className="budget-track">
               <span style={{ width: `${Math.min(100, (m.spent / m.budget) * 100)}%` }} />
@@ -244,6 +273,7 @@ export function MandatesPage() {
 export function NewMandatePage() {
   const nav = useNavigate();
   const [busy, setBusy] = useState(false);
+  const [pendingSync, setPendingSync] = useState<Mandate | null>(null);
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -258,13 +288,21 @@ export function NewMandatePage() {
         data: {
           name: String(form.get("name") ?? ""),
           purpose: String(form.get("purpose") ?? ""),
+          purposeCategory: String(form.get("purposeCategory") ?? "OFFICE") as PurposeCategory,
           budget: Number(form.get("budget")),
+          currency: String(form.get("currency") ?? "USD"),
           merchants,
-          expiresAt: String(form.get("expiry") ?? ""),
+          expiresAt: new Date(String(form.get("expiry") ?? "")).toISOString(),
+          humanApprovalThreshold: Number(form.get("humanApprovalThreshold")),
         },
       });
-      toast.success("Mandate committed on Base Sepolia");
-      nav({ to: "/mandates/$id", params: { id: mandate.id } });
+      if (mandate.chainSyncPending && mandate.commitTxHash) {
+        setPendingSync(mandate);
+        toast.error("Mandate is on chain, but the backend receipt still needs to sync.");
+      } else {
+        toast.success("Mandate committed and receipt persisted");
+        nav({ to: "/mandates/$id", params: { id: mandate.id } });
+      }
     } catch (error) {
       toast.error(errMessage(error));
     } finally {
@@ -282,11 +320,53 @@ export function NewMandatePage() {
         <div className="field field-full">
           <label htmlFor="purpose">Purpose</label>
           <Input id="purpose" name="purpose" defaultValue="Office supplies" required />
-          <small>The agent may act only for this purpose.</small>
+          <small>A human-readable description of the delegated purpose.</small>
+        </div>
+        <div className="field field-full">
+          <label htmlFor="purpose-category">Purpose category</label>
+          <select
+            id="purpose-category"
+            name="purposeCategory"
+            defaultValue="OFFICE"
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            required
+          >
+            {purposeCategories.map((category) => (
+              <option key={category} value={category}>
+                {category.replaceAll("_", " ")}
+              </option>
+            ))}
+          </select>
+          <small>
+            Kiln classifies the request purpose; deterministic code enforces the mandate category.
+          </small>
         </div>
         <div className="field">
-          <label htmlFor="budget">Total budget including fees</label>
+          <label htmlFor="budget">Total budget</label>
           <Input id="budget" name="budget" type="number" defaultValue="50" min="1" required />
+        </div>
+        <div className="field">
+          <label htmlFor="currency">Currency</label>
+          <Input
+            id="currency"
+            name="currency"
+            defaultValue="USD"
+            minLength={3}
+            maxLength={3}
+            required
+          />
+        </div>
+        <div className="field">
+          <label htmlFor="human-approval-threshold">Human approval threshold</label>
+          <Input
+            id="human-approval-threshold"
+            name="humanApprovalThreshold"
+            type="number"
+            defaultValue="40"
+            min="0.01"
+            step="0.01"
+            required
+          />
         </div>
         <div className="field">
           <label htmlFor="expiry">Expiry</label>
@@ -301,11 +381,48 @@ export function NewMandatePage() {
           <Button asChild variant="outline">
             <Link to="/mandates">Cancel</Link>
           </Button>
-          <Button type="submit" disabled={busy}>
+          <Button type="submit" disabled={busy || Boolean(pendingSync)}>
             <LockKeyhole /> {busy ? "Committing…" : "Commit mandate"}
           </Button>
         </div>
       </form>
+      {pendingSync?.commitTxHash && (
+        <div className="panel mt-5">
+          <p className="eyebrow">Receipt sync required</p>
+          <h2 className="mt-2 font-semibold">Mandate is confirmed on Base Sepolia.</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Do not create the mandate again. Retry only the backend receipt sync.
+          </p>
+          <p className="mt-3 break-all font-mono text-xs">{pendingSync.commitTxHash}</p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button
+              type="button"
+              onClick={async () => {
+                try {
+                  const { mandate } = await retryMandateChainSyncFn({
+                    data: {
+                      mandateId: pendingSync.id,
+                      txHash: pendingSync.commitTxHash!,
+                    },
+                  });
+                  setPendingSync(null);
+                  toast.success("Mandate receipt synced");
+                  nav({ to: "/mandates/$id", params: { id: mandate.id } });
+                } catch (error) {
+                  toast.error(errMessage(error));
+                }
+              }}
+            >
+              Retry receipt sync
+            </Button>
+            <Button asChild variant="outline">
+              <a href={explorerTxUrl(pendingSync.commitTxHash)} target="_blank" rel="noreferrer">
+                <ExternalLink /> View tx
+              </a>
+            </Button>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }
@@ -314,7 +431,9 @@ export function MandateDetailPage({ id }: { id: string }) {
   const [mandate, setMandate] = useState<Mandate | null>(null);
   const [decisions, setDecisions] = useState<Decision[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [revoking, setRevoking] = useState(false);
+  const [verification, setVerification] = useState<ChainMandateVerification | null>(null);
+  const [verifying, setVerifying] = useState(false);
 
   const load = () => {
     Promise.all([getMandateFn({ data: { id } }), listDecisionsFn()])
@@ -326,20 +445,6 @@ export function MandateDetailPage({ id }: { id: string }) {
   };
 
   useEffect(load, [id]);
-
-  const revoke = async () => {
-    setBusy(true);
-    try {
-      const { mandate: next } = await revokeMandateFn({ data: { id } });
-      setMandate(next);
-      toast.success("Mandate revoked on chain");
-      load();
-    } catch (e) {
-      toast.error(errMessage(e));
-    } finally {
-      setBusy(false);
-    }
-  };
 
   if (error) {
     return (
@@ -389,7 +494,13 @@ export function MandateDetailPage({ id }: { id: string }) {
               <Check /> Purpose: {mandate.purpose}
             </li>
             <li>
-              <Check /> Budget: ${mandate.budget.toFixed(2)}, including fees
+              <Check /> Purpose category: {purposeCategoryLabel(mandate.purposeCategory)}
+            </li>
+            <li>
+              <Check /> Budget: ${mandate.budget.toFixed(2)}
+            </li>
+            <li>
+              <UserRoundCheck /> Human approval at ${mandate.humanApprovalThreshold.toFixed(2)}
             </li>
             <li>
               <Check /> Merchants: {mandate.merchants.join(", ")}
@@ -408,7 +519,9 @@ export function MandateDetailPage({ id }: { id: string }) {
         </div>
         <div className="panel">
           <p className="eyebrow">On chain commitment</p>
-          <h2 className="mt-3 font-mono text-sm break-all">{mandate.commitTxHash ?? "Pending"}</h2>
+          <h2 className="mt-3 font-mono text-sm break-all">
+            {mandate.commitTxHash ?? "No chain receipt attached yet"}
+          </h2>
           <p className="my-5 text-sm leading-relaxed text-muted-foreground">
             Base Sepolia · hash {mandate.mandateHash.slice(0, 18)}…
           </p>
@@ -420,14 +533,175 @@ export function MandateDetailPage({ id }: { id: string }) {
             </Button>
           )}
           <Button
-            variant="destructive"
-            className="w-full"
-            disabled={busy || mandate.status !== "active"}
-            onClick={revoke}
+            variant="outline"
+            className="mb-3 w-full"
+            disabled={verifying}
+            onClick={async () => {
+              setVerifying(true);
+              try {
+                const result = await verifyMandateOnBaseFn({
+                  data: { mandateId: mandate.id },
+                });
+                setVerification(result.verification);
+              } catch (error) {
+                toast.error(errMessage(error));
+              } finally {
+                setVerifying(false);
+              }
+            }}
           >
-            <ShieldX />
-            {mandate.status === "revoked" ? "Mandate revoked" : "Revoke mandate"}
+            <Shield /> {verifying ? "Verifying…" : "Verify mandate on Base"}
           </Button>
+          {verification && (
+            <div className="mb-5 rounded-lg border border-border p-4 text-sm">
+              <span
+                className={`status-badge ${verification.status === "VERIFIED" ? "status-allow" : verification.status === "MISMATCH" ? "status-block" : "status-review"}`}
+              >
+                {verification.status}
+              </span>
+              <p className="mt-3 text-muted-foreground">{verification.message}</p>
+              <dl className="mt-3 grid gap-2">
+                <div>
+                  <dt className="text-muted-foreground">Mandate hash</dt>
+                  <dd className="font-mono break-all">{verification.mandateHash}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Local / on chain</dt>
+                  <dd>
+                    {verification.localStatus} / revoked:{" "}
+                    {verification.onChain.revoked ? "Yes" : "No"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Exists on chain</dt>
+                  <dd>{verification.checks.exists ? "Yes" : "No"}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Revoked state match</dt>
+                  <dd>
+                    {verification.localStatus === "EXPIRED"
+                      ? "Not applicable"
+                      : verification.checks.revokedMatches
+                        ? "Yes"
+                        : "No"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Committer</dt>
+                  <dd className="font-mono break-all">
+                    {verification.onChain.committer ?? "Not recorded"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Committed at</dt>
+                  <dd>
+                    {verification.onChain.committedAt
+                      ? new Date(verification.onChain.committedAt).toLocaleString()
+                      : "Not recorded"}
+                  </dd>
+                </div>
+              </dl>
+              {verification.localTxHash && (
+                <Button asChild variant="link" className="mt-2 px-0">
+                  <a
+                    href={explorerTxUrl(verification.localTxHash)}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <ExternalLink /> View local commit tx on BaseScan
+                  </a>
+                </Button>
+              )}
+            </div>
+          )}
+          {mandate.status === "active" && (
+            <Button
+              variant="destructive"
+              className="w-full"
+              disabled={revoking}
+              onClick={async () => {
+                if (!window.confirm("Revoke this mandate? Future requests will be blocked."))
+                  return;
+                setRevoking(true);
+                try {
+                  const result = await revokeMandateFn({ data: { mandateId: mandate.id } });
+                  setMandate(result.mandate);
+                  if (result.mandate.revokeChainSyncPending) {
+                    toast.error(
+                      "Revocation is on chain, but the backend receipt still needs to sync.",
+                    );
+                  } else {
+                    toast.success("Mandate revoked and recorded on Base Sepolia");
+                    load();
+                  }
+                } catch (error) {
+                  toast.error(errMessage(error));
+                  load();
+                } finally {
+                  setRevoking(false);
+                }
+              }}
+            >
+              <ShieldX />
+              {revoking ? "Revoking…" : "Revoke mandate"}
+            </Button>
+          )}
+          {mandate.status === "revoked" && (
+            <div className="space-y-2">
+              <Button variant="destructive" className="w-full" disabled>
+                <ShieldX /> Mandate revoked
+              </Button>
+              {mandate.revokeTxHash ? (
+                <>
+                  <Button asChild variant="outline" className="w-full">
+                    <a href={explorerTxUrl(mandate.revokeTxHash)} target="_blank" rel="noreferrer">
+                      <ExternalLink /> View revocation tx
+                    </a>
+                  </Button>
+                  {mandate.revokeChainSyncPending && (
+                    <Button
+                      className="w-full"
+                      onClick={async () => {
+                        try {
+                          const result = await retryMandateRevocationChainSyncFn({
+                            data: { mandateId: mandate.id, txHash: mandate.revokeTxHash! },
+                          });
+                          setMandate(result.mandate);
+                          toast.success("Revocation receipt synced");
+                        } catch (error) {
+                          toast.error(errMessage(error));
+                        }
+                      }}
+                    >
+                      Retry revocation receipt sync
+                    </Button>
+                  )}
+                </>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={async () => {
+                    try {
+                      const result = await retryMandateRevocationFn({
+                        data: { mandateId: mandate.id },
+                      });
+                      setMandate(result.mandate);
+                      toast.success(
+                        result.mandate.revokeChainSyncPending
+                          ? "Revocation recorded; receipt sync still required"
+                          : "Revocation recorded on Base Sepolia",
+                      );
+                    } catch (error) {
+                      toast.error(errMessage(error));
+                    }
+                  }}
+                >
+                  Record revocation on Base
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </div>
       <div className="panel mt-5">
@@ -506,8 +780,7 @@ export function NewRequestPage() {
             className="min-h-32 text-lg"
           />
           <small>
-            Evaluation calls Song parse and Song gate. If Song is not wired, this fails closed. No
-            keyword demo gate.
+            Kiln classifies the request purpose; deterministic code enforces the mandate category.
           </small>
         </div>
         <div className="mt-5 flex flex-wrap gap-2">
@@ -537,7 +810,11 @@ export function NewRequestPage() {
           <div className="timeline">
             {[
               ["01", "Request", decision.request],
-              ["02", "Parsed action", `${decision.merchant} · $${decision.amount.toFixed(2)}`],
+              [
+                "02",
+                "Parsed action",
+                `${decision.merchant} · $${decision.amount.toFixed(2)} · ${purposeCategoryLabel(decision.purposeCategory)}`,
+              ],
               ["03", "Matched rule", `${decision.rule}: ${decision.reason}`],
               [
                 "04",
@@ -557,12 +834,38 @@ export function NewRequestPage() {
               </div>
             ))}
           </div>
-          {decision.txHash && (
-            <Button asChild variant="outline" className="mt-4">
-              <a href={explorerTxUrl(decision.txHash)} target="_blank" rel="noreferrer">
-                <ExternalLink /> View tx
-              </a>
-            </Button>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {decision.chainSyncPending && decision.txHash && (
+              <Button
+                type="button"
+                onClick={async () => {
+                  try {
+                    const result = await retryDecisionChainSyncFn({
+                      data: { decisionId: decision.id, txHash: decision.txHash! },
+                    });
+                    setDecision(result.decision);
+                    toast.success("Decision receipt synced");
+                  } catch (error) {
+                    toast.error(errMessage(error));
+                  }
+                }}
+              >
+                Retry receipt sync
+              </Button>
+            )}
+            {decision.txHash && (
+              <Button asChild variant="outline">
+                <a href={explorerTxUrl(decision.txHash)} target="_blank" rel="noreferrer">
+                  <ExternalLink /> View tx
+                </a>
+              </Button>
+            )}
+          </div>
+          {decision.chainSyncPending && (
+            <p className="mt-3 text-xs text-warning">
+              The chain transaction is confirmed. Do not submit the purchase request again; retry
+              only receipt sync.
+            </p>
           )}
         </div>
       )}
@@ -609,6 +912,8 @@ export function DecisionsPage() {
 export function DecisionDetailPage({ id }: { id: string }) {
   const [decision, setDecision] = useState<Decision | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [verification, setVerification] = useState<ChainDecisionVerification | null>(null);
+  const [verifying, setVerifying] = useState(false);
 
   useEffect(() => {
     getDecisionFn({ data: { id } })
@@ -665,18 +970,18 @@ export function DecisionDetailPage({ id }: { id: string }) {
               [
                 "02",
                 "Parsed action",
-                `${decision.merchant} · $${decision.amount.toFixed(2)} + $${decision.fee.toFixed(2)} fees`,
+                `${decision.merchant} · ${decision.amount.toFixed(2)} · ${purposeCategoryLabel(decision.purposeCategory)}`,
               ],
               ["03", "Matched rule", decision.rule],
               ["04", "Decision reason", decision.reason],
               [
                 "05",
-                decision.status === "allow" ? "Settlement" : "Stop or hold",
+                decision.status === "allow" ? "On-chain audit" : "Stop or hold",
                 decision.status === "allow"
-                  ? "Payment receipt recorded"
+                  ? "Decision receipt recorded"
                   : decision.status === "block"
-                    ? "Nothing paid. Stop recorded."
-                    : "No payment. Awaiting a person.",
+                    ? "Request blocked. Audit receipt recorded."
+                    : "Authorization pending. Awaiting a person.",
               ],
             ].map((x) => (
               <div className="timeline-item" key={x[0]}>
@@ -693,8 +998,8 @@ export function DecisionDetailPage({ id }: { id: string }) {
           <p className="eyebrow">Transaction reference</p>
           <p className="my-4 font-mono text-sm break-all">{decision.txHash ?? "Pending or held"}</p>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            Base Sepolia. Fees and clocks can change before settlement. This receipt shows the
-            recorded decision.
+            Base Sepolia audit anchor. This transaction records the decision receipt; it does not
+            execute payment.
           </p>
           {decision.txHash && (
             <Button asChild variant="outline" className="mt-5 w-full">
@@ -708,12 +1013,120 @@ export function DecisionDetailPage({ id }: { id: string }) {
           </Button>
         </div>
       </div>
+      <div className="panel mt-5">
+        <div className="panel-head">
+          <div>
+            <h2>Base verification</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              On-chain verification confirms that this local audit receipt matches the stored
+              contract state. It does not verify a payment or the truth of the purchase request.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            disabled={verifying}
+            onClick={async () => {
+              setVerifying(true);
+              try {
+                const result = await verifyDecisionOnBaseFn({ data: { decisionId: decision.id } });
+                setVerification(result.verification);
+              } catch (error) {
+                toast.error(errMessage(error));
+              } finally {
+                setVerifying(false);
+              }
+            }}
+          >
+            <Shield /> {verifying ? "Verifying…" : "Verify on Base"}
+          </Button>
+        </div>
+        {verification && (
+          <div className="mt-5 text-sm">
+            <span
+              className={`status-badge ${verification.status === "VERIFIED" ? "status-allow" : verification.status === "MISMATCH" ? "status-block" : "status-review"}`}
+            >
+              {verification.status}
+            </span>
+            <p className="mt-3 text-muted-foreground">{verification.message}</p>
+            <dl className="mt-4 grid gap-3 md:grid-cols-2">
+              <div>
+                <dt className="text-muted-foreground">Local decision hash</dt>
+                <dd className="font-mono break-all">{verification.decisionHash}</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">On-chain outcome</dt>
+                <dd>
+                  {verification.onChain.exists
+                    ? `${verification.onChain.outcome} (expected ${verification.expectedOutcome})`
+                    : "Not recorded"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Exists on chain</dt>
+                <dd>{verification.checks.exists ? "Yes" : "No"}</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Mandate hash match</dt>
+                <dd>
+                  {!verification.checks.exists
+                    ? "Not applicable"
+                    : verification.checks.mandateHashMatches
+                      ? "Yes"
+                      : "No"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Outcome match</dt>
+                <dd>
+                  {!verification.checks.exists
+                    ? "Not applicable"
+                    : verification.checks.outcomeMatches
+                      ? "Yes"
+                      : "No"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Recorder / actor</dt>
+                <dd className="font-mono break-all">
+                  {verification.onChain.actor ?? "Not recorded"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Recorded at</dt>
+                <dd>
+                  {verification.onChain.recordedAt
+                    ? new Date(verification.onChain.recordedAt).toLocaleString()
+                    : "Not recorded"}
+                </dd>
+              </div>
+            </dl>
+            {verification.localTxHash && (
+              <div className="mt-4">
+                <p className="font-mono break-all">Local tx: {verification.localTxHash}</p>
+                <Button asChild variant="link" className="mt-1 px-0">
+                  <a
+                    href={explorerTxUrl(verification.localTxHash)}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <ExternalLink /> View on BaseScan
+                  </a>
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  ClampAudit state does not independently verify this transaction hash.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </AppShell>
   );
 }
 
 export function ReviewsPage() {
   const [items, setItems] = useState<Decision[]>([]);
+  const [pendingSync, setPendingSync] = useState<Decision | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = () => {
@@ -724,10 +1137,30 @@ export function ReviewsPage() {
 
   useEffect(load, []);
 
-  const resolve = async (decisionId: string, status: "allow" | "block") => {
+  const approve = async (decisionId: string) => {
     try {
-      await resolveReviewFn({ data: { decisionId, status } });
-      toast.success(status === "allow" ? "Approved on chain" : "Blocked on chain");
+      const result = await approveReviewFn({ data: { decisionId } });
+      if (result.decision.chainSyncPending) {
+        setPendingSync(result.decision);
+        toast.error("Approval is on chain, but the backend receipt still needs to sync.");
+      } else {
+        toast.success("Approved on chain");
+      }
+      load();
+    } catch (e) {
+      toast.error(errMessage(e));
+    }
+  };
+
+  const reject = async (decisionId: string) => {
+    try {
+      const result = await rejectReviewFn({ data: { decisionId } });
+      if (result.decision.chainSyncPending) {
+        setPendingSync(result.decision);
+        toast.error("Rejection is on chain, but the backend receipt still needs to sync.");
+      } else {
+        toast.success("Rejected and recorded on chain");
+      }
       load();
     } catch (e) {
       toast.error(errMessage(e));
@@ -737,10 +1170,41 @@ export function ReviewsPage() {
   return (
     <AppShell title="Human review" eyebrow={`${items.length} waiting`}>
       {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
-      {!items.length && !error && (
+      {pendingSync?.txHash && (
+        <div className="panel mb-4">
+          <p className="eyebrow">Receipt sync required</p>
+          <h2 className="mt-2 font-semibold">Review decision is confirmed on Base Sepolia.</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Do not approve, reject, or submit the purchase again. Retry only the receipt sync.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button
+              onClick={async () => {
+                try {
+                  await retryDecisionChainSyncFn({
+                    data: { decisionId: pendingSync.id, txHash: pendingSync.txHash! },
+                  });
+                  setPendingSync(null);
+                  toast.success("Review receipt synced");
+                } catch (error) {
+                  toast.error(errMessage(error));
+                }
+              }}
+            >
+              Retry receipt sync
+            </Button>
+            <Button asChild variant="outline">
+              <a href={explorerTxUrl(pendingSync.txHash)} target="_blank" rel="noreferrer">
+                <ExternalLink /> View tx
+              </a>
+            </Button>
+          </div>
+        </div>
+      )}
+      {!items.length && !error && !pendingSync && (
         <div className="panel">
           <p className="text-sm text-muted-foreground">
-            No Needs human items. Requests reach this queue only after Song gate returns review.
+            No Needs human items. Requests reach this queue only after FastAPI returns Needs human.
           </p>
         </div>
       )}
@@ -768,13 +1232,17 @@ export function ReviewsPage() {
               </li>
             </ul>
             <div className="mt-6 flex gap-3">
-              <Button onClick={() => resolve(item.id, "allow")}>
+              <Button onClick={() => approve(item.id)}>
                 <Check /> Approve
               </Button>
-              <Button variant="destructive" onClick={() => resolve(item.id, "block")}>
-                <X /> Block
+              <Button variant="destructive" onClick={() => reject(item.id)}>
+                <ShieldX /> Reject
               </Button>
             </div>
+            <p className="mt-3 text-xs text-muted-foreground">
+              Approve deducts budget and records ALLOW. Reject keeps the budget unchanged and
+              records BLOCK.
+            </p>
           </div>
         ))}
       </div>
@@ -877,25 +1345,29 @@ export function MetricsPage() {
       .catch((e) => setError(errMessage(e)));
   }, []);
 
+  const benchmark = benchmarkSummary;
+
   return (
-    <AppShell title="Efficiency" eyebrow="CLAMP versus all AI">
-      {error && (
-        <div className="panel mb-5">
-          <p className="text-sm text-destructive">{error}</p>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Henry owns this panel. Song owns live token and latency numbers. No illustrative fake
-            table.
-          </p>
+    <AppShell title="Efficiency" eyebrow="Operational metrics and benchmark">
+      <div className="panel mb-5">
+        <div className="panel-head">
+          <div>
+            <h2>Live operational FastAPI metrics</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Persisted Kiln usage from live CLAMP activity. This data is separate from the fixed
+              benchmark below.
+            </p>
+          </div>
+          <Activity />
         </div>
-      )}
-      {metrics && (
-        <>
+        {error && <p className="mt-5 text-sm text-destructive">{error}</p>}
+        {metrics && (
           <div className="metric-grid">
             {[
-              ["CLAMP calls", String(metrics.clampCalls), "parse + explain"],
-              ["All AI calls", String(metrics.allAiCalls), "judge every step"],
-              ["CLAMP tokens", String(metrics.clampTokens), "measured"],
-              ["Gate latency", `${metrics.clampGateLatencyMs}ms`, "local code"],
+              ["Kiln calls", String(metrics.kilnCalls), "measured"],
+              ["Total tokens", String(metrics.totalTokens), "measured"],
+              ["Prompt tokens", String(metrics.promptTokens), "measured"],
+              ["Average latency", `${metrics.averageLatencyMs.toFixed(2)}ms`, "Kiln calls"],
             ].map((x) => (
               <div className="metric-cell" key={x[0]}>
                 <p>{x[0]}</p>
@@ -904,67 +1376,70 @@ export function MetricsPage() {
               </div>
             ))}
           </div>
-          <div className="panel mt-5">
-            <div className="panel-head">
-              <div>
-                <h2>Same three cases</h2>
-                <p className="mt-1 text-sm text-muted-foreground">{metrics.notes}</p>
-              </div>
-              <Activity />
-            </div>
-            <div className="table-wrap">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Approach</th>
-                    <th>LLM calls</th>
-                    <th>Tokens</th>
-                    <th>Decision latency</th>
-                    <th>Policy source</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>
-                      <strong>CLAMP</strong>
-                    </td>
-                    <td>{metrics.clampCalls}</td>
-                    <td>{metrics.clampTokens}</td>
-                    <td>{metrics.clampGateLatencyMs}ms gate</td>
-                    <td>Code</td>
-                  </tr>
-                  <tr>
-                    <td>All AI baseline</td>
-                    <td>{metrics.allAiCalls}</td>
-                    <td>{metrics.allAiTokens}</td>
-                    <td>{metrics.allAiLatencyMs}ms avg</td>
-                    <td>Model judgment</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+        )}
+      </div>
+
+      <div className="panel">
+        <div className="panel-head">
+          <div>
+            <h2>Adversarial benchmark — 30 cases × 3 runs</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Fixed checked-in snapshot. Token count and latency are measured proxies for inference
+              work; no energy savings are claimed.
+            </p>
           </div>
-        </>
-      )}
-      <div className="grid gap-4 md:grid-cols-3 mt-5">
-        {[
-          [CircleDollarSign, "Fewer calls", "Parse once and explain once."],
-          [LockKeyhole, "Hard boundary", "The model never grants permission."],
-          [
-            Activity,
-            "Energy thesis",
-            "Lower token demand implies less inference work. Hardware energy is stated, not guessed.",
-          ],
-        ].map(([Icon, t, d]) => {
-          const I = Icon as typeof Activity;
-          return (
-            <div className="panel" key={t as string}>
-              <I className="text-signal" />
-              <h3 className="mt-8 font-semibold">{t as string}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{d as string}</p>
-            </div>
-          );
-        })}
+          <LockKeyhole />
+        </div>
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Metric</th>
+                <th>CLAMP</th>
+                <th>All-AI baseline</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Decision accuracy</td>
+                <td>{benchmark.CLAMP.decision_accuracy_pct.toFixed(1)}%</td>
+                <td>{benchmark.ALL_AI.decision_accuracy_pct.toFixed(1)}%</td>
+              </tr>
+              <tr>
+                <td>Reason-code accuracy</td>
+                <td>{benchmark.CLAMP.reason_accuracy_pct.toFixed(1)}%</td>
+                <td>{benchmark.ALL_AI.reason_accuracy_pct.toFixed(2)}%</td>
+              </tr>
+              <tr>
+                <td>Consistency</td>
+                <td>{benchmark.CLAMP.consistency_pct.toFixed(1)}%</td>
+                <td>{benchmark.ALL_AI.consistency_pct.toFixed(1)}%</td>
+              </tr>
+              <tr>
+                <td>Total tokens</td>
+                <td>{benchmark.CLAMP.total_tokens.toLocaleString()}</td>
+                <td>{benchmark.ALL_AI.total_tokens.toLocaleString()}</td>
+              </tr>
+              <tr>
+                <td>Average LLM latency</td>
+                <td>{benchmark.CLAMP.average_latency_ms.toLocaleString()} ms</td>
+                <td>{benchmark.ALL_AI.average_latency_ms.toLocaleString()} ms</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div className="mt-5 grid gap-2 text-sm leading-relaxed">
+          <p>
+            Both approaches achieved <strong>100% final decision accuracy</strong>.
+          </p>
+          <p>
+            CLAMP matched the all-AI baseline&apos;s decision accuracy while using 44.4% fewer
+            tokens in this benchmark.
+          </p>
+          <p className="text-muted-foreground">
+            CLAMP achieved 100% reason-code accuracy versus 97.78% for the all-AI baseline.
+          </p>
+        </div>
       </div>
     </AppShell>
   );
@@ -991,7 +1466,7 @@ export function SettingsPage() {
             </div>
             {[
               ["Mode", status.session.mode],
-              ["Tenant", status.session.tenantId],
+              ["Workspace", status.session.tenantId],
               ["Operator", status.session.email],
               ["Model", status.modelPreference],
               ["Network", `${status.chain.network} (${status.chain.chainId})`],
@@ -1014,21 +1489,16 @@ export function SettingsPage() {
                 <span>Base Sepolia</span>
                 <strong>{status.chain.configured ? "Configured" : "Missing env"}</strong>
               </div>
-              {status.song.map((item) => (
-                <div
-                  className="flex justify-between gap-4 text-sm border-b border-border pb-3"
-                  key={item.name}
-                >
-                  <span>{item.name}</span>
-                  <strong className="text-right max-w-md">
-                    {item.wired ? "Wired" : "Not wired (fail closed)"}
-                  </strong>
-                </div>
-              ))}
+              <div className="flex justify-between gap-4 text-sm border-b border-border pb-3">
+                <span>{status.backend.name}</span>
+                <strong className="text-right max-w-md">
+                  {status.backend.wired ? "Connected" : `Unavailable: ${status.backend.detail}`}
+                </strong>
+              </div>
             </div>
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-              CLAMP does not claim to be unhackable. It uses hard controls, tenant sessions, and an
-              inspectable trail.
+              CLAMP does not claim to be unhackable. It uses hard controls, signed sessions, and an
+              inspectable audit trail.
             </p>
           </div>
         </>

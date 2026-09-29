@@ -10,12 +10,14 @@ import { baseSepolia } from "viem/chains";
 import { chainConfig, isChainConfigured } from "../env";
 import { clampAuditAbi, type DecisionOutcomeCode } from "./abi";
 
+export const CLAMP_AUDIT_V2_ADDRESS = "0x4648520fe2b192791c9ae13e46e0cba9544c42d6" as const;
+
 export class ChainNotConfiguredError extends Error {
   readonly code = "CHAIN_NOT_CONFIGURED" as const;
 
   constructor() {
     super(
-      "Base Sepolia is not configured. Set BASE_SEPOLIA_RPC_URL, BASE_SEPOLIA_PRIVATE_KEY, and CLAMP_AUDIT_ADDRESS.",
+      "Base Sepolia is not configured. Reads require BASE_SEPOLIA_RPC_URL and CLAMP_AUDIT_ADDRESS; writes also require BASE_SEPOLIA_PRIVATE_KEY.",
     );
     this.name = "ChainNotConfiguredError";
   }
@@ -30,26 +32,62 @@ export class ChainTxFailedError extends Error {
   }
 }
 
-function requireChain() {
+export class ChainWriterUnauthorizedError extends Error {
+  readonly code = "CHAIN_WRITER_UNAUTHORIZED" as const;
+
+  constructor(address: `0x${string}`) {
+    super(
+      `Configured Base Sepolia wallet ${address} is neither the ClampAudit owner nor an approved recorder.`,
+    );
+    this.name = "ChainWriterUnauthorizedError";
+  }
+}
+
+export class ChainContractMismatchError extends Error {
+  readonly code = "CHAIN_CONTRACT_MISMATCH" as const;
+
+  constructor(address: `0x${string}`) {
+    super(
+      `Configured ClampAudit address ${address} is not the authoritative v2 deployment ${CLAMP_AUDIT_V2_ADDRESS}.`,
+    );
+    this.name = "ChainContractMismatchError";
+  }
+}
+
+function requireReadChain() {
   const config = chainConfig();
-  if (!config.rpcUrl || !config.privateKey || !config.contractAddress) {
+  if (!config.rpcUrl || !config.contractAddress) {
     throw new ChainNotConfiguredError();
   }
-  const account = privateKeyToAccount(config.privateKey);
+  if (config.contractAddress.toLowerCase() !== CLAMP_AUDIT_V2_ADDRESS) {
+    throw new ChainContractMismatchError(config.contractAddress);
+  }
   const publicClient = createPublicClient({
     chain: baseSepolia,
     transport: http(config.rpcUrl),
   });
+  return {
+    publicClient,
+    address: config.contractAddress,
+  };
+}
+
+function requireChain() {
+  const config = chainConfig();
+  if (!config.privateKey) {
+    throw new ChainNotConfiguredError();
+  }
+  const readChain = requireReadChain();
+  const account = privateKeyToAccount(config.privateKey);
   const walletClient = createWalletClient({
     account,
     chain: baseSepolia,
     transport: http(config.rpcUrl),
   });
   return {
-    publicClient,
+    ...readChain,
     walletClient,
     account,
-    address: config.contractAddress,
   };
 }
 
@@ -60,6 +98,27 @@ async function waitSuccess(txHash: Hex): Promise<TransactionReceipt> {
     throw new ChainTxFailedError(txHash);
   }
   return receipt;
+}
+
+async function requireAuthorizedWriter() {
+  const chain = requireChain();
+  const [owner, recorder] = await Promise.all([
+    chain.publicClient.readContract({
+      address: chain.address,
+      abi: clampAuditAbi,
+      functionName: "owner",
+    }),
+    chain.publicClient.readContract({
+      address: chain.address,
+      abi: clampAuditAbi,
+      functionName: "isRecorder",
+      args: [chain.account.address],
+    }),
+  ]);
+  if (String(owner).toLowerCase() !== chain.account.address.toLowerCase() && recorder !== true) {
+    throw new ChainWriterUnauthorizedError(chain.account.address);
+  }
+  return chain;
 }
 
 async function waitFor<T>(
@@ -78,11 +137,14 @@ async function waitFor<T>(
 
 export function getChainStatus() {
   const config = chainConfig();
+  const isV2 = config.contractAddress?.toLowerCase() === CLAMP_AUDIT_V2_ADDRESS;
   return {
-    configured: isChainConfigured(),
+    configured: isChainConfigured() && isV2,
     network: "Base Sepolia",
     chainId: baseSepolia.id,
     contractAddress: config.contractAddress ?? null,
+    expectedContractAddress: CLAMP_AUDIT_V2_ADDRESS,
+    contractMatchesV2: isV2,
     rpcConfigured: Boolean(config.rpcUrl),
     keyConfigured: Boolean(config.privateKey),
     contractVersion: "ClampAudit v2 access controlled",
@@ -143,7 +205,7 @@ function asDecisionView(result: unknown): DecisionView {
 }
 
 export async function readMandateOnChain(mandateHash: Hex): Promise<MandateView> {
-  const { publicClient, address } = requireChain();
+  const { publicClient, address } = requireReadChain();
   const result = await publicClient.readContract({
     address,
     abi: clampAuditAbi,
@@ -154,7 +216,7 @@ export async function readMandateOnChain(mandateHash: Hex): Promise<MandateView>
 }
 
 export async function readDecisionOnChain(decisionHash: Hex): Promise<DecisionView> {
-  const { publicClient, address } = requireChain();
+  const { publicClient, address } = requireReadChain();
   const result = await publicClient.readContract({
     address,
     abi: clampAuditAbi,
@@ -165,7 +227,7 @@ export async function readDecisionOnChain(decisionHash: Hex): Promise<DecisionVi
 }
 
 export async function commitMandateOnChain(mandateHash: Hex): Promise<{ txHash: Hex }> {
-  const { walletClient, account, address } = requireChain();
+  const { walletClient, account, address } = await requireAuthorizedWriter();
   const hash = await walletClient.writeContract({
     address,
     abi: clampAuditAbi,
@@ -183,12 +245,18 @@ export async function commitMandateOnChain(mandateHash: Hex): Promise<{ txHash: 
   return { txHash: hash };
 }
 
+export async function ensureMandateCommitted(mandateHash: Hex): Promise<{ txHash: Hex | null }> {
+  const view = await readMandateOnChain(mandateHash);
+  if (view.exists) return { txHash: null };
+  return commitMandateOnChain(mandateHash);
+}
+
 export async function recordDecisionOnChain(input: {
   mandateHash: Hex;
   decisionHash: Hex;
   outcome: DecisionOutcomeCode;
 }): Promise<{ txHash: Hex }> {
-  const { walletClient, account, address } = requireChain();
+  const { walletClient, account, address } = await requireAuthorizedWriter();
   if (input.outcome < 1 || input.outcome > 4) {
     throw new Error("Outcome must be 1..4.");
   }

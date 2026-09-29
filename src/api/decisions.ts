@@ -1,189 +1,115 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import type { Decision } from "@/lib/clamp-types";
 import { outcomeFromStatus } from "@/server/chain/abi";
-import { recordDecisionOnChain } from "@/server/chain/clamp-audit";
-import { hashDecision } from "@/server/chain/hash";
-import {
-  SongNotWiredError,
-  songExplainClient,
-  songGateClient,
-  songMeteringClient,
-  songParseClient,
-} from "@/server/integrations/song";
+import { ensureMandateCommitted, recordDecisionOnChain } from "@/server/chain/clamp-audit";
+import { hashAuditPayload, hashMandate } from "@/server/chain/hash";
+import { verifyDecisionAgainstChain } from "@/server/chain/verification";
+import { fastApiClient } from "@/server/fastapi/client";
+import { mapDecision, mapMetrics } from "@/server/fastapi/mappers";
+import type { FastApiDecision } from "@/server/fastapi/types";
 import { requireClampSession } from "@/server/session";
-import { getDecision, getMandate, listDecisions, saveDecision, saveMandate } from "@/server/store";
 
-function publicError(error: unknown): never {
-  if (error instanceof SongNotWiredError) throw error;
-  if (error instanceof Error) throw error;
-  throw new Error("Unexpected server error.");
+async function recordFinalDecision(source: FastApiDecision) {
+  if (
+    source.decision === "NEEDS_HUMAN" ||
+    source.tx_hash ||
+    source.reason_code === "MANDATE_REVOKED"
+  ) {
+    return mapDecision(source);
+  }
+
+  const mandate = await fastApiClient.getMandate(source.mandate_id);
+  const mandateHash = hashMandate(mandate);
+  await ensureMandateCommitted(mandateHash);
+  const { txHash } = await recordDecisionOnChain({
+    mandateHash,
+    decisionHash: hashAuditPayload(source.audit_payload),
+    outcome: outcomeFromStatus(source.decision === "ALLOW" ? "allow" : "block"),
+  });
+  try {
+    const attached = await fastApiClient.attachChain(source.decision_id, {
+      network: "base-sepolia",
+      tx_hash: txHash,
+    });
+    return mapDecision(attached);
+  } catch {
+    // The chain write is already confirmed. Do not recreate the decision or
+    // deduct budget again; return the real tx hash so only /chain can be retried.
+    return {
+      ...mapDecision(source),
+      txHash,
+      blockchainNetwork: "base-sepolia",
+      chainSyncPending: true,
+    };
+  }
 }
 
 export const listDecisionsFn = createServerFn({ method: "GET" }).handler(async () => {
-  const session = await requireClampSession();
-  return { decisions: listDecisions(session.tenantId) };
+  await requireClampSession();
+  return { decisions: (await fastApiClient.listDecisions()).map(mapDecision) };
 });
 
 export const getDecisionFn = createServerFn({ method: "GET" })
   .validator(z.object({ id: z.string().min(1) }))
   .handler(async ({ data }) => {
-    const session = await requireClampSession();
-    const decision = getDecision(session.tenantId, data.id);
-    if (!decision) throw new Error("Decision not found for this tenant.");
-    return { decision };
+    await requireClampSession();
+    return { decision: mapDecision(await fastApiClient.getDecision(data.id)) };
+  });
+
+export const verifyDecisionOnBaseFn = createServerFn({ method: "GET" })
+  .validator(z.object({ decisionId: z.string().min(1) }))
+  .handler(async ({ data }) => {
+    await requireClampSession();
+    const decision = await fastApiClient.getDecision(data.decisionId);
+    const mandate = await fastApiClient.getMandate(decision.mandate_id);
+    return { verification: await verifyDecisionAgainstChain(decision, mandate) };
   });
 
 export const submitAgentRequestFn = createServerFn({ method: "POST" })
-  .validator(
-    z.object({
-      mandateId: z.string().min(1),
-      text: z.string().min(3).max(500),
-    }),
-  )
+  .validator(z.object({ mandateId: z.string().min(1), text: z.string().min(1).max(4000) }))
   .handler(async ({ data }) => {
-    try {
-      const session = await requireClampSession();
-      const mandate = getMandate(session.tenantId, data.mandateId);
-      if (!mandate) throw new Error("Mandate not found for this tenant.");
-      if (mandate.status === "revoked") {
-        throw new Error("Mandate is revoked. New requests are blocked.");
-      }
-      if (new Date(mandate.expiresAt).getTime() <= Date.now()) {
-        const expired = { ...mandate, status: "expired" as const };
-        saveMandate(expired);
-        throw new Error("Mandate is expired. New requests are blocked.");
-      }
-
-      const action = await songParseClient.parseRequest({
-        text: data.text.trim(),
-        mandate,
-      });
-      const gate = await songGateClient.evaluateGate({ mandate, action });
-
-      const decisionId = `dec${Date.now()}${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`;
-      const decision: Decision = {
-        id: decisionId,
-        tenantId: session.tenantId,
-        mandateId: mandate.id,
-        merchant: gate.action.merchant,
-        request: data.text.trim(),
-        amount: gate.action.amount,
-        fee: gate.action.fee,
-        status: gate.status,
-        reason: gate.reason,
-        rule: gate.rule,
-        time: new Date().toISOString(),
-        decisionHash: "0x",
-        txHash: null,
-        purpose: gate.action.purpose,
-      };
-      decision.decisionHash = hashDecision(decision);
-
-      const { txHash } = await recordDecisionOnChain({
-        mandateHash: mandate.mandateHash as `0x${string}`,
-        decisionHash: decision.decisionHash as `0x${string}`,
-        outcome: outcomeFromStatus(gate.status),
-      });
-      decision.txHash = txHash;
-
-      if (gate.status === "allow") {
-        const spent = mandate.spent + gate.action.amount + gate.action.fee;
-        saveMandate({ ...mandate, spent });
-      }
-
-      saveDecision(decision);
-
-      if (gate.status === "review") {
-        return { decision, explanation: null as string | null };
-      }
-
-      let explanation: string | null = null;
-      try {
-        explanation = await songExplainClient.explainDecision({
-          request: decision.request,
-          status: decision.status,
-          rule: decision.rule,
-          reason: decision.reason,
-          merchant: decision.merchant,
-          amount: decision.amount,
-          fee: decision.fee,
-        });
-      } catch (error) {
-        if (!(error instanceof SongNotWiredError)) throw error;
-        // Explain is optional after the decision is already recorded.
-        explanation = null;
-      }
-
-      return { decision, explanation };
-    } catch (error) {
-      publicError(error);
-    }
+    await requireClampSession();
+    // This POST is intentionally called once. The backend operation is not idempotent.
+    const source = await fastApiClient.createDecision({
+      mandate_id: data.mandateId,
+      request: data.text.trim(),
+    });
+    return { decision: await recordFinalDecision(source) };
   });
 
-export const resolveReviewFn = createServerFn({ method: "POST" })
+export const approveReviewFn = createServerFn({ method: "POST" })
+  .validator(z.object({ decisionId: z.string().min(1) }))
+  .handler(async ({ data }) => {
+    await requireClampSession();
+    const approved = await fastApiClient.approveDecision(data.decisionId);
+    return { decision: await recordFinalDecision(approved) };
+  });
+
+export const rejectReviewFn = createServerFn({ method: "POST" })
+  .validator(z.object({ decisionId: z.string().min(1) }))
+  .handler(async ({ data }) => {
+    await requireClampSession();
+    const rejected = await fastApiClient.rejectDecision(data.decisionId);
+    return { decision: await recordFinalDecision(rejected) };
+  });
+
+export const retryDecisionChainSyncFn = createServerFn({ method: "POST" })
   .validator(
     z.object({
       decisionId: z.string().min(1),
-      status: z.enum(["allow", "block"]),
+      txHash: z.string().regex(/^0x[0-9a-fA-F]+$/),
     }),
   )
   .handler(async ({ data }) => {
-    const session = await requireClampSession();
-    const decision = getDecision(session.tenantId, data.decisionId);
-    if (!decision) throw new Error("Decision not found for this tenant.");
-    if (decision.status !== "review") {
-      throw new Error("Only a Needs human decision can be resolved.");
-    }
-    const mandate = getMandate(session.tenantId, decision.mandateId);
-    if (!mandate) throw new Error("Mandate not found for this tenant.");
-    if (mandate.status !== "active") {
-      throw new Error("Mandate is not active.");
-    }
-
-    const next: Decision = {
-      ...decision,
-      status: data.status,
-      reason:
-        data.status === "allow"
-          ? "Operator approved a Needs human request."
-          : "Operator blocked a Needs human request.",
-      rule: "Human review",
-      time: new Date().toISOString(),
-      decisionHash: "0x",
-      txHash: null,
-    };
-    next.decisionHash = hashDecision(next);
-
-    const { txHash } = await recordDecisionOnChain({
-      mandateHash: mandate.mandateHash as `0x${string}`,
-      decisionHash: next.decisionHash as `0x${string}`,
-      outcome: outcomeFromStatus(data.status),
+    await requireClampSession();
+    const attached = await fastApiClient.attachChain(data.decisionId, {
+      network: "base-sepolia",
+      tx_hash: data.txHash,
     });
-    next.txHash = txHash;
-
-    if (data.status === "allow") {
-      saveMandate({
-        ...mandate,
-        spent: mandate.spent + next.amount + next.fee,
-      });
-    }
-
-    // Replace the pending review row with the resolved receipt.
-    saveDecision(next);
-    return { decision: next };
+    return { decision: mapDecision(attached) };
   });
 
 export const getMetricsFn = createServerFn({ method: "GET" }).handler(async () => {
   await requireClampSession();
-  try {
-    const metrics = await songMeteringClient.getEfficiencyMetrics([
-      "amazonAllow",
-      "bestbuyBlock",
-      "appleReview",
-    ]);
-    return { metrics };
-  } catch (error) {
-    publicError(error);
-  }
+  return { metrics: mapMetrics(await fastApiClient.getMetrics()) };
 });

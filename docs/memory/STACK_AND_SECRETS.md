@@ -5,7 +5,8 @@
 - Frontend and SSR: TanStack Start, React 19, Vite, Tailwind 4, shadcn
 - Package manager: Bun
 - Chain: Base Sepolia (chain id 84532), viem, ClampAudit contract
-- Sessions: signed httpOnly cookies, tenant scoped server store
+- Sessions: signed httpOnly cookies for the demo workspace
+- Product state: FastAPI + SQLite; current backend does not enforce tenant isolation
 - Song integrations: typed fail closed contracts under src/server/integrations/song/
 - Client RPC entrypoints: src/api/* (createServerFn). Do not import src/server/** from client components.
 
@@ -54,10 +55,10 @@ Do not use api.tinyfish.ai. That host is wrong.
 - Docs: https://kiln.bricksum.com/docs/en
 - Base URL: https://api.bricksum.com/v1
 - Keys: sk-bk-…
-- Prefer model qwen3-32b after checking the live catalog
+- Current backend model: `deepseek-v4.1-flash`
 
 ## Security notes
 
 - No localStorage or sessionStorage for product state
-- Multi tenant: every store read or write is scoped by tenantId from session
+- Current limitation: FastAPI mandate/decision records are not tenant-isolated; the signed session is a UI/demo boundary, not backend data isolation
 - Rotate any key pasted into chat after the hack

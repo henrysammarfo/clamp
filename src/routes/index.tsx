@@ -5,16 +5,15 @@ import { PublicHeader } from "@/components/clamp/public-header";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "CLAMP · Control before action" },
+      { title: "CLAMP · AI spending authority with control" },
       {
         name: "description",
-        content:
-          "You set a spending mandate. The agent asked outside it. Nothing paid. The refuse is on the audit trail.",
+        content: "An authorization and audit control plane for AI agents that spend.",
       },
-      { property: "og:title", content: "CLAMP · Control before action" },
+      { property: "og:title", content: "CLAMP · AI spending authority with control" },
       {
         property: "og:description",
-        content: "Delegation control for AI agents that spend.",
+        content: "Give AI spending authority without giving up control.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -24,10 +23,10 @@ export const Route = createFileRoute("/")({
 });
 
 const stats = [
-  { symbol: "1", target: 1, suffix: "", decimals: 0, label: "Code gate" },
+  { symbol: "1", target: 1, suffix: "", decimals: 0, label: "Deterministic gate" },
   { symbol: "3", target: 3, suffix: "", decimals: 0, label: "Outcomes" },
-  { symbol: "0", target: 0, suffix: "", decimals: 0, label: "Fake pays" },
-  { symbol: "B", target: 0, suffix: "", decimals: 0, label: "Challenge B" },
+  { symbol: "30", target: 30, suffix: "", decimals: 0, label: "Benchmark cases" },
+  { symbol: "0", target: 0, suffix: "", decimals: 0, label: "Payments executed" },
 ];
 
 function Index() {
@@ -45,10 +44,6 @@ function Index() {
         stats.forEach((s, i) => {
           setTimeout(
             () => {
-              if (s.label === "Challenge B") {
-                setValues((old) => old.map((v, j) => (j === i ? "B" : v)));
-                return;
-              }
               const begin = performance.now();
               const duration = 1200 + i * 60;
               const tick = (now: number) => {
@@ -88,12 +83,13 @@ function Index() {
           <div className="trust-pill">GWDC 2026 Korea · Team 14 · Challenge B</div>
         </div>
         <h1 className="headline">
-          <span>CLAMP</span>
-          <span>Control before action</span>
+          <span style={{ whiteSpace: "normal" }}>
+            Give AI spending authority without giving up control.
+          </span>
         </h1>
         <p className="hero-copy anim" style={{ "--d": ".28s" } as React.CSSProperties}>
-          You set a spending mandate. The agent asked outside it. Nothing paid. The refuse is on the
-          audit trail.
+          CLAMP is an authorization and audit control plane for AI agents that spend. Delegate
+          narrow, temporary authority while deterministic code enforces the boundaries.
         </p>
         <div className="flex flex-wrap gap-3 anim" style={{ "--d": ".4s" } as React.CSSProperties}>
           <Link to="/sign-in" className="hero-cta">

@@ -1,72 +1,42 @@
-import { encodeAbiParameters, keccak256, parseAbiParameters } from "viem";
-import type { Decision, Mandate } from "@/lib/clamp-types";
+import { keccak256, stringToHex } from "viem";
+import type {
+  AuditPayload,
+  FastApiMandate,
+  FastApiRevocationAuditPayload,
+} from "@/server/fastapi/types";
 
-const mandateParams = parseAbiParameters(
-  "string id, string tenantId, string purpose, uint256 budget, string[] merchants, string expiresAt, uint256 chainId",
-);
+function canonicalize(value: unknown): string {
+  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(canonicalize).join(",")}]`;
+  const record = value as Record<string, unknown>;
+  return `{${Object.keys(record)
+    .sort()
+    .map((key) => `${JSON.stringify(key)}:${canonicalize(record[key])}`)
+    .join(",")}}`;
+}
 
-const decisionParams = parseAbiParameters(
-  "string id, string tenantId, string mandateId, string request, string merchant, uint256 amount, uint256 fee, string status, string rule, string reason, uint256 chainId",
-);
-
-const BASE_SEPOLIA_CHAIN_ID = 84532n;
-
-function moneyToUint(value: number): bigint {
-  if (!Number.isFinite(value) || value < 0) {
-    throw new Error("Amount values must be finite and non negative.");
+export function hashMandate(mandate: FastApiMandate): `0x${string}` {
+  const authority: Record<string, unknown> = {
+    id: mandate.id,
+    name: mandate.name,
+    purpose: mandate.purpose,
+    total_budget: mandate.total_budget,
+    currency: mandate.currency,
+    allowed_merchants: [...mandate.allowed_merchants].sort(),
+    expires_at: mandate.expires_at,
+    human_approval_threshold: mandate.human_approval_threshold,
+    created_at: mandate.created_at,
+  };
+  if (mandate.purpose_category !== null) {
+    authority.purpose_category = mandate.purpose_category;
   }
-  // Store USD cents as integer to avoid float drift in hashes.
-  return BigInt(Math.round(value * 100));
+  return keccak256(stringToHex(canonicalize(authority)));
 }
 
-export function hashMandate(
-  mandate: Pick<Mandate, "id" | "tenantId" | "purpose" | "budget" | "merchants" | "expiresAt">,
-): `0x${string}` {
-  const merchants = [...mandate.merchants]
-    .map((m) => m.trim())
-    .filter(Boolean)
-    .sort();
-  return keccak256(
-    encodeAbiParameters(mandateParams, [
-      mandate.id,
-      mandate.tenantId,
-      mandate.purpose.trim(),
-      moneyToUint(mandate.budget),
-      merchants,
-      mandate.expiresAt,
-      BASE_SEPOLIA_CHAIN_ID,
-    ]),
-  );
+export function hashAuditPayload(payload: AuditPayload): `0x${string}` {
+  return keccak256(stringToHex(canonicalize(payload)));
 }
 
-export function hashDecision(
-  decision: Pick<
-    Decision,
-    | "id"
-    | "tenantId"
-    | "mandateId"
-    | "request"
-    | "merchant"
-    | "amount"
-    | "fee"
-    | "status"
-    | "rule"
-    | "reason"
-  >,
-): `0x${string}` {
-  return keccak256(
-    encodeAbiParameters(decisionParams, [
-      decision.id,
-      decision.tenantId,
-      decision.mandateId,
-      decision.request,
-      decision.merchant,
-      moneyToUint(decision.amount),
-      moneyToUint(decision.fee),
-      decision.status,
-      decision.rule,
-      decision.reason,
-      BASE_SEPOLIA_CHAIN_ID,
-    ]),
-  );
+export function hashRevocationAuditPayload(payload: FastApiRevocationAuditPayload): `0x${string}` {
+  return keccak256(stringToHex(canonicalize(payload)));
 }
