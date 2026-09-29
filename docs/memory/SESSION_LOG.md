@@ -1,4 +1,17 @@
 
+## 2026-09-29 Song live E2E success
+
+Song confirmed recorder access, funded her Base Sepolia wallet, and completed live E2E:
+
+- Mandate creation committed on Base Sepolia
+- Amazon $65 → ALLOW → on chain receipt confirmed
+- Apple $120 → NEEDS_HUMAN → approved → ALLOW → on chain receipt confirmed
+- BestBuy $20 → BLOCK → on chain audit receipt confirmed
+- FastAPI `/api/decisions` shows real `base-sepolia` tx hashes for final decisions
+- Budget state correct after reload (reported $300 total context)
+
+Architecture in use: React UI → thin TanStack adapters → FastAPI → ClampAudit v2 → confirmed tx → FastAPI `/chain`.
+
 ## 2026-09-29 Song integration confirmations
 
 - Song accepted GitHub invite and is integrating FastAPI as source of truth.
