@@ -34,6 +34,7 @@ def _mandate_from_row(row: sqlite3.Row) -> Mandate:
         expires_at=datetime.fromisoformat(row["expires_at"]),
         human_approval_threshold=Decimal(row["human_approval_threshold"]),
         status=row["status"], created_at=datetime.fromisoformat(row["created_at"]),
+        blockchain_network=row["blockchain_network"], tx_hash=row["tx_hash"],
     )
 
 
@@ -67,7 +68,7 @@ class ClampService:
         mandate_id, created = str(uuid4()), utcnow()
         with self.db.transaction() as connection:
             connection.execute(
-                "INSERT INTO mandates VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO mandates (id, name, purpose, total_budget, remaining_budget, currency, allowed_merchants, expires_at, human_approval_threshold, status, created_at, blockchain_network, tx_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL)",
                 (mandate_id, data.name, data.purpose, str(data.total_budget), str(data.total_budget),
                  data.currency, json.dumps(data.allowed_merchants), data.expires_at.isoformat(),
                  str(data.human_approval_threshold), MandateStatus.ACTIVE.value, created.isoformat()),
@@ -150,16 +151,42 @@ class ClampService:
             )
         return self.get_decision(decision_id)
 
+    def attach_mandate_chain(self, mandate_id: str, data: ChainAttachment) -> Mandate:
+        with self.db.transaction() as connection:
+            existing = connection.execute(
+                "SELECT blockchain_network, tx_hash FROM mandates WHERE id = ?",
+                (mandate_id,),
+            ).fetchone()
+            if not existing:
+                raise HTTPException(404, "Mandate not found")
+            if existing["tx_hash"]:
+                if existing["blockchain_network"] != data.network or existing["tx_hash"] != data.tx_hash:
+                    raise HTTPException(409, "Blockchain transaction is already attached")
+            else:
+                connection.execute(
+                    "UPDATE mandates SET blockchain_network = ?, tx_hash = ? WHERE id = ?",
+                    (data.network, data.tx_hash, mandate_id),
+                )
+        return self.get_mandate(mandate_id)
+
     def attach_chain(self, decision_id: str, data: ChainAttachment) -> DecisionReceipt:
         with self.db.transaction() as connection:
-            existing = connection.execute("SELECT decision, tx_hash FROM decisions WHERE decision_id = ?", (decision_id,)).fetchone()
+            existing = connection.execute(
+                "SELECT decision, blockchain_network, tx_hash FROM decisions WHERE decision_id = ?",
+                (decision_id,),
+            ).fetchone()
             if not existing:
                 raise HTTPException(404, "Decision not found")
             if existing["decision"] == DecisionValue.NEEDS_HUMAN.value:
                 raise HTTPException(409, "Decision must be approved before blockchain attachment")
             if existing["tx_hash"]:
-                raise HTTPException(409, "Blockchain transaction is already attached")
-            connection.execute("UPDATE decisions SET blockchain_network = ?, tx_hash = ? WHERE decision_id = ?", (data.network, data.tx_hash, decision_id))
+                if existing["blockchain_network"] != data.network or existing["tx_hash"] != data.tx_hash:
+                    raise HTTPException(409, "Blockchain transaction is already attached")
+            else:
+                connection.execute(
+                    "UPDATE decisions SET blockchain_network = ?, tx_hash = ? WHERE decision_id = ?",
+                    (data.network, data.tx_hash, decision_id),
+                )
         return self.get_decision(decision_id)
 
     def metrics_summary(self) -> dict:
