@@ -1,3 +1,12 @@
+
+## 2026-09-29 chain live
+
+- Deployer: 0x9ADd0ac311e9E528800afc3F4A04e9cDe52C9cE0
+- ClampAudit: 0xebf79a18105f43730d6b54fc53144499c8050287
+- Deploy tx: 0x6c1bc4c64080e737a387ffb15a7e4fad3e41b06684f900ca35c00097e83e7d98
+- Explorer: https://sepolia.basescan.org/address/0xebf79a18105f43730d6b54fc53144499c8050287
+- Private key stays in local .env only. Rotate after the hack.
+
 # Session log
 
 ## 2026-09-29 submit deadline confirm
