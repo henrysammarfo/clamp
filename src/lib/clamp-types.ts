@@ -16,6 +16,10 @@ export type Mandate = {
   mandateHash: string;
   commitTxHash: string | null;
   chainSyncPending: boolean;
+  revocationId: string | null;
+  revokedAt: string | null;
+  revokeTxHash: string | null;
+  revokeBlockchainNetwork: string | null;
   createdAt: string;
 };
 
