@@ -6,7 +6,6 @@ Team 14 · GWDC 2026 Korea · Challenge B · FuriosaAI x Bricksum
 
 ## Honesty
 
-- Henry ships live Base Sepolia mandate commits and decision receipts when chain env is set.
 - FastAPI is the source of truth for Kiln parsing, deterministic policy, budgets, mandates, decisions, metrics, audit payloads, and confirmed transaction hashes.
 - TanStack is a server-side adapter and UI. It does not calculate policy or budgets and does not store mandate or decision state.
 - No fake Kiln calls. No mock pays. No invented transaction hashes.
@@ -24,16 +23,28 @@ Team 14 · GWDC 2026 Korea · Challenge B · FuriosaAI x Bricksum
 - TanStack Start + React 19 + Vite + Tailwind
 - Signed httpOnly server sessions (no localStorage for product state)
 - FastAPI + SQLite authoritative persistence
-- Base Sepolia + `ClampAudit` via viem
+- Base Sepolia + access-controlled `ClampAudit` v2 via viem
 
 Final Allow and Block receipts commit the complete backend `audit_payload` to Base Sepolia. Needs human receipts remain off chain until approval. The backend currently exposes approval only, so human rejection and mandate revocation are disabled in the UI rather than implemented locally.
 
-## Live Base Sepolia (hackathon)
+## Live Base Sepolia
 
-- Deployer: `0x9ADd0ac311e9E528800afc3F4A04e9cDe52C9cE0`
-- ClampAudit: [`0xebf79a18105f43730d6b54fc53144499c8050287`](https://sepolia.basescan.org/address/0xebf79a18105f43730d6b54fc53144499c8050287)
-- Deploy tx: [`0x6c1bc4c64080e737a387ffb15a7e4fad3e41b06684f900ca35c00097e83e7d98`](https://sepolia.basescan.org/tx/0x6c1bc4c64080e737a387ffb15a7e4fad3e41b06684f900ca35c00097e83e7d98)
-- Example mandate commit: [`0x8c2e412f46d33d515c25b643f0f8e1b615e7f85b7aa8b967231eaadb47a0be4a`](https://sepolia.basescan.org/tx/0x8c2e412f46d33d515c25b643f0f8e1b615e7f85b7aa8b967231eaadb47a0be4a)
+Hardened ClampAudit v2 uses access-controlled writers, a terminal revoke state, and outcome codes 1 through 4:
+
+- Deployer and owner: `0x9ADd0ac311e9E528800afc3F4A04e9cDe52C9cE0`
+- ClampAudit v2: [`0x4648520fe2b192791c9ae13e46e0cba9544c42d6`](https://sepolia.basescan.org/address/0x4648520fe2b192791c9ae13e46e0cba9544c42d6)
+- Deploy tx: [`0xb7bfa077bad8fea9aecc679b7feba0429138a8983123dd2a0be1be9a6a2b8797`](https://sepolia.basescan.org/tx/0xb7bfa077bad8fea9aecc679b7feba0429138a8983123dd2a0be1be9a6a2b8797)
+- Live invariant script: `bun scripts/audit-clamp-live.ts`
+- Audit notes: [`docs/memory/CHAIN_AUDIT.md`](docs/memory/CHAIN_AUDIT.md)
+
+The configured private key must belong to the owner or an address approved through `setRecorder`.
+
+Current receipt outcomes:
+
+- Allow: `1`
+- Block: `2`
+- Needs human: not recorded until approval
+- Approved Needs human: Allow, `1`
 
 ## Setup
 
@@ -42,10 +53,9 @@ bun install
 cp .env.example .env
 # fill SESSION_SECRET (32+ chars)
 # set FASTAPI_BASE_URL (defaults to http://127.0.0.1:8000)
-# fill BASE_SEPOLIA_RPC_URL and BASE_SEPOLIA_PRIVATE_KEY
-bun run compile:audit
-bun run deploy:audit
-# put returned address into CLAMP_AUDIT_ADDRESS
+# fill BASE_SEPOLIA_RPC_URL
+# set BASE_SEPOLIA_PRIVATE_KEY to the owner or an approved recorder
+# CLAMP_AUDIT_ADDRESS must be 0x4648520fe2b192791c9ae13e46e0cba9544c42d6
 bun run dev
 ```
 
@@ -56,22 +66,17 @@ bun run dev
 - `bun run lint` lint
 - `bun run test` unit tests
 - `bun run compile:audit` compile Solidity
-- `bun run deploy:audit` deploy ClampAudit to Base Sepolia
+- `bun run deploy:audit` deploy a new ClampAudit contract
+- `bun run audit:live` audit the configured live contract
 
 ## Demo beat
 
-1. Sign in to create a tenant session.
-2. Create a mandate ($50, Amazon Apple Uber, office supplies). Confirm Basescan tx.
-3. Open on a BestBuy request. FastAPI returns Block. Nothing paid.
-4. Run an Amazon allow under the same mandate.
-5. Show persisted Kiln metrics from FastAPI. The all AI baseline is labeled unavailable until measured.
+1. Sign in to create a server session.
+2. Create a mandate and confirm the v2 `MandateCommitted` event on BaseScan.
+3. Submit a disallowed merchant request. FastAPI returns Block and nothing is paid.
+4. Submit an allowed request under the same mandate.
+5. Show persisted Kiln metrics from FastAPI. The all AI baseline is unavailable until measured.
 6. Hand the audit trail to a second person.
-
-## Prebuilt vs hackathon built
-
-- UI shell and brand started in the Lovable TanStack template before and during the hack.
-- Henry live session, tenant store, ClampAudit, route map, and fail closed Song contracts are hackathon built.
-- Mark any further prebuilt assets in submit notes.
 
 ## Submit package
 

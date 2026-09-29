@@ -12,18 +12,21 @@ function canonicalize(value: unknown): string {
 }
 
 export function hashMandate(mandate: FastApiMandate): `0x${string}` {
-  const payload = canonicalize({
-    id: mandate.id,
-    name: mandate.name,
-    purpose: mandate.purpose,
-    total_budget: mandate.total_budget,
-    currency: mandate.currency,
-    allowed_merchants: [...mandate.allowed_merchants].sort(),
-    expires_at: mandate.expires_at,
-    human_approval_threshold: mandate.human_approval_threshold,
-    created_at: mandate.created_at,
-  });
-  return keccak256(stringToHex(payload));
+  return keccak256(
+    stringToHex(
+      canonicalize({
+        id: mandate.id,
+        name: mandate.name,
+        purpose: mandate.purpose,
+        total_budget: mandate.total_budget,
+        currency: mandate.currency,
+        allowed_merchants: [...mandate.allowed_merchants].sort(),
+        expires_at: mandate.expires_at,
+        human_approval_threshold: mandate.human_approval_threshold,
+        created_at: mandate.created_at,
+      }),
+    ),
+  );
 }
 
 export function hashAuditPayload(payload: AuditPayload): `0x${string}` {

@@ -62,4 +62,19 @@ writeFileSync(
     2,
   ),
 );
+
+const customErrors = [
+  { type: "error", name: "NotOwner", inputs: [] },
+  { type: "error", name: "NotWriter", inputs: [] },
+  { type: "error", name: "ZeroAddress", inputs: [] },
+  { type: "error", name: "EmptyHash", inputs: [] },
+  { type: "error", name: "InvalidOutcome", inputs: [] },
+  { type: "error", name: "MandateMissing", inputs: [] },
+  { type: "error", name: "MandateAlreadyCommitted", inputs: [] },
+  { type: "error", name: "MandateAlreadyRevoked", inputs: [] },
+  { type: "error", name: "DecisionAlreadyRecorded", inputs: [] },
+];
+const runtimeAbiPath = join(root, "src/server/chain/clamp-audit-abi.json");
+writeFileSync(runtimeAbiPath, JSON.stringify([...artifact.abi, ...customErrors], null, 2));
 console.log(`Wrote ${artifactPath}`);
+console.log(`Wrote ${runtimeAbiPath}`);
