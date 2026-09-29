@@ -62,6 +62,27 @@ Mandate receipt persistence was separately verified with [`0xa99d0ad8…b32ea`](
 
 See [`docs/SUBMISSION_EVIDENCE.md`](docs/SUBMISSION_EVIDENCE.md) for IDs, hashes, reproduction commands, and the final capture checklist.
 
+### Verified Kiln smoke run
+
+A real Kiln smoke run completed with `failure: null` and produced all three expected policy outcomes from parsed natural-language requests:
+
+| Scenario | Parsed request | Policy outcome |
+| --- | --- | --- |
+| A | Amazon keyboard · $65 | ALLOW |
+| B | Apple AirPods · $120 | BLOCK · merchant not allowed |
+| C | Amazon office chair · $90 | NEEDS_HUMAN · approval threshold |
+
+Persisted Kiln metrics from that run:
+
+- Model: `deepseek-v4.1-flash`
+- Calls: `3`
+- Prompt tokens: `335`
+- Completion tokens: `971`
+- Total tokens: `1306`
+- Average latency: `4554.67 ms`
+
+The per-call rows, including request IDs, token counts, latency, and resulting decision IDs, are listed in [`docs/SUBMISSION_EVIDENCE.md`](docs/SUBMISSION_EVIDENCE.md).
+
 ## Setup
 
 ```bash
