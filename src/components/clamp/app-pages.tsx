@@ -493,13 +493,16 @@ export function MandateDetailPage({ id }: { id: string }) {
               className="w-full"
               disabled={revoking}
               onClick={async () => {
-                if (!window.confirm("Revoke this mandate? Future requests will be blocked.")) return;
+                if (!window.confirm("Revoke this mandate? Future requests will be blocked."))
+                  return;
                 setRevoking(true);
                 try {
                   const result = await revokeMandateFn({ data: { mandateId: mandate.id } });
                   setMandate(result.mandate);
                   if (result.mandate.revokeChainSyncPending) {
-                    toast.error("Revocation is on chain, but the backend receipt still needs to sync.");
+                    toast.error(
+                      "Revocation is on chain, but the backend receipt still needs to sync.",
+                    );
                   } else {
                     toast.success("Mandate revoked and recorded on Base Sepolia");
                     load();
@@ -993,7 +996,8 @@ export function ReviewsPage() {
               </Button>
             </div>
             <p className="mt-3 text-xs text-muted-foreground">
-              Approve deducts budget and records ALLOW. Reject keeps the budget unchanged and records BLOCK.
+              Approve deducts budget and records ALLOW. Reject keeps the budget unchanged and
+              records BLOCK.
             </p>
           </div>
         ))}
