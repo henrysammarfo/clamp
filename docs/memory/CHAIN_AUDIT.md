@@ -45,7 +45,7 @@ Do **not** use v1 style `ALLOW=0, BLOCK=1, REVIEW=2, REVOKE=3`. That mapping is 
 1. **Open writer surface** — v1 had no access control. v2: only `owner` or `isRecorder`.
 2. **Post revoke writes** — v1 allowed later decisions. v2 sets `revoked` on outcome 4 and rejects further writes.
 3. **Outcome encoding** — v2 uses 1..4; storage zero means unset.
-4. **Hash canonicalization** — client hashes use `abi.encode` style via viem `encodeAbiParameters`, cents as integers, Base Sepolia chain id domain.
+4. **Hash canonicalization** — the client deterministically canonicalizes the backend mandate/audit JSON, then hashes the UTF-8 canonical string with Keccak-256 via viem. Dynamic fields such as remaining budget are excluded from the mandate hash.
 5. **Review outcome available but unused** — v2 reserves outcome 3 for review, but the current FastAPI flow keeps Needs human off chain until approval and then records outcome 1.
 6. **Read after write** — client retries read back after mining to survive public RPC lag.
 7. **ABI source of truth** — runtime ABI is compiled solc output, not a hand copied mismatch.
