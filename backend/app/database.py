@@ -15,7 +15,9 @@ CREATE TABLE IF NOT EXISTS mandates (
     expires_at TEXT NOT NULL,
     human_approval_threshold TEXT NOT NULL,
     status TEXT NOT NULL,
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    blockchain_network TEXT,
+    tx_hash TEXT
 );
 CREATE TABLE IF NOT EXISTS decisions (
     decision_id TEXT PRIMARY KEY,
@@ -60,6 +62,11 @@ class Database:
     def initialize(self) -> None:
         with self.connect() as connection:
             connection.executescript(SCHEMA)
+            columns = {row["name"] for row in connection.execute("PRAGMA table_info(mandates)")}
+            if "blockchain_network" not in columns:
+                connection.execute("ALTER TABLE mandates ADD COLUMN blockchain_network TEXT")
+            if "tx_hash" not in columns:
+                connection.execute("ALTER TABLE mandates ADD COLUMN tx_hash TEXT")
 
     @contextmanager
     def transaction(self):
