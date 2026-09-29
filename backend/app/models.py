@@ -62,6 +62,8 @@ class Mandate(BaseModel):
     human_approval_threshold: Decimal
     status: MandateStatus
     created_at: datetime
+    blockchain_network: str | None = None
+    tx_hash: str | None = None
 
 
 class StructuredPurchaseRequest(BaseModel):
