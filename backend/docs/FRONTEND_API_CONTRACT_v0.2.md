@@ -14,6 +14,7 @@ This document describes the current FastAPI implementation. `docs/openapi.json` 
 - `NEEDS_HUMAN` deducts nothing until approval succeeds.
 - `POST /api/decisions` is **not idempotent**. The UI must prevent double-submit and must not automatically retry it.
 - Submit `audit_payload` to Base Sepolia exactly as returned. Call `/chain` only after the transaction is confirmed.
+- Mandate and decision chain attachment endpoints are retry-safe for the same `network + tx_hash`. Repeating the same receipt returns 200; attempting to replace it with a different receipt returns 409.
 
 The examples below use stable illustrative UUIDs and timestamps. Kiln controls the exact text inside `structured_request.item` and `structured_request.purpose`.
 
@@ -49,9 +50,26 @@ Response: `201 Created`
   "expires_at": "2026-10-01T12:00:00Z",
   "human_approval_threshold": "80",
   "status": "ACTIVE",
-  "created_at": "2026-09-29T03:00:00Z"
+  "created_at": "2026-09-29T03:00:00Z",
+  "blockchain_network": null,
+  "tx_hash": null
 }
 ```
+
+### `POST /api/mandates/{id}/chain`
+
+Call only after `commitMandate` is confirmed on Base Sepolia.
+
+Request:
+
+```json
+{
+  "network": "base-sepolia",
+  "tx_hash": "0xabc123"
+}
+```
+
+Response: `200 OK`. The full mandate is returned with `blockchain_network` and `tx_hash` populated. Repeating the exact same attachment is safe and returns `200`; a different transaction for the same mandate returns `409`.
 
 ### `GET /api/mandates`
 
@@ -70,7 +88,9 @@ Response: `200 OK`. Newest mandates are first.
     "expires_at": "2026-10-01T12:00:00Z",
     "human_approval_threshold": "80",
     "status": "ACTIVE",
-    "created_at": "2026-09-29T03:00:00Z"
+    "created_at": "2026-09-29T03:00:00Z",
+    "blockchain_network": "base-sepolia",
+    "tx_hash": "0xabc123"
   }
 ]
 ```
@@ -232,7 +252,7 @@ Request:
 }
 ```
 
-Response: `200 OK`. It returns the complete receipt, with these fields changed:
+Response: `200 OK`. It returns the complete receipt, with these fields changed. Repeating the exact same `network + tx_hash` is safe and returns the same receipt; a conflicting replacement returns `409`:
 
 ```json
 {
@@ -279,7 +299,7 @@ The API uses FastAPI's standard JSON error envelope.
 | Approve an ALLOW/BLOCK/already approved receipt | 409 | `{"detail":"Only NEEDS_HUMAN decisions can be approved"}` |
 | Approval after mandate expiry/revocation or insufficient budget | 409 | `{"detail":"Mandate is no longer active or has insufficient budget"}` |
 | Chain a NEEDS_HUMAN receipt | 409 | `{"detail":"Decision must be approved before blockchain attachment"}` |
-| Attach a second chain transaction | 409 | `{"detail":"Blockchain transaction is already attached"}` |
+| Replace an existing mandate/decision chain receipt with a different transaction | 409 | `{"detail":"Blockchain transaction is already attached"}` |
 | Missing local Kiln key | 502 | `{"detail":"KILN_API_KEY is not configured"}` |
 | Kiln transport/API failure | 502 | `{"detail":"Kiln request failed: <upstream error>"}` |
 | Empty Kiln completion | 502 | `{"detail":"Kiln returned an empty response"}` |
@@ -315,4 +335,5 @@ Request validation returns `422 Unprocessable Entity`. The exact entries vary by
 5. After successful approval, use the newly returned receipt and its updated `audit_payload`.
 6. Submit that exact payload to the Base Sepolia contract.
 7. Wait for transaction confirmation.
-8. Attach `{ "network": "base-sepolia", "tx_hash": "..." }` through `/chain` exactly once.
+8. Attach `{ "network": "base-sepolia", "tx_hash": "..." }` through `/chain`.
+9. If the chain transaction is confirmed but receipt attachment fails, do **not** recreate the mandate/decision or resubmit the purchase request. Retry only the same `/chain` attachment using the already-confirmed transaction hash.
