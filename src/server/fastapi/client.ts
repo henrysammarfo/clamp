@@ -55,6 +55,11 @@ export const fastApiClient = {
       method: "POST",
       body: JSON.stringify(input),
     }),
+  attachMandateChain: (id: string, input: { network: string; tx_hash: string }) =>
+    request<FastApiMandate>(`/api/mandates/${encodeURIComponent(id)}/chain`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
   listDecisions: () => request<FastApiDecision[]>("/api/decisions"),
   getDecision: (id: string) => request<FastApiDecision>(`/api/decisions/${encodeURIComponent(id)}`),
   createDecision: (input: { mandate_id: string; request: string }) =>
