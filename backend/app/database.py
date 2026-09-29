@@ -17,7 +17,11 @@ CREATE TABLE IF NOT EXISTS mandates (
     status TEXT NOT NULL,
     created_at TEXT NOT NULL,
     blockchain_network TEXT,
-    tx_hash TEXT
+    tx_hash TEXT,
+    revocation_id TEXT,
+    revoked_at TEXT,
+    revoke_blockchain_network TEXT,
+    revoke_tx_hash TEXT
 );
 CREATE TABLE IF NOT EXISTS decisions (
     decision_id TEXT PRIMARY KEY,
@@ -67,6 +71,14 @@ class Database:
                 connection.execute("ALTER TABLE mandates ADD COLUMN blockchain_network TEXT")
             if "tx_hash" not in columns:
                 connection.execute("ALTER TABLE mandates ADD COLUMN tx_hash TEXT")
+            if "revocation_id" not in columns:
+                connection.execute("ALTER TABLE mandates ADD COLUMN revocation_id TEXT")
+            if "revoked_at" not in columns:
+                connection.execute("ALTER TABLE mandates ADD COLUMN revoked_at TEXT")
+            if "revoke_blockchain_network" not in columns:
+                connection.execute("ALTER TABLE mandates ADD COLUMN revoke_blockchain_network TEXT")
+            if "revoke_tx_hash" not in columns:
+                connection.execute("ALTER TABLE mandates ADD COLUMN revoke_tx_hash TEXT")
 
     @contextmanager
     def transaction(self):
