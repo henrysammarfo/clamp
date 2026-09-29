@@ -6,6 +6,7 @@ import {
   recordDecisionOnChain,
 } from "@/server/chain/clamp-audit";
 import { hashMandate, hashRevocationAuditPayload } from "@/server/chain/hash";
+import { verifyMandateAgainstChain } from "@/server/chain/verification";
 import { fastApiClient } from "@/server/fastapi/client";
 import { mapMandate } from "@/server/fastapi/mappers";
 import { requireClampSession } from "@/server/session";
@@ -31,6 +32,14 @@ export const getMandateFn = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     await requireClampSession();
     return { mandate: mapMandate(await fastApiClient.getMandate(data.id)) };
+  });
+
+export const verifyMandateOnBaseFn = createServerFn({ method: "GET" })
+  .validator(z.object({ mandateId: z.string().min(1) }))
+  .handler(async ({ data }) => {
+    await requireClampSession();
+    const mandate = await fastApiClient.getMandate(data.mandateId);
+    return { verification: await verifyMandateAgainstChain(mandate) };
   });
 
 export const createMandateFn = createServerFn({ method: "POST" })

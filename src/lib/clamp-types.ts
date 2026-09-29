@@ -88,6 +88,47 @@ export type EfficiencyMetrics = {
   averageLatencyMs: number;
 };
 
+export type ChainDecisionVerification = {
+  status: "VERIFIED" | "MISMATCH" | "NOT_RECORDED" | "REVOCATION_ENFORCED";
+  decisionId: string;
+  decisionHash: string;
+  mandateHash: string;
+  expectedOutcome: 1 | 2 | 3;
+  localTxHash: string | null;
+  message: string;
+  onChain: {
+    exists: boolean;
+    mandateHash: string | null;
+    outcome: number;
+    actor: string | null;
+    recordedAt: string | null;
+  };
+  checks: {
+    exists: boolean;
+    mandateHashMatches: boolean;
+    outcomeMatches: boolean;
+  };
+};
+
+export type ChainMandateVerification = {
+  status: "VERIFIED" | "MISMATCH" | "NOT_RECORDED";
+  mandateId: string;
+  mandateHash: string;
+  localStatus: "ACTIVE" | "EXPIRED" | "REVOKED";
+  localTxHash: string | null;
+  message: string;
+  onChain: {
+    exists: boolean;
+    revoked: boolean;
+    committer: string | null;
+    committedAt: string | null;
+  };
+  checks: {
+    exists: boolean;
+    revokedMatches: boolean;
+  };
+};
+
 export type CaseStudy = {
   slug: string;
   title: string;

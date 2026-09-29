@@ -23,6 +23,8 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   explorerTxUrl,
   statusLabel,
+  type ChainDecisionVerification,
+  type ChainMandateVerification,
   type Decision,
   type DecisionStatus,
   type EfficiencyMetrics,
@@ -38,6 +40,7 @@ import {
   rejectReviewFn,
   retryDecisionChainSyncFn,
   submitAgentRequestFn,
+  verifyDecisionOnBaseFn,
 } from "@/api/decisions";
 import {
   createMandateFn,
@@ -47,6 +50,7 @@ import {
   retryMandateRevocationChainSyncFn,
   retryMandateRevocationFn,
   revokeMandateFn,
+  verifyMandateOnBaseFn,
 } from "@/api/mandates";
 import { getRuntimeStatusFn } from "@/api/settings";
 import { AppShell } from "./app-shell";
@@ -428,6 +432,8 @@ export function MandateDetailPage({ id }: { id: string }) {
   const [decisions, setDecisions] = useState<Decision[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [revoking, setRevoking] = useState(false);
+  const [verification, setVerification] = useState<ChainMandateVerification | null>(null);
+  const [verifying, setVerifying] = useState(false);
 
   const load = () => {
     Promise.all([getMandateFn({ data: { id } }), listDecisionsFn()])
@@ -525,6 +531,88 @@ export function MandateDetailPage({ id }: { id: string }) {
                 <ExternalLink /> View on Basescan
               </a>
             </Button>
+          )}
+          <Button
+            variant="outline"
+            className="mb-3 w-full"
+            disabled={verifying}
+            onClick={async () => {
+              setVerifying(true);
+              try {
+                const result = await verifyMandateOnBaseFn({
+                  data: { mandateId: mandate.id },
+                });
+                setVerification(result.verification);
+              } catch (error) {
+                toast.error(errMessage(error));
+              } finally {
+                setVerifying(false);
+              }
+            }}
+          >
+            <Shield /> {verifying ? "Verifying…" : "Verify mandate on Base"}
+          </Button>
+          {verification && (
+            <div className="mb-5 rounded-lg border border-border p-4 text-sm">
+              <span
+                className={`status-badge ${verification.status === "VERIFIED" ? "status-allow" : verification.status === "MISMATCH" ? "status-block" : "status-review"}`}
+              >
+                {verification.status}
+              </span>
+              <p className="mt-3 text-muted-foreground">{verification.message}</p>
+              <dl className="mt-3 grid gap-2">
+                <div>
+                  <dt className="text-muted-foreground">Mandate hash</dt>
+                  <dd className="font-mono break-all">{verification.mandateHash}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Local / on chain</dt>
+                  <dd>
+                    {verification.localStatus} / revoked:{" "}
+                    {verification.onChain.revoked ? "Yes" : "No"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Exists on chain</dt>
+                  <dd>{verification.checks.exists ? "Yes" : "No"}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Revoked state match</dt>
+                  <dd>
+                    {verification.localStatus === "EXPIRED"
+                      ? "Not applicable"
+                      : verification.checks.revokedMatches
+                        ? "Yes"
+                        : "No"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Committer</dt>
+                  <dd className="font-mono break-all">
+                    {verification.onChain.committer ?? "Not recorded"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Committed at</dt>
+                  <dd>
+                    {verification.onChain.committedAt
+                      ? new Date(verification.onChain.committedAt).toLocaleString()
+                      : "Not recorded"}
+                  </dd>
+                </div>
+              </dl>
+              {verification.localTxHash && (
+                <Button asChild variant="link" className="mt-2 px-0">
+                  <a
+                    href={explorerTxUrl(verification.localTxHash)}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <ExternalLink /> View local commit tx on BaseScan
+                  </a>
+                </Button>
+              )}
+            </div>
           )}
           {mandate.status === "active" && (
             <Button
@@ -824,6 +912,8 @@ export function DecisionsPage() {
 export function DecisionDetailPage({ id }: { id: string }) {
   const [decision, setDecision] = useState<Decision | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [verification, setVerification] = useState<ChainDecisionVerification | null>(null);
+  const [verifying, setVerifying] = useState(false);
 
   useEffect(() => {
     getDecisionFn({ data: { id } })
@@ -922,6 +1012,113 @@ export function DecisionDetailPage({ id }: { id: string }) {
             <Copy /> Copy summary
           </Button>
         </div>
+      </div>
+      <div className="panel mt-5">
+        <div className="panel-head">
+          <div>
+            <h2>Base verification</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              On-chain verification confirms that this local audit receipt matches the stored
+              contract state. It does not verify a payment or the truth of the purchase request.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            disabled={verifying}
+            onClick={async () => {
+              setVerifying(true);
+              try {
+                const result = await verifyDecisionOnBaseFn({ data: { decisionId: decision.id } });
+                setVerification(result.verification);
+              } catch (error) {
+                toast.error(errMessage(error));
+              } finally {
+                setVerifying(false);
+              }
+            }}
+          >
+            <Shield /> {verifying ? "Verifying…" : "Verify on Base"}
+          </Button>
+        </div>
+        {verification && (
+          <div className="mt-5 text-sm">
+            <span
+              className={`status-badge ${verification.status === "VERIFIED" ? "status-allow" : verification.status === "MISMATCH" ? "status-block" : "status-review"}`}
+            >
+              {verification.status}
+            </span>
+            <p className="mt-3 text-muted-foreground">{verification.message}</p>
+            <dl className="mt-4 grid gap-3 md:grid-cols-2">
+              <div>
+                <dt className="text-muted-foreground">Local decision hash</dt>
+                <dd className="font-mono break-all">{verification.decisionHash}</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">On-chain outcome</dt>
+                <dd>
+                  {verification.onChain.exists
+                    ? `${verification.onChain.outcome} (expected ${verification.expectedOutcome})`
+                    : "Not recorded"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Exists on chain</dt>
+                <dd>{verification.checks.exists ? "Yes" : "No"}</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Mandate hash match</dt>
+                <dd>
+                  {!verification.checks.exists
+                    ? "Not applicable"
+                    : verification.checks.mandateHashMatches
+                      ? "Yes"
+                      : "No"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Outcome match</dt>
+                <dd>
+                  {!verification.checks.exists
+                    ? "Not applicable"
+                    : verification.checks.outcomeMatches
+                      ? "Yes"
+                      : "No"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Recorder / actor</dt>
+                <dd className="font-mono break-all">
+                  {verification.onChain.actor ?? "Not recorded"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Recorded at</dt>
+                <dd>
+                  {verification.onChain.recordedAt
+                    ? new Date(verification.onChain.recordedAt).toLocaleString()
+                    : "Not recorded"}
+                </dd>
+              </div>
+            </dl>
+            {verification.localTxHash && (
+              <div className="mt-4">
+                <p className="font-mono break-all">Local tx: {verification.localTxHash}</p>
+                <Button asChild variant="link" className="mt-1 px-0">
+                  <a
+                    href={explorerTxUrl(verification.localTxHash)}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <ExternalLink /> View on BaseScan
+                  </a>
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  ClampAudit state does not independently verify this transaction hash.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </AppShell>
   );

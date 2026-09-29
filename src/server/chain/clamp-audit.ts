@@ -17,7 +17,7 @@ export class ChainNotConfiguredError extends Error {
 
   constructor() {
     super(
-      "Base Sepolia is not configured. Set BASE_SEPOLIA_RPC_URL, BASE_SEPOLIA_PRIVATE_KEY, and CLAMP_AUDIT_ADDRESS.",
+      "Base Sepolia is not configured. Reads require BASE_SEPOLIA_RPC_URL and CLAMP_AUDIT_ADDRESS; writes also require BASE_SEPOLIA_PRIVATE_KEY.",
     );
     this.name = "ChainNotConfiguredError";
   }
@@ -54,29 +54,40 @@ export class ChainContractMismatchError extends Error {
   }
 }
 
-function requireChain() {
+function requireReadChain() {
   const config = chainConfig();
-  if (!config.rpcUrl || !config.privateKey || !config.contractAddress) {
+  if (!config.rpcUrl || !config.contractAddress) {
     throw new ChainNotConfiguredError();
   }
   if (config.contractAddress.toLowerCase() !== CLAMP_AUDIT_V2_ADDRESS) {
     throw new ChainContractMismatchError(config.contractAddress);
   }
-  const account = privateKeyToAccount(config.privateKey);
   const publicClient = createPublicClient({
     chain: baseSepolia,
     transport: http(config.rpcUrl),
   });
+  return {
+    publicClient,
+    address: config.contractAddress,
+  };
+}
+
+function requireChain() {
+  const config = chainConfig();
+  if (!config.privateKey) {
+    throw new ChainNotConfiguredError();
+  }
+  const readChain = requireReadChain();
+  const account = privateKeyToAccount(config.privateKey);
   const walletClient = createWalletClient({
     account,
     chain: baseSepolia,
     transport: http(config.rpcUrl),
   });
   return {
-    publicClient,
+    ...readChain,
     walletClient,
     account,
-    address: config.contractAddress,
   };
 }
 
@@ -194,7 +205,7 @@ function asDecisionView(result: unknown): DecisionView {
 }
 
 export async function readMandateOnChain(mandateHash: Hex): Promise<MandateView> {
-  const { publicClient, address } = requireChain();
+  const { publicClient, address } = requireReadChain();
   const result = await publicClient.readContract({
     address,
     abi: clampAuditAbi,
@@ -205,7 +216,7 @@ export async function readMandateOnChain(mandateHash: Hex): Promise<MandateView>
 }
 
 export async function readDecisionOnChain(decisionHash: Hex): Promise<DecisionView> {
-  const { publicClient, address } = requireChain();
+  const { publicClient, address } = requireReadChain();
   const result = await publicClient.readContract({
     address,
     abi: clampAuditAbi,
