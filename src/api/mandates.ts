@@ -82,7 +82,6 @@ export const retryMandateChainSyncFn = createServerFn({ method: "POST" })
     return { mandate: mapMandate(attached) };
   });
 
-
 async function recordRevocationOnChain(mandateId: string) {
   const revocation = await fastApiClient.getMandateRevocation(mandateId);
   if (revocation.tx_hash) {
