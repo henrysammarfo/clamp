@@ -9,7 +9,13 @@ import type { FastApiDecision } from "@/server/fastapi/types";
 import { requireClampSession } from "@/server/session";
 
 async function recordFinalDecision(source: FastApiDecision) {
-  if (source.decision === "NEEDS_HUMAN" || source.tx_hash) return mapDecision(source);
+  if (
+    source.decision === "NEEDS_HUMAN" ||
+    source.tx_hash ||
+    source.reason_code === "MANDATE_REVOKED"
+  ) {
+    return mapDecision(source);
+  }
 
   const mandate = await fastApiClient.getMandate(source.mandate_id);
   const mandateHash = hashMandate(mandate);
