@@ -59,7 +59,7 @@ export function ProductPage() {
           </p>
         </div>
       </Section>
-      <Section kicker="How it works" title="Interpretation and authorization stay separate.">
+      <Section kicker="How it works" title="AI interprets. Code decides.">
         <div className="space-y-8">
           <p className="max-w-3xl text-lg leading-relaxed text-white/70">
             AI interprets. Code authorizes. Humans handle exceptions. Base records the receipt.
@@ -139,7 +139,7 @@ export function ProductPage() {
           </div>
         </div>
       </Section>
-      <Section kicker="Product boundary" title="Authorization control, not payment execution.">
+      <Section kicker="Product boundary" title="Control authorization, not payments.">
         <div className="panel public-panel max-w-3xl">
           <p className="text-lg leading-relaxed">
             CLAMP controls authorization and records audit receipts. It does not execute payment,
