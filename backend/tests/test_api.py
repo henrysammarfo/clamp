@@ -127,3 +127,73 @@ def test_pending_decision_cannot_be_attached_to_chain(tmp_path):
         assert response.status_code == 409
         stored = client.get(f"/api/decisions/{receipt['decision_id']}").json()
         assert stored["tx_hash"] is None
+
+
+def test_human_reject_blocks_without_budget_deduction(tmp_path):
+    app = create_app(str(tmp_path / "reject.db"))
+    app.state.interpreter = ThresholdInterpreter()
+    with TestClient(app) as client:
+        mandate = create_test_mandate(client)
+        pending = client.post(
+            "/api/decisions",
+            json={"mandate_id": mandate["id"], "request": "Buy a $90 chair from Amazon"},
+        ).json()
+        assert pending["decision"] == "NEEDS_HUMAN"
+
+        rejected = client.post(f"/api/decisions/{pending['decision_id']}/reject")
+        second = client.post(f"/api/decisions/{pending['decision_id']}/reject")
+
+        assert rejected.status_code == 200
+        assert rejected.json()["decision"] == "BLOCK"
+        assert rejected.json()["matched_rule"] == "human_rejection"
+        assert rejected.json()["reason_code"] == "HUMAN_REJECTED"
+        assert second.status_code == 409
+        assert client.get(f"/api/mandates/{mandate['id']}").json()["remaining_budget"] == "200"
+
+
+def test_revoke_mandate_blocks_future_requests_and_persists_chain_receipt(tmp_path):
+    app = create_app(str(tmp_path / "revoke.db"))
+    app.state.interpreter = FakeInterpreter()
+    with TestClient(app) as client:
+        mandate = create_test_mandate(client, threshold="100")
+        revoked = client.post(f"/api/mandates/{mandate['id']}/revoke")
+
+        assert revoked.status_code == 200
+        body = revoked.json()
+        assert body["decision"] == "REVOKE"
+        assert body["reason_code"] == "MANDATE_REVOKED"
+        assert body["tx_hash"] is None
+
+        stored_mandate = client.get(f"/api/mandates/{mandate['id']}").json()
+        assert stored_mandate["status"] == "REVOKED"
+        assert stored_mandate["revocation_id"] == body["revocation_id"]
+
+        blocked = client.post(
+            "/api/decisions",
+            json={"mandate_id": mandate["id"], "request": "Buy a keyboard"},
+        )
+        assert blocked.status_code == 201
+        assert blocked.json()["decision"] == "BLOCK"
+        assert blocked.json()["reason_code"] == "MANDATE_REVOKED"
+        assert client.get(f"/api/mandates/{mandate['id']}").json()["remaining_budget"] == "200"
+
+        url = f"/api/mandates/{mandate['id']}/revoke/chain"
+        first = client.post(url, json={"network": "base-sepolia", "tx_hash": "0xrevoke"})
+        same = client.post(url, json={"network": "base-sepolia", "tx_hash": "0xrevoke"})
+        conflict = client.post(url, json={"network": "base-sepolia", "tx_hash": "0xother"})
+
+        assert first.status_code == 200
+        assert first.json()["tx_hash"] == "0xrevoke"
+        assert same.status_code == 200
+        assert conflict.status_code == 409
+
+
+def test_revoke_cannot_be_applied_twice(tmp_path):
+    app = create_app(str(tmp_path / "revoke-twice.db"))
+    with TestClient(app) as client:
+        mandate = create_test_mandate(client)
+        first = client.post(f"/api/mandates/{mandate['id']}/revoke")
+        second = client.post(f"/api/mandates/{mandate['id']}/revoke")
+
+        assert first.status_code == 200
+        assert second.status_code == 409
