@@ -23,23 +23,23 @@ import { StatusBadge } from "./status-badge";
 const features = [
   {
     icon: Bot,
-    title: "Parse once",
-    text: "Kiln turns natural language into a proposed buy. Song owns this call.",
+    title: "AI interprets",
+    text: "Kiln turns a natural language procurement request into structured purchase fields.",
   },
   {
     icon: Code2,
-    title: "Gate in code",
-    text: "Budget, merchant, purpose category, and deadline are enforced by deterministic code after parsing.",
+    title: "Code authorizes",
+    text: "Deterministic policy checks purpose, budget, merchant, currency, expiry, and approval threshold.",
   },
   {
     icon: UserRoundCheck,
-    title: "Escalate uncertainty",
-    text: "Requests above the configured threshold wait for a person before authorization is finalized.",
+    title: "Humans handle exceptions",
+    text: "Exceptional spend waits for explicit approval or rejection, and authority can be revoked at any time.",
   },
   {
     icon: Fingerprint,
-    title: "Leave a receipt",
-    text: "Each request, rule, decision, reason, and Base Sepolia tx stays reconstructable.",
+    title: "Base records the receipt",
+    text: "Final audit receipts can be verified against the tamper resistant ClampAudit v2 state on Base Sepolia.",
   },
 ];
 
@@ -47,10 +47,22 @@ export function ProductPage() {
   return (
     <PublicPage
       eyebrow="Product"
-      title="Control before action."
-      intro="CLAMP gives an AI agent a narrow temporary mandate, not broad access to your money."
+      title="Give AI spending authority without giving up control."
+      intro="CLAMP is an authorization and audit control plane for AI agents that spend. A human delegates narrow, temporary authority instead of granting unrestricted access or approving every purchase."
     >
-      <Section kicker="The control loop" title="One sentence in. One clear decision out.">
+      <Section kicker="Why CLAMP" title="Financial authority needs explicit boundaries.">
+        <div className="panel max-w-3xl">
+          <p className="text-xl leading-relaxed text-muted-foreground">
+            Enterprise procurement agents can move routine work faster, but they should act only
+            within authority a person deliberately grants. CLAMP makes that authority specific,
+            temporary, reviewable, and revocable.
+          </p>
+        </div>
+      </Section>
+      <Section kicker="How it works" title="Interpretation and authorization stay separate.">
+        <p className="mb-8 max-w-3xl text-xl leading-relaxed">
+          AI interprets. Code authorizes. Humans handle exceptions. Base records the receipt.
+        </p>
         <div className="feature-grid">
           {features.map(({ icon: Icon, ...f }) => (
             <article className="feature-card" key={f.title}>
@@ -61,42 +73,77 @@ export function ProductPage() {
           ))}
         </div>
       </Section>
-      <Section kicker="Decision model" title="Three outcomes. No ambiguity.">
-        <div className="space-y-3">
-          {(
-            [
-              ["allow", "Clearly inside", "Authorize and record an audit receipt."],
-              ["block", "Clearly outside", "Stop, pay nothing, and record why."],
-              ["review", "A person should decide", "Hold all action until approval or rejection."],
-            ] as const
-          ).map(([status, title, text]) => (
-            <div className="panel flex items-center gap-5" key={status}>
-              <StatusBadge status={status} />
-              <div>
-                <h3 className="font-semibold">{title}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{text}</p>
+      <Section kicker="Procurement example" title="Delegate a mandate, not unlimited authority.">
+        <div className="panel-grid">
+          <div className="panel">
+            <p className="eyebrow">Office procurement mandate</p>
+            <ul className="rule-list mt-5">
+              <li>
+                <CircleCheck /> Purpose: OFFICE
+              </li>
+              <li>
+                <CircleCheck /> Budget: $2,000
+              </li>
+              <li>
+                <CircleCheck /> Merchants: Amazon, Apple
+              </li>
+              <li>
+                <UserRoundCheck /> Human approval: $500 or more
+              </li>
+              <li>
+                <CircleCheck /> Expiry: Friday
+              </li>
+            </ul>
+          </div>
+          <div className="space-y-3">
+            {(
+              [
+                ["allow", "$60 keyboard", "Inside the mandate."],
+                ["block", "$40 groceries", "Purpose is outside the mandate."],
+                ["review", "$700 monitor", "A person must approve exceptional spend."],
+                ["revoke", "Revoke mandate", "Delegated authority ends."],
+              ] as const
+            ).map(([status, title, text]) => (
+              <div className="panel flex items-center gap-5" key={status}>
+                <StatusBadge status={status} />
+                <div>
+                  <h3 className="font-semibold">{title}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">{text}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </Section>
-      <Section kicker="Evidence" title="A trail another person can read.">
+      <Section kicker="Evidence" title="Inspect the decision and verify the receipt.">
         <div className="receipt-hero">
           <div>
-            <p className="eyebrow">Demo story</p>
+            <p className="eyebrow">Measured and verifiable</p>
             <h2>
-              BestBuy.
+              Decision.
               <br />
-              Blocked.
+              Reason.
+              <br />
+              Receipt.
             </h2>
           </div>
           <div>
-            <StatusBadge status="block" />
-            <p className="mt-4 max-w-xs text-sm text-muted-foreground">
-              Merchant not on list. The request is blocked and its audit receipt is recorded on Base
-              Sepolia when the chain is configured.
+            <ShieldCheck />
+            <p className="mt-4 max-w-md text-sm text-muted-foreground">
+              CLAMP supports read-only verification of final Base Sepolia audit receipts and a
+              measured 30 case adversarial benchmark. These demonstrate the control path; they do
+              not prove that a purchase happened or that an AI was correct.
             </p>
           </div>
+        </div>
+      </Section>
+      <Section kicker="Product boundary" title="Authorization control, not payment execution.">
+        <div className="panel max-w-3xl">
+          <p className="text-xl leading-relaxed">
+            CLAMP controls authorization and records audit receipts. It does not execute payment,
+            custody funds, prove a purchase happened, or prove that an AI decision was correct or
+            fair.
+          </p>
         </div>
       </Section>
     </PublicPage>
@@ -152,7 +199,7 @@ export function CaseStudyPage({ slug }: { slug: string }) {
               `${study.merchant} · $${study.amount.toFixed(2)} · office supplies`,
             ],
             ["03", "Code gate", `${study.rule}: ${study.reason}`],
-            ["04", "Receipt", "Base Sepolia stop or settle hash when live"],
+            ["04", "Receipt", "Base Sepolia audit receipt for a final decision"],
           ].map(([n, t, d]) => (
             <div className="timeline-item" key={n}>
               <span>{n}</span>
@@ -193,7 +240,7 @@ export function DocsPage() {
     [
       "04 · Chain",
       "Outcome to receipt",
-      "Mandate commits and decision receipts write to Base Sepolia. Henry owns this path.",
+      "Mandate commitments and final decision receipts write to Base Sepolia for audit verification. CLAMP does not execute payment.",
     ],
   ];
   return (
