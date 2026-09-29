@@ -1,267 +1,123 @@
 # CLAMP
 
-GO THROUGH MD ATTACHED ,CREATE GOOD BRAND,logo WILL USE FORR future MERCH AND HODDIES , CREATE FULL PAGES AND ROUTES AND DASHBOARD ALL FLOWS ,ROUTES EERYTHING , USE THE RIGHT PRO PREMIUM ICONS , SUBPAGES FULL should match template prompt design
+A delegation control layer: temporary spending mandates for AI agents, with Allow, Block, or Needs human, plus an on chain audit trail of request, rule, decision, and reason.
 
-AND USE THIS TEMPLATE = Rebuild this as a **single-viewport, full-bleed video-background landing page** using static **HTML + CSS + vanilla JS** (no framework). Match the current implementation exactly. File structure:
+Team 14 · GWDC 2026 Korea · Challenge B · FuriosaAI x Bricksum
 
+## Honesty
+
+- FastAPI is the source of truth for Kiln parsing, deterministic policy, budgets, mandates, decisions, metrics, audit payloads, and confirmed transaction hashes.
+- TanStack is a server-side adapter and UI. It does not calculate policy or budgets and does not store mandate or decision state.
+- No fake Kiln calls. No mock pays. No invented transaction hashes.
+- Testnet is labeled. We do not claim the system is unhackable.
+
+## Ownership
+
+| Owner           | Scope                                                                  |
+| --------------- | ---------------------------------------------------------------------- |
+| Henry Sam Marfo | On chain receipts, frontend, sessions, metrics UI, demo, pitch, README |
+| Song Hyewon     | Kiln client, gate, metering, tests, AuditTrail shape                   |
+
+## Stack
+
+- TanStack Start + React 19 + Vite + Tailwind
+- Signed httpOnly server sessions (no localStorage for product state)
+- FastAPI + SQLite authoritative persistence
+- Base Sepolia + access-controlled `ClampAudit` v2 via viem
+
+Final Allow and Block receipts commit the complete backend `audit_payload` to Base Sepolia. Needs human receipts remain off chain until approval. Confirmed mandate and decision transaction hashes are persisted back to FastAPI. If a chain write succeeds but receipt persistence fails, the UI preserves the confirmed transaction hash and retries only the receipt sync; it never recreates the mandate or purchase decision. The backend currently exposes approval only, so human rejection and mandate revocation are disabled in the UI rather than implemented locally.
+
+## Live Base Sepolia
+
+Hardened ClampAudit v2 uses access-controlled writers, a terminal revoke state, and outcome codes 1 through 4:
+
+- Deployer and owner: `0x9ADd0ac311e9E528800afc3F4A04e9cDe52C9cE0`
+- ClampAudit v2: [`0x4648520fe2b192791c9ae13e46e0cba9544c42d6`](https://sepolia.basescan.org/address/0x4648520fe2b192791c9ae13e46e0cba9544c42d6)
+- Deploy tx: [`0xb7bfa077bad8fea9aecc679b7feba0429138a8983123dd2a0be1be9a6a2b8797`](https://sepolia.basescan.org/tx/0xb7bfa077bad8fea9aecc679b7feba0429138a8983123dd2a0be1be9a6a2b8797)
+- Live invariant script: `bun scripts/audit-clamp-live.ts`
+- Audit notes: [`docs/memory/CHAIN_AUDIT.md`](docs/memory/CHAIN_AUDIT.md)
+
+The configured private key must belong to the owner or an address approved through `setRecorder`.
+
+Current receipt outcomes:
+
+- Allow: `1`
+- Block: `2`
+- Needs human: not recorded until approval
+- Approved Needs human: Allow, `1`
+
+## Verified live E2E evidence
+
+The integrated flow was exercised on Base Sepolia with real FastAPI decisions and Kiln parsing:
+
+| Flow | Final result | Base Sepolia tx |
+| --- | --- | --- |
+| Amazon keyboard · $65 | ALLOW · `POLICY_ALLOW` | [`0xc24d4822…73de0b`](https://sepolia.basescan.org/tx/0xc24d48229e85b34cb77b9410b9debba2d937ba7f076fea777be07baa3573de0b) |
+| Apple AirPods · $120 | NEEDS_HUMAN → human approval → ALLOW · `HUMAN_APPROVED` | [`0xed1a99f1…4da869b`](https://sepolia.basescan.org/tx/0xed1a99f1b0ed96fa1f9229321ff0eb388898a63e6584f7e25eb8717ce4da869b) |
+| BestBuy mouse · $20 | BLOCK · `MERCHANT_NOT_ALLOWED` | [`0xea0b454e…aa41ef`](https://sepolia.basescan.org/tx/0xea0b454ebac7e5b6b43ad27d5af6ee5b1c6c60fe3b75e962d44635075caa41ef) |
+
+The $300 E2E mandate finished with $115 remaining: the $65 ALLOW and approved $120 request committed budget, while the blocked $20 request did not.
+
+Mandate receipt persistence was separately verified with [`0xa99d0ad8…b32ea`](https://sepolia.basescan.org/tx/0xa99d0ad8f8911d40a34276d3a7298866cd97019a8b3cf25eac78fe92bacb32ea). Re-attaching that exact receipt returned 200; attempting to replace it with a different hash returned 409.
+
+See [`docs/SUBMISSION_EVIDENCE.md`](docs/SUBMISSION_EVIDENCE.md) for IDs, hashes, reproduction commands, and the final capture checklist.
+
+### Verified Kiln smoke run
+
+A real Kiln smoke run completed with `failure: null` and produced all three expected policy outcomes from parsed natural-language requests:
+
+| Scenario | Parsed request | Policy outcome |
+| --- | --- | --- |
+| A | Amazon keyboard · $65 | ALLOW |
+| B | Apple AirPods · $120 | BLOCK · merchant not allowed |
+| C | Amazon office chair · $90 | NEEDS_HUMAN · approval threshold |
+
+Persisted Kiln metrics from that run:
+
+- Model: `deepseek-v4.1-flash`
+- Calls: `3`
+- Prompt tokens: `335`
+- Completion tokens: `971`
+- Total tokens: `1306`
+- Average latency: `4554.67 ms`
+
+The per-call rows, including request IDs, token counts, latency, and resulting decision IDs, are listed in [`docs/SUBMISSION_EVIDENCE.md`](docs/SUBMISSION_EVIDENCE.md).
+
+## Setup
+
+```bash
+bun install
+cp .env.example .env
+# fill SESSION_SECRET (32+ chars)
+# set FASTAPI_BASE_URL (defaults to http://127.0.0.1:8000)
+# fill BASE_SEPOLIA_RPC_URL
+# set BASE_SEPOLIA_PRIVATE_KEY to the owner or an approved recorder
+# CLAMP_AUDIT_ADDRESS must be 0x4648520fe2b192791c9ae13e46e0cba9544c42d6
+bun run dev
 ```
-index.html
-styles.css
-main.js
-assets/logo.webp
-fonts/GeistPixel-Circle.woff2
-```
 
-Document title: `Intelligence Designed To Evolve`.  
-Body: black `#000`, `overflow: hidden`, height `100vh` / `100dvh`, Inter for UI, retro dot-matrix display font for headline + stat symbols. Antialiased text.
+## Scripts
 
----
+- `bun run dev` local app
+- `bun run build` production build
+- `bun run lint` lint
+- `bun run test` unit tests
+- `bun run compile:audit` compile Solidity
+- `bun run deploy:audit` deploy a new ClampAudit contract
+- `bun run audit:live` audit the configured live contract
 
-## Exact background video (required)
+## Demo beat
 
-Full-viewport cover video behind all UI (`position: absolute; inset: 0; object-fit: cover; pointer-events: none; z-index: 0`).
+1. Open the existing mandate and show its persisted Base Sepolia commitment.
+2. Submit an allowed request and show the deterministic rule result plus its on-chain audit receipt.
+3. Submit a request above the human approval threshold, approve it, then show the final ALLOW receipt.
+4. Submit a disallowed merchant request and show BLOCK with no budget deduction.
+5. Open Metrics to show persisted Kiln calls/tokens/latency, then open Audit trail and a BaseScan receipt.
+6. State the boundary clearly: CLAMP records authorization decisions on-chain; it does not execute payment.
 
-```html
-<video class="bg-video" autoplay muted loop playsinline>
-  <source
-    src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260809_012548_ef22562c-c0ae-4816-ad9d-f8922af4e6a7.mp4"
-    type="video/mp4"
-  />
-</video>
-```
+## Submit package
 
-Use this **exact CloudFront URL**. Parent `.bg` is black `#000`, absolute inset 0, `overflow: hidden`.
-
----
-
-## Fonts (exact)
-
-**1. Inter** (UI) via Google Fonts: weights `400`, `500`, `600`  
-`https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap`  
-Stack: `"Inter", "Segoe UI", system-ui, sans-serif`
-
-**2. BubbledotICG-FinePos** (primary display — retro dot-matrix) via OnlineWebFonts CDN — **do not use local Bubbledot files**:
-```html
-<link
-  href="https://db.onlinewebfonts.com/c/8cb707a9b8a73f8a7403336b861c3074?family=BubbledotICG-FinePos"
-  rel="stylesheet"
-/>
-```
-Family name exactly: `"BubbledotICG-FinePos"`
-
-**3. Geist Pixel Circle** (fallback display only) local `@font-face`:
-- `fonts/GeistPixel-Circle.woff2`
-- weight 400, `font-display: swap`
-- Display stack: `"BubbledotICG-FinePos", "Geist Pixel Circle", monospace`
-
-**4. Font Awesome 6.5.2** (enterprise brand icons) from cdnjs:
-```
-https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css
-```
-integrity:  
-`sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==`
-
----
-
-## CSS variables (exact)
-
-```css
---bg: #000000;
---text: #ffffff;
---muted: #8e8e8e;
---nav-text: #2e2e2e;
---pill-dark: #28282a;
---sign-in-text: #c8c8c8;
---nav-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
---trust-bg: #28282a;
---trust-border: rgba(255, 255, 255, 0.4);
---trust-text: #c4c2c3;
---font-sans: "Inter", "Segoe UI", system-ui, sans-serif;
---font-display: "BubbledotICG-FinePos", "Geist Pixel Circle", monospace;
-```
-
----
-
-## Layout composition (one viewport, 3 vertical regions)
-
-`.page`: flex column, centered, padding `clamp(16px, 2.4vh, 28px) clamp(14px, 3vw, 32px)`, height `100vh`/`100dvh`, overflow hidden.
-
-1. **Header** (top, shrink 0)  
-2. **Hero** (flex 1, centered)  
-3. **Stats footer** (bottom, shrink 0)
-
-Header / hero / stats / mobile menu: `z-index: 1` above video.
-
----
-
-## 1) Header (desktop)
-
-Centered row, max-width `720px`, gap `clamp(18px, 2.8vw, 28px)`.
-
-### Logo
-- Circular button `clamp(40px, 4.4vw, 46px)`, `border-radius: 50%`
-- **White background `#fff`**
-- Soft shadow `--nav-shadow`
-- Image: `assets/logo.webp` (alt empty; width/height attrs 52)
-- Icon **inside** scaled to **72%** width/height, `object-fit: contain`, centered with CSS grid (circle size unchanged)
-- Hover: `scale(1.04)`
-
-### Nav pill (white)
-- White `#fff` pill, height `clamp(44px, 5.2vw, 48px)`, max-width `430px`, flex 1, padding `4px 8px`, radius 999, same soft shadow
-- Links: **Home** (active), **Product**, **Case Studies**, **Contact**
-- Inter 500, size `clamp(13px, 1.4vw, 15px)`, letter-spacing `-0.01em`, color `#2e2e2e`
-- Default opacity `0.5`; hover `0.75`; active `1`
-- Active indicator: three 3×3px black dots under label via `::after` + box-shadow offsets `-5px` / `+5px`, bottom `5px`
-
-### Sign in
-- Dark pill `#28282a`, text `#c8c8c8`, same height as nav, radius 999, soft shadow
-- Hover: bg `#323234`, text `#fff`, `translateY(-1px)`
-
-### Entrance animation
-Header: `slideDown 0.7s cubic-bezier(0.22, 1, 0.36, 1) both`  
-(from opacity 0, `translateY(-18px)` → settled)
-
----
-
-## 2) Hero (center)
-
-Column, text-center, max-width `900px`.
-
-### Trust row (“Trusted by 2000+ Enterprises”)
-- Inline flex; `--trust-size: clamp(36px, 4.5vw, 42px)` (34px at ≤420px)
-- Margin-bottom `clamp(16px, 2.5vh, 26px)`
-- Stagger delay `--d: 0.05s`
-
-**Three overlapping avatar rings** (not full solid white disks):
-- Outer ring: size `--trust-size`, bg `#28282a`, border `1px solid rgba(255,255,255,0.4)`, **padding `5px`**
-- Inner white circle fills the padded area (`border-radius: 50%`, bg `#fff`)
-- Icons (black `#111`) via Font Awesome brands, font-size `calc(var(--trust-size) * 0.34)`:
-  1. `fa-brands fa-microsoft`
-  2. `fa-brands fa-amazon`
-  3. `fa-brands fa-google`
-- Overlap: later avatars `margin-left: calc(var(--trust-size) * -0.42)`; z-index 1 / 2 / 4
-- Hover lift: a1 `-2px`, a2 `-4px`, a3 `-2px` (0.35s)
-
-**Trust pill** (overlaps last avatar):
-- Same height as avatars, bg `#28282a`, border same as avatars, radius 999
-- Left margin `-0.42 * trust-size`; left padding `0.58 * trust-size` so text clears overlap
-- Text: `Trusted by 2000+ Enterprises` — Inter 500, `#c4c2c3`, size `clamp(12px, 1.4vw, 13.5px)` (12px on mobile)
-
-### Headline
-Exact two lines (each a `<span>` block):
-```
-Intelligence
-Designed To Evolve
-```
-- Font: **BubbledotICG-FinePos** (retro dot-matrix) / Geist Pixel Circle fallback
-- Solid **white** (NO gradient, NO shimmer/LED scan)
-- Size desktop: `clamp(28px, 6.2vw, 80px)`
-- Letter-spacing: **`-0.04em`** desktop; **`-0.08em`** ≤720px; **`-0.09em`** ≤420px
-- Line-height 1.12 (1.05 / 1.04 on smaller breakpoints)
-- `white-space: nowrap`, overflow hidden
-- Per-line fade: opacity 0 + `translateY(14px)` → in via `headlineFade 0.85s cubic-bezier(0.22, 1, 0.36, 1)`  
-  delays: line1 `0.12s`, line2 `0.3s`  
-  (parent `.headline.anim` has no reveal animation itself)
-
-### Subhead (exact copy)
-```
-Build applications that reason, adapt and collaborate using a modular
-AI platform designed for production.
-```
-- Max-width `min(500px, 92%)`
-- Font-size: `clamp(calc(13.5px + 2pt), calc(1.55vw + 2pt), calc(16.5px + 2pt))`  ← base + **2pt**
-- Color `#d0d0d0`, **opacity `0.8`**
-- Line-height 1.55, weight 400
-- Delay `--d: 0.28s`
-
-### CTA
-- Text: `Get Started`
-- White pill, black text, Inter 600, size `clamp(13.5px, 1.5vw, 14.5px)`
-- Padding `clamp(11px, 1.6vh, 13px) clamp(22px, 3vw, 28px)`, radius 999
-- Soft white glow:
-  `0 0 0 1px rgba(255,255,255,0.15), 0 0 22px rgba(255,255,255,0.32), 0 0 44px rgba(255,255,255,0.12)`
-- Hover: `translateY(-2px) scale(1.02)` + stronger glow
-- Entrance uses `revealPulse` (not plain reveal); delay `--d: 0.4s`
-
----
-
-## 3) Stats footer (exact 4 metrics)
-
-Grid 4 cols (2×2 on ≤720px), max-width `920px`. Each: icon (display font white) → counting value → muted label.
-
-| Icon glyph | Target | Suffix | Decimals | Label |
-|---|---|---|---|---|
-| `<` | 120 | `ms` | 0 | Inference Time |
-| `%` | 99.99 | `%` | 2 | Platform Uptime |
-| `*` | 24 | `/7` | 0 | Autonomous Runtime |
-| `#` | 2.4 | `M` | 1 | Context Windows |
-
-- Icon size `clamp(22px, 3vw, 33px)`, **BubbledotICG-FinePos**
-- Value: Inter, white, `clamp(18px, 2.2vw, 26px)`, letter-spacing `-0.025em`, tabular-nums
-- Label: `#8e8e8e`, `clamp(11px, 1.2vw, 12.5px)`
-- Stagger delays: `0.5s`, `0.58s`, `0.66s`, `0.74s`
-- Count-up JS: easeOutCubic, duration `1500 + i*80`ms, start offset `480 + i*90`ms, once via IntersectionObserver threshold `0.25`
-
----
-
-## Shared entrance animation
-
-`.anim` elements:
-- Start: opacity 0, `translateY(22px) scale(0.98)`, `blur(6px)`
-- Animate: `reveal 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards`
-- Delay from inline `--d`
-
-`prefers-reduced-motion: reduce`: kill animations; show final state; headline solid white.
-
----
-
-## Mobile (≤720px) — exact behavior
-
-- Hide desktop nav + desktop Sign in
-- Header: space-between; logo 48×48 left; circular burger 48×48 right (`#28282a`, 3 white 18×1.5px bars)
-- Burger open: white circle, bars → black X (translateY ±6.5px + rotate ±45°)
-- Overlay: fixed full screen, `rgba(0,0,0,0.62)`, blur 6px, `overlayIn 0.28s`
-- White sheet menu: centered under header, radius 28px, padding `22px 18px 20px`, shadow `0 20px 60px rgba(0,0,0,0.45)`, `menuIn 0.38s`
-- Links: Home / Product / Case Studies / Contact + full-width Sign in; staggered `linkIn`; active three-dot indicator at bottom 8px
-- JS: toggle `aria-expanded`, `hidden`, `body.menu-open`; close on overlay click, Escape, link click, resize >720
-- Stats → 2 columns
-
-Also: ≤420px headline/trust tweaks; ≤700px height tighten hero spacing.
-
----
-
-## Visual / interaction constraints (do not deviate)
-
-- **No cards** in hero; one composition; brand logo is a real circular mark, not text-only
-- **No gradient animation** on headline — solid white only
-- Display type is **BubbledotICG-FinePos** from OnlineWebFonts (retro dot-matrix), **not** local Bubbledot.woff/ttf
-- Trust logos are **small white inner circles** inside dark padded rings (same size language as the old inner gradient dots), **not** full-bleed white outer circles
-- Soft nav/logo shadow only: `0 4px 14px rgba(0,0,0,0.16)` (not heavy)
-- Page must work on desktop and mobile; first viewport = header + trust + headline + subhead + CTA + stats over the looping CloudFront video
-
----
-
-## Implementation stack
-
-Plain `index.html` + `styles.css` + `main.js`. No React/build step required. Copy local `assets/logo.webp` and `fonts/GeistPixel-Circle.woff2`. Load **Inter**, **BubbledotICG-FinePos** (OnlineWebFonts), and **Font Awesome 6.5.2** from CDNs as specified. Use the **exact** CloudFront MP4 URL above for the background video.
-
-This project was built with [Lovable](https://lovable.dev).
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/67c72e15-cdc0-4db4-8852-6e95aa3395fd).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
-```
+1. Public GitHub + this README
+2. Demo video <= 3 min
+3. Pitch PDF <= 10 pages
+4. Google Form in the official window
