@@ -502,8 +502,8 @@ export function MandateDetailPage({ id }: { id: string }) {
                     toast.error("Revocation is on chain, but the backend receipt still needs to sync.");
                   } else {
                     toast.success("Mandate revoked and recorded on Base Sepolia");
+                    load();
                   }
-                  load();
                 } catch (error) {
                   toast.error(errMessage(error));
                   load();
