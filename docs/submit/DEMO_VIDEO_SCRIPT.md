@@ -1,61 +1,85 @@
 # Demo video script (≤ 3 minutes)
 
-Tone: calm, clear, no hype. Show the refuse early. No secrets on screen.
+Tone: soft, friendly, a little curious. Like someone showing you something cool at a quiet table. No hype. No jargon pileup. Open on the refuse. No secrets on screen.
 
-Record from the final app on main. Full capture list lives in `docs/SUBMISSION_EVIDENCE.md` §13.
+Voice notes: slow breath between beats. Smile in the voice. Short sentences. Human grammar.
 
-## 0:00 to 0:20 · Open
+## 0:00 to 0:18 · Open
 
-On screen: CLAMP wordmark.
-
-Voice:
-“CLAMP is a delegation control layer for AI agents that spend. You set a temporary mandate. The agent can act alone only inside it.”
-
-## 0:20 to 0:45 · Mandate
-
-Show enterprise procurement mandate: purpose OFFICE, budget, Amazon + Apple, human threshold, expiry, Base commit tx.
+On screen: landing. Cursor drifts to the wordmark, then Open control room.
 
 Voice:
-“Purpose category, budget, merchants, human threshold, expiry. Committed on Base Sepolia.”
+“Hey. This is CLAMP.
 
-## 0:45 to 1:15 · Block first
+Imagine an AI that can spend for you… but only inside a box you drew.
 
-BestBuy $20 → BLOCK / MERCHANT_NOT_ALLOWED. Show nothing paid. Show Verify on Base → VERIFIED.
+That’s the whole idea. Soft prompts can be talked around. A mandate can’t.”
 
-Voice:
-“BestBuy is not on the list. Code stops it. Nothing paid. The refuse is on chain and verified.”
+## 0:18 to 0:40 · Mandate
 
-## 1:15 to 1:35 · Allow
-
-Amazon $65 OFFICE → ALLOW. Show receipt + Verify.
+Sign in → dashboard → mandate. Cursor clicks Mandates, opens the live mandate. Slow hover over purpose, budget, merchants, threshold.
 
 Voice:
-“Same mandate. Amazon inside the box. The gate passes in code.”
+“You set the box. Purpose. Budget. Who they can buy from. When a human has to step in. When it expires.
 
-## 1:35 to 2:00 · Needs human
+We commit that on Base Sepolia, so later you can prove what you actually allowed.”
 
-Apple $120 → NEEDS_HUMAN → approve → ALLOW. Or show $90 pending NOT_RECORDED then reject path if cleaner.
+## 0:40 to 1:10 · Block first
 
-Voice:
-“Borderline cases wait for a person. No payment until then.”
-
-## 2:00 to 2:25 · Purpose control
-
-Amazon $20 OFFICE → ALLOW. Amazon $20 FOOD → BLOCK / PURPOSE_NOT_ALLOWED. Same merchant, same amount.
+New request → BestBuy. Cursor types or selects the BestBuy line, Evaluate, then opens the Block receipt. Zoom in on Block and the reason.
 
 Voice:
-“Merchant alone is not enough. Purpose has to match.”
+“Watch this. The agent asks for BestBuy.
 
-## 2:25 to 2:45 · Efficiency
+BestBuy isn’t on the list… so code just says no.
 
-Metrics page: 30 × 3 adversarial benchmark. CLAMP 100% decisions, 100% reason codes, 44.4% fewer tokens vs ALL_AI.
+Nothing gets paid. And that little refusal? It’s on the trail.”
 
-Voice:
-“Parse once, decide in code. Fewer tokens than asking the model to judge every spend.”
+## 1:10 to 1:30 · Allow
 
-## 2:45 to 3:00 · Close
-
-Audit trail / Basescan flash. End card: Team 14 · github.com/henrysammarfo/clamp · contract address.
+Same mandate. Amazon request. Cursor to Allow receipt. Gentle zoom on Allow.
 
 Voice:
-“A second person can reconstruct the story from the trail. CLAMP. Control before action.”
+“Same mandate. Now Amazon. Inside the box.
+
+The gate opens in code. Quiet. Clean. Done.”
+
+## 1:30 to 1:55 · Needs human
+
+Apple over threshold. Cursor to Needs human receipt. Hover “Awaiting a person.”
+
+Voice:
+“And when it’s fuzzy? Or a bit expensive?
+
+CLAMP doesn’t guess. It waits for a person.
+
+No payment until someone actually decides.”
+
+## 1:55 to 2:20 · Why that matters
+
+Case studies or reviews skim. Cursor points at Allow / Block / Needs human cards.
+
+Voice:
+“Merchant alone isn’t enough. Purpose has to match too.
+
+You’re not hoping the model behaves. You’re checking a rule.”
+
+## 2:20 to 2:40 · Efficiency
+
+Metrics page. Cursor underlines 44.4% fewer tokens / 100% decisions.
+
+Voice:
+“Parse once. Decide in code.
+
+Fewer tokens than asking the model to judge every single spend… and on our thirty case check, the decisions stay sharp.”
+
+## 2:40 to 3:00 · Close
+
+Audit flash, back to landing. Cursor rests on CLAMP.
+
+Voice:
+“Later, someone else can reconstruct the whole story from the trail.
+
+That’s CLAMP. Control before action.
+
+Thanks for watching.”

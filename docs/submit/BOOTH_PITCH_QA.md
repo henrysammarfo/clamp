@@ -12,21 +12,21 @@ Song also prepared `CLAMP_Judge_QA_Preparation_FINAL.docx` (Telegram).
 
 ## Spoken path (about 5 minutes)
 
-Hi, we’re Team 14, and this is CLAMP.
+Hey. We’re Team 14, and this is CLAMP.
 
-People are starting to let AI agents spend money. The hard part is not the chat. It’s control. Soft prompt limits can be talked around. We wanted a hard mandate and a trail someone else can read.
+People are starting to let AI agents spend money. The hard part isn’t the chat. It’s control. Soft prompt limits can be talked around. We wanted something firmer: a temporary mandate, and a trail a second person can actually read.
 
-With CLAMP, you create a temporary spending mandate: purpose category, budget including fees, allowed merchants, human threshold, and an expiry. The agent may act alone only inside that box.
+With CLAMP, you draw a box. Purpose category. Budget, including fees. Allowed merchants. A human threshold. An expiry. The agent can move alone only inside that box.
 
-Kiln interprets the request into structured fields. Then a deterministic Python policy returns Allow, Block, or Needs human. The model does not grant permission.
+Kiln listens and turns the request into structured fields. Then a deterministic Python policy returns Allow, Block, or Needs human. The model explains. It does not grant permission.
 
-We open on a Block. BestBuy is not on the list. Nothing paid. The refuse is written to Base Sepolia. Then Allow on Amazon under the same mandate. Then Needs human on Apple until a person decides. We also show purpose control: same merchant and amount, OFFICE allows, FOOD blocks. And Verify on Base reads the contract back.
+We like to open on a Block. BestBuy isn’t on the list. Nothing paid. The refuse lands on Base Sepolia. Then Allow on Amazon under the same mandate. Then Needs human on Apple until a person decides. We also show purpose control: same merchant and amount, OFFICE allows, FOOD blocks. And Verify on Base reads the contract back, quietly.
 
-So the story is simple. You set the mandate. The agent asked outside it. Nothing paid. The refuse is on the audit trail.
+So the story stays simple. You set the mandate. The agent asked outside it. Nothing paid. The refuse is on the audit trail.
 
-That’s CLAMP. Control before action.
+That’s CLAMP. Control before action. Happy to take questions.
 
-## Keep ready
+## Keep ready (say these slowly)
 
 - Code decides. The model explains.
 - Open on the block.
@@ -37,28 +37,28 @@ That’s CLAMP. Control before action.
 ## Likely questions (short answers)
 
 **Is this just a wallet limit UI?**  
-No. Delegation control layer: mandate + deterministic gate + reconstructable audit trail. Kiln only interprets.
+No. It’s a delegation control layer: mandate, deterministic gate, reconstructable audit trail. Kiln only interprets.
 
 **Why not let the model decide allow or deny?**  
-Social engineering risk and wasted tokens. We parse once, decide in code. On our 30 case × 3 rep adversarial benchmark with the same model, CLAMP matched ALL_AI on decision accuracy at 100% and beat it on reason codes (100% vs 97.78%) with 44.4% fewer tokens. Do not generalize beyond that set.
+Social engineering risk, and a lot of wasted tokens. We parse once, decide in code. On our 30 case × 3 rep adversarial benchmark with the same model, CLAMP matched ALL_AI on decision accuracy at 100% and beat it on reason codes (100% vs 97.78%) with 44.4% fewer tokens. That’s that set. We don’t overclaim beyond it.
 
 **What model?**  
 Kiln / Bricksum `deepseek-v4.1-flash` for interpretation.
 
 **What is on chain?**  
-ClampAudit v2 on Base Sepolia. Mandate commits, final decision receipts, revocations. Outcomes 1..4. Testnet labeled. Value 0 ETH means audit, not payment.
+ClampAudit v2 on Base Sepolia. Mandate commits, final decision receipts, revocations. Outcomes 1..4. Testnet, labeled clearly. Value 0 ETH means audit, not payment.
 
-**What if fuzzy?**  
+**What if it’s fuzzy?**  
 Needs human. No pay until approve or reject. Reject writes BLOCK / HUMAN_REJECTED and does not deduct budget.
 
 **Can someone fake a receipt?**  
-Writers are owner / approved recorders. Verify on Base compares local receipt to contract state.
+Writers are owner / approved recorders. Verify on Base compares the local receipt to contract state.
 
 **Purpose control?**  
 Same Amazon $20: OFFICE → ALLOW, FOOD → BLOCK. Merchant and amount held constant.
 
 **Revoke?**  
-Revocation is terminal on chain. Later requests BLOCK / MANDATE_REVOKED without a new decision write that would revert.
+Revocation is terminal on chain. Later requests BLOCK / MANDATE_REVOKED.
 
 **Is it production custody?**  
 No. Authorization and audit prototype for Challenge B. Honest about testnet and residual risk. Not unhackable.

@@ -1,4 +1,8 @@
 
+## 2026-09-29 demo v2 · Lily ASMR + cursor zooms
+
+Rewrote demo + booth scripts soft/friendly/intriguing. Regenerated VO with ElevenLabs Lily (not Brian). Re-recorded headed Chrome with visible mouse + CSS zoom on Block/Allow/Needs human. Artifact: `/opt/cursor/artifacts/CLAMP_Team14_Demo.mp4` (~2:13).
+
 ## 2026-09-29 UI polish + demo VO
 
 Fixed landing/app-shell bugs from screenshots (sidebar class, ghost CTA, duplicate stats, paper panels, truncated headers, Sign in contrast, mid-word wraps).
