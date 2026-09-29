@@ -21,8 +21,14 @@ Delete either and the entry is weak for Challenge B.
 
 | Owner | Owns |
 | --- | --- |
-| Song Hyewon | Kiln client, parse, explain, code gate, unit tests, token or latency metering, vs all AI baseline, AuditTrail shape |
+| Song Hyewon | Kiln client, parse, explain, code gate, unit tests, token or latency metering, vs all AI baseline, AuditTrail shape. GitHub: [20223096](https://github.com/20223096) |
 | Henry Sam Marfo | On chain mandate or decision receipts, frontend mandate or watch or block or Needs human UI, metrics panel UI, demo video, pitch PDF, README |
+
+## Repo access
+
+- Repo: https://github.com/henrysammarfo/clamp (public)
+- Song needs **Write** collaborator access as `20223096` so she can push her backend branch (403 without it).
+- Cursor agents cannot invite collaborators (GitHub integration returns 403). Henry must invite from GitHub Settings.
 
 ## Submit window
 
