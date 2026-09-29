@@ -152,7 +152,7 @@ export function DashboardPage() {
                     />
                   </div>
                   <div className="flex justify-between text-sm">
-                    <strong>${active.spent.toFixed(2)} spent</strong>
+                    <strong>${active.spent.toFixed(2)} committed</strong>
                     <span className="text-muted-foreground">${available.toFixed(2)} left</span>
                   </div>
                   <Button asChild variant="outline" className="mt-5 w-full">
