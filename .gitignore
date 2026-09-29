@@ -35,3 +35,8 @@ dist-ssr
 !.env.example
 .vercel
 .env*
+
+# Local demo capture artifacts (keep scripts; do not commit media)
+docs/submit/demo/*.mp4
+docs/submit/demo/*.mp3
+docs/submit/demo/*.webm

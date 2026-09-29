@@ -1,4 +1,10 @@
 
+## 2026-09-29 UI polish + demo VO
+
+Fixed landing/app-shell bugs from screenshots (sidebar class, ghost CTA, duplicate stats, paper panels, truncated headers, Sign in contrast, mid-word wraps).
+
+Recorded synced demo with ElevenLabs Brian voice (~95s): `/opt/cursor/artifacts/CLAMP_Team14_Demo.mp4`. Song still needs public upload link for the form.
+
 ## 2026-09-29 Song v0.3 final handoff
 
 Song finished development. Evidence on main:

@@ -20,7 +20,7 @@ Deadline: 30 Sep 2026 12:00 noon KST = **03:00 AM Ghana GMT** (not midnight)
 | Submission evidence | Ready on main | https://github.com/henrysammarfo/clamp/blob/main/docs/SUBMISSION_EVIDENCE.md |
 | Pitch deck PPTX | Ready for Song form | `docs/submit/view/CLAMP_Team14_Pitch.pptx` |
 | Pitch deck PDF | Ready | `docs/submit/view/CLAMP_Team14_Pitch.pdf` |
-| Demo video ≤ 3 min | **NEXT · Henry records locally** | Kiln key set on this machine |
+| Demo video ≤ 3 min | **Ready locally (~95s)** | `/opt/cursor/artifacts/CLAMP_Team14_Demo.mp4` · upload to Drive/YouTube for Song |
 | Booth Q and A | Ready | `docs/submit/BOOTH_PITCH_QA.md` |
 | Form submit | **Song captain** · deploy **not required** | Henry sends: full name, city/country, public video link, final deck |
 | Live frontend (Vercel) | Optional (done anyway) | https://clamp-eight.vercel.app |
