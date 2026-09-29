@@ -69,6 +69,14 @@ export const approveReviewFn = createServerFn({ method: "POST" })
     return { decision: await recordFinalDecision(approved) };
   });
 
+export const rejectReviewFn = createServerFn({ method: "POST" })
+  .validator(z.object({ decisionId: z.string().min(1) }))
+  .handler(async ({ data }) => {
+    await requireClampSession();
+    const rejected = await fastApiClient.rejectDecision(data.decisionId);
+    return { decision: await recordFinalDecision(rejected) };
+  });
+
 export const retryDecisionChainSyncFn = createServerFn({ method: "POST" })
   .validator(
     z.object({
