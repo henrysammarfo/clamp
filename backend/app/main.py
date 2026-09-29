@@ -11,7 +11,7 @@ load_dotenv(Path(__file__).parents[1] / ".env", override=False)
 
 from .database import Database
 from .kiln import KilnError, KilnInterpreter
-from .models import ChainAttachment, DecisionCreate, DecisionReceipt, Mandate, MandateCreate
+from .models import ChainAttachment, DecisionCreate, DecisionReceipt, Mandate, MandateCreate, MandateRevocationReceipt
 from .services import ClampService
 
 
@@ -62,6 +62,18 @@ def create_app(db_path: str | None = None) -> FastAPI:
     def attach_mandate_chain(mandate_id: str, data: ChainAttachment, request: Request):
         return request.app.state.service.attach_mandate_chain(mandate_id, data)
 
+    @app.post("/api/mandates/{mandate_id}/revoke", response_model=MandateRevocationReceipt)
+    def revoke_mandate(mandate_id: str, request: Request):
+        return request.app.state.service.revoke_mandate(mandate_id)
+
+    @app.get("/api/mandates/{mandate_id}/revoke", response_model=MandateRevocationReceipt)
+    def get_mandate_revocation(mandate_id: str, request: Request):
+        return request.app.state.service.get_mandate_revocation(mandate_id)
+
+    @app.post("/api/mandates/{mandate_id}/revoke/chain", response_model=MandateRevocationReceipt)
+    def attach_mandate_revocation_chain(mandate_id: str, data: ChainAttachment, request: Request):
+        return request.app.state.service.attach_mandate_revocation_chain(mandate_id, data)
+
     @app.post("/api/decisions", response_model=DecisionReceipt, status_code=201)
     def create_decision(data: DecisionCreate, request: Request):
         service = request.app.state.service
@@ -82,6 +94,10 @@ def create_app(db_path: str | None = None) -> FastAPI:
     @app.post("/api/decisions/{decision_id}/approve", response_model=DecisionReceipt)
     def approve_decision(decision_id: str, request: Request):
         return request.app.state.service.approve(decision_id)
+
+    @app.post("/api/decisions/{decision_id}/reject", response_model=DecisionReceipt)
+    def reject_decision(decision_id: str, request: Request):
+        return request.app.state.service.reject(decision_id)
 
     @app.post("/api/decisions/{decision_id}/chain", response_model=DecisionReceipt)
     def attach_chain(decision_id: str, data: ChainAttachment, request: Request):
