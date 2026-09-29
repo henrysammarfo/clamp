@@ -1,4 +1,8 @@
 
+## 2026-09-29 Song asks Henry Zoom availability
+
+Song asked if Henry can present at 3 PM tomorrow (30 Sep) via Zoom if needed. That maps to organiser top-3 window **15:00 KST = 06:00 AM Ghana GMT**. Henry confirms available. Song also said she will send final branch name + verified tx links with time before the form deadline.
+
 ## 2026-09-29 submit package committed
 
 Drafts landed under `docs/submit/`:

@@ -1,5 +1,9 @@
 # 5 minute booth pitch + Q and A
 
+## Slot
+
+If selected: **30 Sep 2026 15:00 KST** on Zoom (= 06:00 AM Ghana GMT). Henry presents if called.
+
 ## Spoken pitch (about 5 minutes)
 
 Hi, we’re Team 14, and this is CLAMP.

@@ -3,6 +3,12 @@
 Form: https://forms.gle/iiDRR7e3qbaXfetp7  
 Deadline: 30 Sep 2026 12:00 noon KST = **03:00 AM Ghana GMT** (not midnight)
 
+## Pitch slot if selected
+
+- Organiser top-3 pitch window: **30 Sep 2026 15:00 KST** = **06:00 AM Ghana GMT**
+- Remote teams present on Zoom
+- Henry confirmed available for Zoom if Team 14 is called
+
 ## Ownership now
 
 | Who | Owns |
