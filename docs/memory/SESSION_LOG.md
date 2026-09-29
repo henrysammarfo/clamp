@@ -1,4 +1,12 @@
 
+## 2026-09-29 Song integration confirmations
+
+- Song accepted GitHub invite and is integrating FastAPI as source of truth.
+- Target: React UI -> thin TanStack adapters -> FastAPI -> Base Sepolia -> confirmed hash -> FastAPI /chain.
+- Henry confirms: keep UI + ClampAudit v2; Song owns policy/store/budget; pause conflicting Henry edits on those files while she wires.
+- setRecorder(Song `0x84e71c088A5254F13650682aD9E4d751B57Ac43e`, true) confirmed: tx `0xe60dc24086c22c27a323bd24b21e9acc2e0f3038286922b81a87e1b79c6565c9`.
+- Critical: v2 outcomes are 1..4, not 0..3.
+
 ## 2026-09-29 chain audit and harden
 
 - Audited v1: open writers, post revoke writes, outcome 0 ambiguity.
