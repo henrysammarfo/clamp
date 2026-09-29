@@ -23,6 +23,7 @@ export function mapMandate(source: FastApiMandate): Mandate {
     revokedAt: source.revoked_at,
     revokeTxHash: source.revoke_tx_hash,
     revokeBlockchainNetwork: source.revoke_blockchain_network,
+    revokeChainSyncPending: false,
     createdAt: source.created_at,
   };
 }
