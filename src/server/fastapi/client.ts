@@ -2,6 +2,7 @@ import type {
   FastApiDecision,
   FastApiMandate,
   FastApiMandateCreate,
+  FastApiMandateRevocation,
   FastApiMetrics,
 } from "./types";
 
@@ -60,6 +61,20 @@ export const fastApiClient = {
       method: "POST",
       body: JSON.stringify(input),
     }),
+  revokeMandate: (id: string) =>
+    request<FastApiMandateRevocation>(`/api/mandates/${encodeURIComponent(id)}/revoke`, {
+      method: "POST",
+    }),
+  getMandateRevocation: (id: string) =>
+    request<FastApiMandateRevocation>(`/api/mandates/${encodeURIComponent(id)}/revoke`),
+  attachMandateRevocationChain: (id: string, input: { network: string; tx_hash: string }) =>
+    request<FastApiMandateRevocation>(
+      `/api/mandates/${encodeURIComponent(id)}/revoke/chain`,
+      {
+        method: "POST",
+        body: JSON.stringify(input),
+      },
+    ),
   listDecisions: () => request<FastApiDecision[]>("/api/decisions"),
   getDecision: (id: string) => request<FastApiDecision>(`/api/decisions/${encodeURIComponent(id)}`),
   createDecision: (input: { mandate_id: string; request: string }) =>
@@ -69,6 +84,10 @@ export const fastApiClient = {
     }),
   approveDecision: (id: string) =>
     request<FastApiDecision>(`/api/decisions/${encodeURIComponent(id)}/approve`, {
+      method: "POST",
+    }),
+  rejectDecision: (id: string) =>
+    request<FastApiDecision>(`/api/decisions/${encodeURIComponent(id)}/reject`, {
       method: "POST",
     }),
   attachChain: (id: string, input: { network: string; tx_hash: string }) =>
