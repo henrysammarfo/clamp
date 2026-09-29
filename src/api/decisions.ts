@@ -19,11 +19,22 @@ async function recordFinalDecision(source: FastApiDecision) {
     decisionHash: hashAuditPayload(source.audit_payload),
     outcome: outcomeFromStatus(source.decision === "ALLOW" ? "allow" : "block"),
   });
-  const attached = await fastApiClient.attachChain(source.decision_id, {
-    network: "base-sepolia",
-    tx_hash: txHash,
-  });
-  return mapDecision(attached);
+  try {
+    const attached = await fastApiClient.attachChain(source.decision_id, {
+      network: "base-sepolia",
+      tx_hash: txHash,
+    });
+    return mapDecision(attached);
+  } catch {
+    // The chain write is already confirmed. Do not recreate the decision or
+    // deduct budget again; return the real tx hash so only /chain can be retried.
+    return {
+      ...mapDecision(source),
+      txHash,
+      blockchainNetwork: "base-sepolia",
+      chainSyncPending: true,
+    };
+  }
 }
 
 export const listDecisionsFn = createServerFn({ method: "GET" }).handler(async () => {
@@ -56,6 +67,22 @@ export const approveReviewFn = createServerFn({ method: "POST" })
     await requireClampSession();
     const approved = await fastApiClient.approveDecision(data.decisionId);
     return { decision: await recordFinalDecision(approved) };
+  });
+
+export const retryDecisionChainSyncFn = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      decisionId: z.string().min(1),
+      txHash: z.string().regex(/^0x[0-9a-fA-F]+$/),
+    }),
+  )
+  .handler(async ({ data }) => {
+    await requireClampSession();
+    const attached = await fastApiClient.attachChain(data.decisionId, {
+      network: "base-sepolia",
+      tx_hash: data.txHash,
+    });
+    return { decision: mapDecision(attached) };
   });
 
 export const getMetricsFn = createServerFn({ method: "GET" }).handler(async () => {
