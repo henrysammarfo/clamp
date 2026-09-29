@@ -755,11 +755,7 @@ export function DecisionDetailPage({ id }: { id: string }) {
           <div className="timeline">
             {[
               ["01", "Original request", decision.request],
-              [
-                "02",
-                "Parsed action",
-                `${decision.merchant} · ${decision.amount.toFixed(2)}`,
-              ],
+              ["02", "Parsed action", `${decision.merchant} · ${decision.amount.toFixed(2)}`],
               ["03", "Matched rule", decision.rule],
               ["04", "Decision reason", decision.reason],
               [
