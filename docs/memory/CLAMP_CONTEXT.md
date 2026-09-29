@@ -21,8 +21,8 @@ Delete either and the entry is weak for Challenge B.
 
 | Owner | Owns |
 | --- | --- |
-| Song Hyewon | Kiln, FastAPI source of truth, gate, budget, reject/revoke, purpose controls, benchmark, Base verification polish, final product docs, final branch + tx links. GitHub: [20223096](https://github.com/20223096) |
-| Henry Sam Marfo | Product UI/session/chain foundation, pitch deck, demo video, submit form/checklist, 5 min booth pitch + Q and A |
+| Song Hyewon | Kiln, FastAPI source of truth, gate, budget, reject/revoke, purpose controls, benchmark, Verify on Base, final product docs + evidence on main. Final pitch if selected. GitHub: [20223096](https://github.com/20223096) |
+| Henry Sam Marfo | Product UI/session/chain foundation, pitch deck, demo video, submit form, 4 AM Zoom booth + Q and A |
 
 ## Integration lock (2026-09-29)
 
@@ -42,9 +42,9 @@ Live E2E already green. Henry pauses integration file edits unless Song asks.
 - Organiser deadline: **30 Sep 2026 at 12:00 noon (not midnight)**
 - Timezone for the event clock: **KST** (GWDC Korea / bible lock)
 - **Ghana (GMT):** form must be in by **30 Sep 2026 03:00 AM GMT**
-- Booth judging: **30 Sep 13:00 KST = 04:00 AM Ghana GMT** (Song may ask organisers to move later)
-- Final pitch if selected: **30 Sep 16:00 KST = 07:00 AM Ghana GMT** — Song presents
-- Henry wakes ~06:30 Ghana for intern work; booth at 04:00 is not clean for him
+- Day of (Song-confirmed): submit **12:00 KST** → booth Q and A **13:00 KST** (all teams, Zoom ok) → results **15:00 KST** → final pitch **16:00 KST** if selected (Song presents)
+- Ghana: submit 03:00 · booth 04:00 · results 06:00 · final 07:00
+- Henry wakes ~06:30 for intern work; booth at 04:00 is rough
 
 ## Honesty
 

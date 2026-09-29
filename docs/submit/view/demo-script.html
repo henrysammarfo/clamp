@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CLAMP · Demo video script · Team 14</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root { --ink:#0c0d10; --signal:#e23a28; --paper:#0c0d10; --mist:#e8ebf0; --dim:#9aa3b2; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body {
+      font-family: Manrope, sans-serif;
+      background: linear-gradient(165deg, #0c0d10, #151821 55%, #0a0b0e);
+      color: var(--mist);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+    h1 {
+      font-family: Syne, sans-serif;
+      font-weight: 800;
+      font-size: clamp(2rem, 5vw, 3rem);
+      letter-spacing: -0.03em;
+    }
+    .sub { color: var(--dim); margin: 0.6rem 0 2rem; font-weight: 500; }
+    .beat {
+      display: grid;
+      grid-template-columns: 6.5rem 1fr;
+      gap: 1rem;
+      padding: 1.25rem 0;
+      border-top: 1px solid rgba(232,235,240,0.1);
+    }
+    .t {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      color: var(--signal);
+      text-transform: uppercase;
+    }
+    .beat h2 {
+      font-family: Syne, sans-serif;
+      font-size: 1.2rem;
+      margin-bottom: 0.45rem;
+    }
+    .beat p { color: var(--dim); line-height: 1.55; font-weight: 500; margin-bottom: 0.55rem; }
+    .voice {
+      color: var(--mist);
+      font-size: 1.05rem;
+      line-height: 1.5;
+      font-weight: 600;
+      border-left: 3px solid var(--signal);
+      padding-left: 0.9rem;
+    }
+    a { color: #ff8b7a; font-weight: 600; text-decoration: none; }
+    .foot { margin-top: 2rem; color: var(--dim); font-size: 0.95rem; }
+    @media (max-width:640px) { .beat { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Demo video script</h1>
+    <p class="sub">Under 3 minutes · calm · no hype · open on the refuse</p>
+
+    <div class="beat">
+      <div class="t">0:00</div>
+      <div>
+        <h2>Open</h2>
+        <p>On screen: CLAMP wordmark and soft line.</p>
+        <p class="voice">CLAMP is a delegation control layer for AI agents that spend. You set a temporary mandate. The agent can act alone only inside it.</p>
+      </div>
+    </div>
+    <div class="beat">
+      <div class="t">0:20</div>
+      <div>
+        <h2>Mandate</h2>
+        <p>Show create mandate: office supplies, budget including fees, Amazon Apple Uber, expiry tonight. Cut to Basescan for one second when the tx link is ready.</p>
+        <p class="voice">This mandate is committed on Base Sepolia. The hash is on the audit trail.</p>
+      </div>
+    </div>
+    <div class="beat">
+      <div class="t">0:50</div>
+      <div>
+        <h2>Block first</h2>
+        <p>Submit BestBuy. Show Block. Show nothing paid. Show request, rule, decision, reason, tx.</p>
+        <p class="voice">BestBuy is not on the list. Code stops it. Nothing paid. The refuse is on chain.</p>
+      </div>
+    </div>
+    <div class="beat">
+      <div class="t">1:20</div>
+      <div>
+        <h2>Allow</h2>
+        <p>Submit Amazon inside budget. Show Allow and matching tx.</p>
+        <p class="voice">Same mandate. Amazon is allowed. The gate passes in code, not by asking the model for permission.</p>
+      </div>
+    </div>
+    <div class="beat">
+      <div class="t">1:45</div>
+      <div>
+        <h2>Needs human</h2>
+        <p>Submit Apple near the edge. Show hold. Approve. Show final Allow receipt and tx.</p>
+        <p class="voice">Borderline cases wait for a person. No payment until then.</p>
+      </div>
+    </div>
+    <div class="beat">
+      <div class="t">2:15</div>
+      <div>
+        <h2>Efficiency</h2>
+        <p>Show metrics if Song numbers are ready. Else keep the line short.</p>
+        <p class="voice">Parse once, gate in code, explain once. Fewer model calls than asking an LLM to judge every spend.</p>
+      </div>
+    </div>
+    <div class="beat">
+      <div class="t">2:40</div>
+      <div>
+        <h2>Close</h2>
+        <p>Show audit trail handoff. End card: Team 14, GitHub, contract address.</p>
+        <p class="voice">A second person can reconstruct the story from the trail alone. CLAMP. Control before action.</p>
+      </div>
+    </div>
+
+    <p class="foot">Back to <a href="./index.html">submit view hub</a></p>
+  </div>
+</body>
+</html>

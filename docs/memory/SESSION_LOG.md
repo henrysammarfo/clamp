@@ -1,7 +1,22 @@
 
+## 2026-09-29 Song v0.3 final handoff
+
+Song finished development. Evidence on main:
+- `docs/SUBMISSION_EVIDENCE.md`
+- Contract `0x4648520…42d6` + verified txs (Allow, human Allow, merchant Block, human Reject, Revoke, purpose OFFICE/FOOD)
+- Benchmark: 30×3, CLAMP 100% decision / 100% reason, ALL_AI 100% / 97.78%, 44.4% fewer tokens
+- Model: `deepseek-v4.1-flash`
+- Docx on her machine: `CLAMP_v0.3_FINAL_Report.docx`, `CLAMP_Judge_QA_Preparation_FINAL.docx`
+
+Left for Henry: polish deck with evidence, record ≤3 min demo, submit form (or hand Song exact package). Henry owns 4 AM booth Zoom.
+
+## 2026-09-29 Song clarifies full day flow
+
+Submit by 12:00 KST → booth judging + Q and A at 13:00 (all teams, remote on Zoom) → results 15:00 → final pitch 16:00 only if selected (Song presents). Henry was confused whether booth was only for top 3; it is for everyone after submit.
+
 ## 2026-09-29 presentation timezone corrected
 
-Song corrected: booth judging is **13:00 KST (= 04:00 AM Ghana)**, not 15:00. Final pitch if selected is **16:00 KST** and Song can take that. Booth at 13:00 is hard for Song (work). Henry sleeps until ~06:30 for intern work, so 04:00 and even 04:30–05:00 are too early; he asked Song to push organisers toward closer to 06:30 Ghana if possible. Song still sending final branch + verified tx links before form deadline.
+Booth is 13:00 KST (= 04:00 AM Ghana). Final pitch if selected is 16:00 KST and Song can take that. Booth hard for Song (work) and Henry (asleep until ~06:30). Song may ask organisers about a later booth slot.
 
 ## 2026-09-29 Song asks Henry Zoom availability
 

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CLAMP · Booth cue · Team 14</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #0c0d10;
+      --mist: #e8ebf0;
+      --mist-dim: #9aa3b2;
+      --paper: #f3f5f8;
+      --signal: #e23a28;
+      --line: rgba(12, 13, 16, 0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Manrope, sans-serif;
+      background:
+        radial-gradient(ellipse 60% 40% at 100% 0%, rgba(226, 58, 40, 0.08), transparent 50%),
+        var(--paper);
+      color: var(--ink);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrap {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 5rem;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+    .brand {
+      font-family: Syne, sans-serif;
+      font-weight: 800;
+      font-size: 2rem;
+      letter-spacing: -0.03em;
+    }
+    .brand span { color: var(--signal); }
+    .meta {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #5c6470;
+      text-align: right;
+      line-height: 1.6;
+    }
+    h2 {
+      font-family: Syne, sans-serif;
+      font-size: 1.55rem;
+      letter-spacing: -0.02em;
+      margin: 2.5rem 0 1rem;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 1.4rem 1.5rem;
+      box-shadow: 0 16px 40px rgba(12, 13, 16, 0.05);
+      margin-bottom: 0.85rem;
+    }
+    .card.speak {
+      border-left: 4px solid var(--signal);
+    }
+    .time {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--signal);
+      margin-bottom: 0.55rem;
+    }
+    .card p {
+      font-size: 1.12rem;
+      line-height: 1.55;
+      font-weight: 500;
+    }
+    .q {
+      font-family: Syne, sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      margin-bottom: 0.4rem;
+    }
+    .a { color: #3d4450; font-size: 1rem; line-height: 1.5; font-weight: 500; }
+    .lines {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+    }
+    @media (max-width: 640px) { .lines { grid-template-columns: 1fr; } }
+    .pill {
+      background: var(--ink);
+      color: var(--mist);
+      border-radius: 14px;
+      padding: 1rem 1.15rem;
+      font-family: Syne, sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+    .note {
+      margin-top: 2rem;
+      font-size: 0.95rem;
+      color: #5c6470;
+      line-height: 1.5;
+    }
+    a {
+      color: var(--signal);
+      font-weight: 600;
+      text-decoration: none;
+    }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <div class="brand">CLAMP <span>booth cue</span></div>
+        <p style="margin-top:0.4rem;color:#5c6470;font-weight:500;">Five minute Zoom · calm · open on the block</p>
+      </div>
+      <div class="meta">
+        Team 14<br />
+        Booth ~13:00 KST<br />
+        Final pitch Song · 16:00 KST
+      </div>
+    </header>
+
+    <h2>Spoken path</h2>
+
+    <article class="card speak">
+      <div class="time">0:00 · open</div>
+      <p>Hi, we’re Team 14, and this is CLAMP.</p>
+    </article>
+    <article class="card speak">
+      <div class="time">0:20 · problem</div>
+      <p>People are starting to let AI agents spend money. The hard part is not the chat. It’s control. Soft prompt limits can be talked around. We wanted a hard mandate and a trail someone else can read.</p>
+    </article>
+    <article class="card speak">
+      <div class="time">1:20 · mandate</div>
+      <p>With CLAMP, you create a temporary spending mandate: purpose, budget including fees, allowed merchants, and an expiry. The agent may act alone only inside that box.</p>
+    </article>
+    <article class="card speak">
+      <div class="time">2:10 · decide</div>
+      <p>Kiln turns a sentence into a proposed buy. Then a code gate returns Allow, Block, or Needs human. The model does not grant permission.</p>
+    </article>
+    <article class="card speak">
+      <div class="time">3:00 · demo</div>
+      <p>We open on a Block. BestBuy is not on the list. Nothing paid. The refuse is written to Base Sepolia. Then Allow on Amazon under the same mandate. Then Needs human on Apple until a person approves.</p>
+    </article>
+    <article class="card speak">
+      <div class="time">4:20 · close</div>
+      <p>You set the mandate. The agent asked outside it. Nothing paid. The refuse is on the audit trail. That’s CLAMP. Control before action.</p>
+    </article>
+
+    <h2>Keep these lines ready</h2>
+    <div class="lines">
+      <div class="pill">Code decides. The model explains.</div>
+      <div class="pill">Open on the block.</div>
+      <div class="pill">Nothing paid.</div>
+      <div class="pill">A second person can reconstruct it from the trail.</div>
+    </div>
+
+    <h2>Likely questions</h2>
+    <article class="card">
+      <p class="q">Is this just a wallet limit UI?</p>
+      <p class="a">No. It’s a delegation control layer. Mandate plus deterministic gate plus a reconstructable audit trail. Kiln is for parse and explain only.</p>
+    </article>
+    <article class="card">
+      <p class="q">Why not let the model decide allow or deny?</p>
+      <p class="a">That burns tokens and can be socially engineered. We parse once, decide in code, explain once.</p>
+    </article>
+    <article class="card">
+      <p class="q">What is on chain?</p>
+      <p class="a">Mandate commits and decision receipts on Base Sepolia through ClampAudit. Hashes and outcomes. Testnet is labeled.</p>
+    </article>
+    <article class="card">
+      <p class="q">What if the case is fuzzy?</p>
+      <p class="a">Needs human. Payment stays stopped until a person decides.</p>
+    </article>
+    <article class="card">
+      <p class="q">Can someone fake a receipt?</p>
+      <p class="a">Writers are access controlled. Final decisions are backed by real Base Sepolia tx hashes in FastAPI.</p>
+    </article>
+    <article class="card">
+      <p class="q">Is this production custody?</p>
+      <p class="a">No. Control and records for Challenge B. Honest about testnet and residual risk. Not claiming unhackable.</p>
+    </article>
+    <article class="card">
+      <p class="q">Who built what?</p>
+      <p class="a">Song: Kiln, gate, FastAPI, metering, audit payloads. Henry: product UI, sessions, ClampAudit, pitch and demo package.</p>
+    </article>
+
+    <p class="note">
+      Open the visual deck: <a href="./pitch-deck.html">pitch-deck.html</a>
+      · Demo script: <a href="./demo-script.html">demo-script.html</a>
+      · Hub: <a href="./index.html">index.html</a>
+    </p>
+  </div>
+</body>
+</html>
