@@ -37,9 +37,6 @@ export function hashAuditPayload(payload: AuditPayload): `0x${string}` {
   return keccak256(stringToHex(canonicalize(payload)));
 }
 
-
-export function hashRevocationAuditPayload(
-  payload: FastApiRevocationAuditPayload,
-): `0x${string}` {
+export function hashRevocationAuditPayload(payload: FastApiRevocationAuditPayload): `0x${string}` {
   return keccak256(stringToHex(canonicalize(payload)));
 }
