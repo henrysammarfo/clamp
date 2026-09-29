@@ -51,8 +51,8 @@ export function ProductPage() {
       intro="CLAMP is an authorization and audit control plane for AI agents that spend. A human delegates narrow, temporary authority instead of granting unrestricted access or approving every purchase."
     >
       <Section kicker="Why CLAMP" title="Financial authority needs explicit boundaries.">
-        <div className="panel max-w-3xl">
-          <p className="text-xl leading-relaxed text-muted-foreground">
+        <div className="panel public-panel max-w-3xl">
+          <p className="text-lg leading-relaxed">
             Enterprise procurement agents can move routine work faster, but they should act only
             within authority a person deliberately grants. CLAMP makes that authority specific,
             temporary, reviewable, and revocable.
@@ -60,22 +60,24 @@ export function ProductPage() {
         </div>
       </Section>
       <Section kicker="How it works" title="Interpretation and authorization stay separate.">
-        <p className="mb-8 max-w-3xl text-xl leading-relaxed">
-          AI interprets. Code authorizes. Humans handle exceptions. Base records the receipt.
-        </p>
-        <div className="feature-grid">
-          {features.map(({ icon: Icon, ...f }) => (
-            <article className="feature-card" key={f.title}>
-              <Icon />
-              <h3>{f.title}</h3>
-              <p>{f.text}</p>
-            </article>
-          ))}
+        <div className="space-y-8">
+          <p className="max-w-3xl text-lg leading-relaxed text-white/70">
+            AI interprets. Code authorizes. Humans handle exceptions. Base records the receipt.
+          </p>
+          <div className="feature-grid">
+            {features.map(({ icon: Icon, ...f }) => (
+              <article className="feature-card" key={f.title}>
+                <Icon />
+                <h3>{f.title}</h3>
+                <p>{f.text}</p>
+              </article>
+            ))}
+          </div>
         </div>
       </Section>
       <Section kicker="Procurement example" title="Delegate a mandate, not unlimited authority.">
         <div className="panel-grid">
-          <div className="panel">
+          <div className="panel public-panel">
             <p className="eyebrow">Office procurement mandate</p>
             <ul className="rule-list mt-5">
               <li>
@@ -104,11 +106,11 @@ export function ProductPage() {
                 ["revoke", "Revoke mandate", "Delegated authority ends."],
               ] as const
             ).map(([status, title, text]) => (
-              <div className="panel flex items-center gap-5" key={status}>
+              <div className="panel public-panel flex items-center gap-5" key={status}>
                 <StatusBadge status={status} />
                 <div>
                   <h3 className="font-semibold">{title}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{text}</p>
+                  <p className="mt-1 text-sm opacity-70">{text}</p>
                 </div>
               </div>
             ))}
@@ -129,7 +131,7 @@ export function ProductPage() {
           </div>
           <div>
             <ShieldCheck />
-            <p className="mt-4 max-w-md text-sm text-muted-foreground">
+            <p className="mt-4 max-w-md text-sm text-white/70">
               CLAMP supports read-only verification of final Base Sepolia audit receipts and a
               measured 30 case adversarial benchmark. These demonstrate the control path; they do
               not prove that a purchase happened or that an AI was correct.
@@ -138,8 +140,8 @@ export function ProductPage() {
         </div>
       </Section>
       <Section kicker="Product boundary" title="Authorization control, not payment execution.">
-        <div className="panel max-w-3xl">
-          <p className="text-xl leading-relaxed">
+        <div className="panel public-panel max-w-3xl">
+          <p className="text-lg leading-relaxed">
             CLAMP controls authorization and records audit receipts. It does not execute payment,
             custody funds, prove a purchase happened, or prove that an AI decision was correct or
             fair.
@@ -167,13 +169,13 @@ export function CaseStudiesPage() {
             <Link
               to="/case-studies/$slug"
               params={{ slug: c.slug }}
-              className="panel flex items-center justify-between gap-5 transition-colors hover:bg-accent"
+              className="panel public-panel flex items-center justify-between gap-5 transition-colors hover:brightness-95"
               key={c.slug}
             >
               <div>
                 <StatusBadge status={c.status} />
                 <h3 className="mt-5 text-xl font-semibold">{c.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{c.description}</p>
+                <p className="mt-2 text-sm opacity-70">{c.description}</p>
               </div>
               <ArrowRight />
             </Link>

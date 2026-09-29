@@ -22,9 +22,9 @@ Deadline: 30 Sep 2026 12:00 noon KST = **03:00 AM Ghana GMT** (not midnight)
 | Pitch deck PDF | Ready | `docs/submit/view/CLAMP_Team14_Pitch.pdf` |
 | Demo video ≤ 3 min | **NEXT · Henry records locally** | Kiln key set on this machine |
 | Booth Q and A | Ready | `docs/submit/BOOTH_PITCH_QA.md` |
-| Form submit | Song captain | Henry sends deck + video + field answers |
-| Live frontend (Vercel) | **Up** | https://clamp-eight.vercel.app |
-| Live FastAPI backend (Render) | **Up** | https://clamp-api.onrender.com |
+| Form submit | **Song captain** · deploy **not required** | Henry sends: full name, city/country, public video link, final deck |
+| Live frontend (Vercel) | Optional (done anyway) | https://clamp-eight.vercel.app |
+| Live FastAPI backend (Render) | Optional (done anyway) | https://clamp-api.onrender.com |
 
 ## Deploy notes (2026-09-29)
 
@@ -40,18 +40,20 @@ Deadline: 30 Sep 2026 12:00 noon KST = **03:00 AM Ghana GMT** (not midnight)
 - Backend health: `http://127.0.0.1:8000/health` (up · Kiln key set locally)
 - Frontend: `http://127.0.0.1:3000/` (up)
 
-## Form draft fields
+## Form fields Song needs from Henry (2026-09-29)
 
-- Project name: CLAMP
-- Team: Team 14 · Henry Sam Marfo · Song Hyewon
-- Challenge: B · Controls and records for an AI agent that spends
-- One sentence: A delegation control layer for AI agents with temporary spending mandates, allow / block / needs human decisions, and an on chain audit trail.
-- Repo: https://github.com/henrysammarfo/clamp
-- Live demo URL (optional): https://clamp-eight.vercel.app
-- Demo video URL: _(record + upload)_
-- Pitch PDF / PPTX: `docs/submit/view/CLAMP_Team14_Pitch.pdf` (or Drive link after upload)
-- Contract: `0x4648520fe2b192791c9ae13e46e0cba9544c42d6`
-- Network: Base Sepolia
+Official package: challenge · GitHub · public demo video ≤3 min · pitch deck. **No live app URL.**
+
+| Field | Value |
+| --- | --- |
+| Full name | Henry Sam Marfo |
+| Team location (country + city) | Ghana · _(Henry fill city)_ |
+| GitHub | https://github.com/henrysammarfo/clamp |
+| Demo video (public YouTube / Drive / Notion) | _(record + upload · anyone-with-link)_ |
+| Pitch deck | https://github.com/henrysammarfo/clamp/blob/cursor/clamp-henry-live-069f/docs/submit/view/CLAMP_Team14_Pitch.pdf |
+| Pitch PPTX | https://github.com/henrysammarfo/clamp/blob/cursor/clamp-henry-live-069f/docs/submit/view/CLAMP_Team14_Pitch.pptx |
+
+Video must show workflow + AI decision path. Keep under 3 minutes.
 
 ## Key verified txs (paste into form / deck)
 
