@@ -64,6 +64,27 @@ export async function commitMandateOnChain(mandateHash: Hex): Promise<{ txHash: 
   return { txHash: hash };
 }
 
+export async function ensureMandateCommitted(mandateHash: Hex): Promise<{ txHash: Hex | null }> {
+  const { publicClient, walletClient, account, address } = requireChain();
+  const exists = await publicClient.readContract({
+    address,
+    abi: clampAuditAbi,
+    functionName: "mandateExists",
+    args: [mandateHash],
+  });
+  if (exists) return { txHash: null };
+  const hash = await walletClient.writeContract({
+    address,
+    abi: clampAuditAbi,
+    functionName: "commitMandate",
+    args: [mandateHash],
+    account,
+    chain: baseSepolia,
+  });
+  await publicClient.waitForTransactionReceipt({ hash });
+  return { txHash: hash };
+}
+
 export async function recordDecisionOnChain(input: {
   mandateHash: Hex;
   decisionHash: Hex;

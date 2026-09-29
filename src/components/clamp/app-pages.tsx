@@ -15,7 +15,6 @@ import {
   ShieldX,
   Sparkles,
   UserRoundCheck,
-  X,
 } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { toast } from "sonner";
@@ -35,10 +34,10 @@ import {
   getDecisionFn,
   getMetricsFn,
   listDecisionsFn,
-  resolveReviewFn,
+  approveReviewFn,
   submitAgentRequestFn,
 } from "@/api/decisions";
-import { createMandateFn, getMandateFn, listMandatesFn, revokeMandateFn } from "@/api/mandates";
+import { createMandateFn, getMandateFn, listMandatesFn } from "@/api/mandates";
 import { getRuntimeStatusFn } from "@/api/settings";
 import { AppShell } from "./app-shell";
 import { StatusBadge } from "./status-badge";
@@ -259,8 +258,10 @@ export function NewMandatePage() {
           name: String(form.get("name") ?? ""),
           purpose: String(form.get("purpose") ?? ""),
           budget: Number(form.get("budget")),
+          currency: String(form.get("currency") ?? "USD"),
           merchants,
-          expiresAt: String(form.get("expiry") ?? ""),
+          expiresAt: new Date(String(form.get("expiry") ?? "")).toISOString(),
+          humanApprovalThreshold: Number(form.get("humanApprovalThreshold")),
         },
       });
       toast.success("Mandate committed on Base Sepolia");
@@ -289,6 +290,29 @@ export function NewMandatePage() {
           <Input id="budget" name="budget" type="number" defaultValue="50" min="1" required />
         </div>
         <div className="field">
+          <label htmlFor="currency">Currency</label>
+          <Input
+            id="currency"
+            name="currency"
+            defaultValue="USD"
+            minLength={3}
+            maxLength={3}
+            required
+          />
+        </div>
+        <div className="field">
+          <label htmlFor="human-approval-threshold">Human approval threshold</label>
+          <Input
+            id="human-approval-threshold"
+            name="humanApprovalThreshold"
+            type="number"
+            defaultValue="40"
+            min="0.01"
+            step="0.01"
+            required
+          />
+        </div>
+        <div className="field">
           <label htmlFor="expiry">Expiry</label>
           <Input id="expiry" name="expiry" type="datetime-local" required />
         </div>
@@ -314,7 +338,6 @@ export function MandateDetailPage({ id }: { id: string }) {
   const [mandate, setMandate] = useState<Mandate | null>(null);
   const [decisions, setDecisions] = useState<Decision[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
 
   const load = () => {
     Promise.all([getMandateFn({ data: { id } }), listDecisionsFn()])
@@ -326,20 +349,6 @@ export function MandateDetailPage({ id }: { id: string }) {
   };
 
   useEffect(load, [id]);
-
-  const revoke = async () => {
-    setBusy(true);
-    try {
-      const { mandate: next } = await revokeMandateFn({ data: { id } });
-      setMandate(next);
-      toast.success("Mandate revoked on chain");
-      load();
-    } catch (e) {
-      toast.error(errMessage(e));
-    } finally {
-      setBusy(false);
-    }
-  };
 
   if (error) {
     return (
@@ -392,6 +401,9 @@ export function MandateDetailPage({ id }: { id: string }) {
               <Check /> Budget: ${mandate.budget.toFixed(2)}, including fees
             </li>
             <li>
+              <UserRoundCheck /> Human approval at ${mandate.humanApprovalThreshold.toFixed(2)}
+            </li>
+            <li>
               <Check /> Merchants: {mandate.merchants.join(", ")}
             </li>
             <li>
@@ -408,7 +420,9 @@ export function MandateDetailPage({ id }: { id: string }) {
         </div>
         <div className="panel">
           <p className="eyebrow">On chain commitment</p>
-          <h2 className="mt-3 font-mono text-sm break-all">{mandate.commitTxHash ?? "Pending"}</h2>
+          <h2 className="mt-3 font-mono text-sm break-all">
+            {mandate.commitTxHash ?? "Transaction hash not stored by the mandate API"}
+          </h2>
           <p className="my-5 text-sm leading-relaxed text-muted-foreground">
             Base Sepolia · hash {mandate.mandateHash.slice(0, 18)}…
           </p>
@@ -422,12 +436,17 @@ export function MandateDetailPage({ id }: { id: string }) {
           <Button
             variant="destructive"
             className="w-full"
-            disabled={busy || mandate.status !== "active"}
-            onClick={revoke}
+            disabled
+            title="The FastAPI contract does not currently expose mandate revocation."
           >
             <ShieldX />
-            {mandate.status === "revoked" ? "Mandate revoked" : "Revoke mandate"}
+            {mandate.status === "revoked" ? "Mandate revoked" : "Revocation unavailable"}
           </Button>
+          {mandate.status === "active" && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              The backend does not currently provide a revocation endpoint.
+            </p>
+          )}
         </div>
       </div>
       <div className="panel mt-5">
@@ -506,8 +525,7 @@ export function NewRequestPage() {
             className="min-h-32 text-lg"
           />
           <small>
-            Evaluation calls Song parse and Song gate. If Song is not wired, this fails closed. No
-            keyword demo gate.
+            Evaluation is performed by FastAPI using Kiln parsing and deterministic policy.
           </small>
         </div>
         <div className="mt-5 flex flex-wrap gap-2">
@@ -724,10 +742,10 @@ export function ReviewsPage() {
 
   useEffect(load, []);
 
-  const resolve = async (decisionId: string, status: "allow" | "block") => {
+  const approve = async (decisionId: string) => {
     try {
-      await resolveReviewFn({ data: { decisionId, status } });
-      toast.success(status === "allow" ? "Approved on chain" : "Blocked on chain");
+      await approveReviewFn({ data: { decisionId } });
+      toast.success("Approved on chain");
       load();
     } catch (e) {
       toast.error(errMessage(e));
@@ -740,7 +758,7 @@ export function ReviewsPage() {
       {!items.length && !error && (
         <div className="panel">
           <p className="text-sm text-muted-foreground">
-            No Needs human items. Requests reach this queue only after Song gate returns review.
+            No Needs human items. Requests reach this queue only after FastAPI returns Needs human.
           </p>
         </div>
       )}
@@ -768,13 +786,20 @@ export function ReviewsPage() {
               </li>
             </ul>
             <div className="mt-6 flex gap-3">
-              <Button onClick={() => resolve(item.id, "allow")}>
+              <Button onClick={() => approve(item.id)}>
                 <Check /> Approve
               </Button>
-              <Button variant="destructive" onClick={() => resolve(item.id, "block")}>
-                <X /> Block
+              <Button
+                variant="destructive"
+                disabled
+                title="Human rejection is not supported by the backend API."
+              >
+                Block unavailable
               </Button>
             </div>
+            <p className="mt-3 text-xs text-muted-foreground">
+              The backend currently supports human approval only. Rejection is not yet available.
+            </p>
           </div>
         ))}
       </div>
@@ -883,8 +908,7 @@ export function MetricsPage() {
         <div className="panel mb-5">
           <p className="text-sm text-destructive">{error}</p>
           <p className="mt-3 text-sm text-muted-foreground">
-            Henry owns this panel. Song owns live token and latency numbers. No illustrative fake
-            table.
+            Live token and latency numbers come from FastAPI. No illustrative fake table.
           </p>
         </div>
       )}
@@ -892,10 +916,10 @@ export function MetricsPage() {
         <>
           <div className="metric-grid">
             {[
-              ["CLAMP calls", String(metrics.clampCalls), "parse + explain"],
-              ["All AI calls", String(metrics.allAiCalls), "judge every step"],
-              ["CLAMP tokens", String(metrics.clampTokens), "measured"],
-              ["Gate latency", `${metrics.clampGateLatencyMs}ms`, "local code"],
+              ["Kiln calls", String(metrics.kilnCalls), "measured"],
+              ["Total tokens", String(metrics.totalTokens), "measured"],
+              ["Prompt tokens", String(metrics.promptTokens), "measured"],
+              ["Average latency", `${metrics.averageLatencyMs.toFixed(2)}ms`, "Kiln calls"],
             ].map((x) => (
               <div className="metric-cell" key={x[0]}>
                 <p>{x[0]}</p>
@@ -907,8 +931,10 @@ export function MetricsPage() {
           <div className="panel mt-5">
             <div className="panel-head">
               <div>
-                <h2>Same three cases</h2>
-                <p className="mt-1 text-sm text-muted-foreground">{metrics.notes}</p>
+                <h2>Measured backend activity</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Persisted Kiln usage and decision counts from FastAPI.
+                </p>
               </div>
               <Activity />
             </div>
@@ -928,17 +954,17 @@ export function MetricsPage() {
                     <td>
                       <strong>CLAMP</strong>
                     </td>
-                    <td>{metrics.clampCalls}</td>
-                    <td>{metrics.clampTokens}</td>
-                    <td>{metrics.clampGateLatencyMs}ms gate</td>
-                    <td>Code</td>
+                    <td>{metrics.kilnCalls}</td>
+                    <td>{metrics.totalTokens}</td>
+                    <td>{metrics.averageLatencyMs.toFixed(2)}ms avg</td>
+                    <td>FastAPI deterministic policy</td>
                   </tr>
                   <tr>
                     <td>All AI baseline</td>
-                    <td>{metrics.allAiCalls}</td>
-                    <td>{metrics.allAiTokens}</td>
-                    <td>{metrics.allAiLatencyMs}ms avg</td>
-                    <td>Model judgment</td>
+                    <td>Unavailable</td>
+                    <td>Unavailable</td>
+                    <td>Not yet measured</td>
+                    <td>No backend data</td>
                   </tr>
                 </tbody>
               </table>
@@ -1014,17 +1040,12 @@ export function SettingsPage() {
                 <span>Base Sepolia</span>
                 <strong>{status.chain.configured ? "Configured" : "Missing env"}</strong>
               </div>
-              {status.song.map((item) => (
-                <div
-                  className="flex justify-between gap-4 text-sm border-b border-border pb-3"
-                  key={item.name}
-                >
-                  <span>{item.name}</span>
-                  <strong className="text-right max-w-md">
-                    {item.wired ? "Wired" : "Not wired (fail closed)"}
-                  </strong>
-                </div>
-              ))}
+              <div className="flex justify-between gap-4 text-sm border-b border-border pb-3">
+                <span>{status.backend.name}</span>
+                <strong className="text-right max-w-md">
+                  {status.backend.wired ? "Connected" : `Unavailable: ${status.backend.detail}`}
+                </strong>
+              </div>
             </div>
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
               CLAMP does not claim to be unhackable. It uses hard controls, tenant sessions, and an

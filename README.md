@@ -7,23 +7,26 @@ Team 14 · GWDC 2026 Korea · Challenge B · FuriosaAI x Bricksum
 ## Honesty
 
 - Henry ships live Base Sepolia mandate commits and decision receipts when chain env is set.
-- Song owns Kiln parse or explain, the code gate, metering, and AuditTrail shape.
-- If Song APIs are unwired, request evaluation and metrics fail closed. No fake Kiln calls. No mock pays. No invented tx hashes.
+- FastAPI is the source of truth for Kiln parsing, deterministic policy, budgets, mandates, decisions, metrics, audit payloads, and confirmed transaction hashes.
+- TanStack is a server-side adapter and UI. It does not calculate policy or budgets and does not store mandate or decision state.
+- No fake Kiln calls. No mock pays. No invented transaction hashes.
 - Testnet is labeled. We do not claim the system is unhackable.
 
 ## Ownership
 
-| Owner | Scope |
-| --- | --- |
+| Owner           | Scope                                                                  |
+| --------------- | ---------------------------------------------------------------------- |
 | Henry Sam Marfo | On chain receipts, frontend, sessions, metrics UI, demo, pitch, README |
-| Song Hyewon | Kiln client, gate, metering, tests, AuditTrail shape |
+| Song Hyewon     | Kiln client, gate, metering, tests, AuditTrail shape                   |
 
 ## Stack
 
 - TanStack Start + React 19 + Vite + Tailwind
 - Signed httpOnly server sessions (no localStorage for product state)
-- Tenant scoped server store
+- FastAPI + SQLite authoritative persistence
 - Base Sepolia + `ClampAudit` via viem
+
+Final Allow and Block receipts commit the complete backend `audit_payload` to Base Sepolia. Needs human receipts remain off chain until approval. The backend currently exposes approval only, so human rejection and mandate revocation are disabled in the UI rather than implemented locally.
 
 ## Live Base Sepolia (hackathon)
 
@@ -38,6 +41,7 @@ Team 14 · GWDC 2026 Korea · Challenge B · FuriosaAI x Bricksum
 bun install
 cp .env.example .env
 # fill SESSION_SECRET (32+ chars)
+# set FASTAPI_BASE_URL (defaults to http://127.0.0.1:8000)
 # fill BASE_SEPOLIA_RPC_URL and BASE_SEPOLIA_PRIVATE_KEY
 bun run compile:audit
 bun run deploy:audit
@@ -58,9 +62,9 @@ bun run dev
 
 1. Sign in to create a tenant session.
 2. Create a mandate ($50, Amazon Apple Uber, office supplies). Confirm Basescan tx.
-3. Open on a BestBuy request after Song wires the gate. Expect Block. Nothing paid.
+3. Open on a BestBuy request. FastAPI returns Block. Nothing paid.
 4. Run an Amazon allow under the same mandate.
-5. Show metrics when Song metering is wired.
+5. Show persisted Kiln metrics from FastAPI. The all AI baseline is labeled unavailable until measured.
 6. Hand the audit trail to a second person.
 
 ## Prebuilt vs hackathon built

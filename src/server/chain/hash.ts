@@ -1,46 +1,31 @@
 import { keccak256, stringToHex } from "viem";
-import type { Decision, Mandate } from "@/lib/clamp-types";
+import type { AuditPayload, FastApiMandate } from "@/server/fastapi/types";
 
-export function hashMandate(
-  mandate: Pick<Mandate, "id" | "tenantId" | "purpose" | "budget" | "merchants" | "expiresAt">,
-): `0x${string}` {
-  const payload = JSON.stringify({
+function canonicalize(value: unknown): string {
+  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(canonicalize).join(",")}]`;
+  const record = value as Record<string, unknown>;
+  return `{${Object.keys(record)
+    .sort()
+    .map((key) => `${JSON.stringify(key)}:${canonicalize(record[key])}`)
+    .join(",")}}`;
+}
+
+export function hashMandate(mandate: FastApiMandate): `0x${string}` {
+  const payload = canonicalize({
     id: mandate.id,
-    tenantId: mandate.tenantId,
+    name: mandate.name,
     purpose: mandate.purpose,
-    budget: mandate.budget,
-    merchants: [...mandate.merchants].sort(),
-    expiresAt: mandate.expiresAt,
+    total_budget: mandate.total_budget,
+    currency: mandate.currency,
+    allowed_merchants: [...mandate.allowed_merchants].sort(),
+    expires_at: mandate.expires_at,
+    human_approval_threshold: mandate.human_approval_threshold,
+    created_at: mandate.created_at,
   });
   return keccak256(stringToHex(payload));
 }
 
-export function hashDecision(
-  decision: Pick<
-    Decision,
-    | "id"
-    | "tenantId"
-    | "mandateId"
-    | "request"
-    | "merchant"
-    | "amount"
-    | "fee"
-    | "status"
-    | "rule"
-    | "reason"
-  >,
-): `0x${string}` {
-  const payload = JSON.stringify({
-    id: decision.id,
-    tenantId: decision.tenantId,
-    mandateId: decision.mandateId,
-    request: decision.request,
-    merchant: decision.merchant,
-    amount: decision.amount,
-    fee: decision.fee,
-    status: decision.status,
-    rule: decision.rule,
-    reason: decision.reason,
-  });
-  return keccak256(stringToHex(payload));
+export function hashAuditPayload(payload: AuditPayload): `0x${string}` {
+  return keccak256(stringToHex(canonicalize(payload)));
 }
