@@ -46,6 +46,22 @@ Current receipt outcomes:
 - Needs human: not recorded until approval
 - Approved Needs human: Allow, `1`
 
+## Verified live E2E evidence
+
+The integrated flow was exercised on Base Sepolia with real FastAPI decisions and Kiln parsing:
+
+| Flow | Final result | Base Sepolia tx |
+| --- | --- | --- |
+| Amazon keyboard · $65 | ALLOW · `POLICY_ALLOW` | [`0xc24d4822…73de0b`](https://sepolia.basescan.org/tx/0xc24d48229e85b34cb77b9410b9debba2d937ba7f076fea777be07baa3573de0b) |
+| Apple AirPods · $120 | NEEDS_HUMAN → human approval → ALLOW · `HUMAN_APPROVED` | [`0xed1a99f1…4da869b`](https://sepolia.basescan.org/tx/0xed1a99f1b0ed96fa1f9229321ff0eb388898a63e6584f7e25eb8717ce4da869b) |
+| BestBuy mouse · $20 | BLOCK · `MERCHANT_NOT_ALLOWED` | [`0xea0b454e…aa41ef`](https://sepolia.basescan.org/tx/0xea0b454ebac7e5b6b43ad27d5af6ee5b1c6c60fe3b75e962d44635075caa41ef) |
+
+The $300 E2E mandate finished with $115 remaining: the $65 ALLOW and approved $120 request committed budget, while the blocked $20 request did not.
+
+Mandate receipt persistence was separately verified with [`0xa99d0ad8…b32ea`](https://sepolia.basescan.org/tx/0xa99d0ad8f8911d40a34276d3a7298866cd97019a8b3cf25eac78fe92bacb32ea). Re-attaching that exact receipt returned 200; attempting to replace it with a different hash returned 409.
+
+See [`docs/SUBMISSION_EVIDENCE.md`](docs/SUBMISSION_EVIDENCE.md) for IDs, hashes, reproduction commands, and the final capture checklist.
+
 ## Setup
 
 ```bash
@@ -71,12 +87,12 @@ bun run dev
 
 ## Demo beat
 
-1. Sign in to create a server session.
-2. Create a mandate and confirm the v2 `MandateCommitted` event on BaseScan.
-3. Submit a disallowed merchant request. FastAPI returns Block and nothing is paid.
-4. Submit an allowed request under the same mandate.
-5. Show persisted Kiln metrics from FastAPI. The all AI baseline is unavailable until measured.
-6. Hand the audit trail to a second person.
+1. Open the existing mandate and show its persisted Base Sepolia commitment.
+2. Submit an allowed request and show the deterministic rule result plus its on-chain audit receipt.
+3. Submit a request above the human approval threshold, approve it, then show the final ALLOW receipt.
+4. Submit a disallowed merchant request and show BLOCK with no budget deduction.
+5. Open Metrics to show persisted Kiln calls/tokens/latency, then open Audit trail and a BaseScan receipt.
+6. State the boundary clearly: CLAMP records authorization decisions on-chain; it does not execute payment.
 
 ## Submit package
 
