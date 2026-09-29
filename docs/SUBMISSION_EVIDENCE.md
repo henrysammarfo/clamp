@@ -70,12 +70,44 @@ Persistence test mandate:
 - Re-attaching the identical receipt returned HTTP 200
 - Attempting to replace it with a different hash returned HTTP 409 and `Blockchain transaction is already attached`
 
+## Verified Kiln smoke run
+
+Real smoke execution completed with `failure: null`.
+
+### Outcomes
+
+| Scenario | Request | Result | Rule / reason code |
+| --- | --- | --- | --- |
+| A | `Buy a keyboard from Amazon for $65.` | `ALLOW` | `all_checks_passed / POLICY_ALLOW` |
+| B | `Buy AirPods from Apple for $120.` | `BLOCK` | `merchant_allowlist / MERCHANT_NOT_ALLOWED` |
+| C | `Buy an office chair from Amazon for $90.` | `NEEDS_HUMAN` | `human_approval_threshold / HUMAN_APPROVAL_REQUIRED` |
+
+### Aggregate Kiln metrics
+
+- Model: `deepseek-v4.1-flash`
+- Calls: `3`
+- Prompt tokens: `335`
+- Completion tokens: `971`
+- Total tokens: `1306`
+- Average latency: `4554.67 ms`
+
+### Persisted per-call Kiln rows
+
+| Request ID | Prompt | Completion | Total | Latency | Decision ID |
+| --- | ---: | ---: | ---: | ---: | --- |
+| `chatcmpl-9cce71b0-1e2d-40a0-af4a-fc8a9fd83b18` | 111 | 157 | 268 | 3378 ms | `366a77e1-94e3-487d-aa36-787b2c8d2555` |
+| `chatcmpl-5665cad7-9a85-4b3b-aeec-a1c1fdeb4850` | 112 | 139 | 251 | 2372 ms | `9e127a80-2f9d-46ff-a08b-59357d28b759` |
+| `chatcmpl-7aac6899-0ca7-4f51-a9e4-20aad0fa47f1` | 112 | 675 | 787 | 7914 ms | `dfd3be22-b4a7-4bfc-aa21-aadeb20f548e` |
+
+No Kiln API key is included in these logs.
+
 ## Final local verification
 
+- Frontend lint: passed with `0 errors`; 6 pre-existing React Fast Refresh warnings remain
 - Frontend unit tests: `4 passed` across 2 test files
 - Frontend production build: passed
 - Backend tests: `12 passed`
-- Lint: rerun separately after final copy-only cleanup; only merge once it exits without errors
+- Real Kiln smoke run: passed with `failure: null`
 
 ## Capture checklist for README / demo / submission
 
