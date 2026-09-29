@@ -14,6 +14,25 @@ Honesty: This is hardened audit logging, not an unhackable system.
 | Owner / deployer | `0x9ADd0ac311e9E528800afc3F4A04e9cDe52C9cE0`                                    |
 | Explorer         | https://sepolia.basescan.org/address/0x4648520fe2b192791c9ae13e46e0cba9544c42d6 |
 
+### Approved recorders
+
+| Address | Notes |
+| --- | --- |
+| `0x9ADd0ac311e9E528800afc3F4A04e9cDe52C9cE0` | Owner / Henry deployer |
+| `0x84e71c088A5254F13650682aD9E4d751B57Ac43e` | Song FastAPI writer · setRecorder tx [`0xe60dc240…65c9`](https://sepolia.basescan.org/tx/0xe60dc24086c22c27a323bd24b21e9acc2e0f3038286922b81a87e1b79c6565c9) |
+
+### Outcome mapping (v2, authoritative)
+
+| Meaning | uint8 |
+| --- | --- |
+| unset | `0` |
+| ALLOW | `1` |
+| BLOCK | `2` |
+| NEEDS_HUMAN / review | `3` |
+| REVOKE | `4` |
+
+Do **not** use v1 style `ALLOW=0, BLOCK=1, REVIEW=2, REVOKE=3`. That mapping is retired with v1.
+
 ## Superseded v1 (do not use)
 
 | Item        | Value                                                                             |
