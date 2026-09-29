@@ -1,7 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { commitMandateOnChain } from "@/server/chain/clamp-audit";
-import { hashMandate } from "@/server/chain/hash";
+import {
+  commitMandateOnChain,
+  ensureMandateCommitted,
+  recordDecisionOnChain,
+} from "@/server/chain/clamp-audit";
+import { hashMandate, hashRevocationAuditPayload } from "@/server/chain/hash";
 import { fastApiClient } from "@/server/fastapi/client";
 import { mapMandate } from "@/server/fastapi/mappers";
 import { requireClampSession } from "@/server/session";
@@ -76,4 +80,74 @@ export const retryMandateChainSyncFn = createServerFn({ method: "POST" })
       tx_hash: data.txHash,
     });
     return { mandate: mapMandate(attached) };
+  });
+
+
+async function recordRevocationOnChain(mandateId: string) {
+  const revocation = await fastApiClient.getMandateRevocation(mandateId);
+  if (revocation.tx_hash) {
+    return {
+      mandate: mapMandate(await fastApiClient.getMandate(mandateId)),
+    };
+  }
+
+  const source = await fastApiClient.getMandate(mandateId);
+  const mandateHash = hashMandate(source);
+  await ensureMandateCommitted(mandateHash);
+
+  const { txHash } = await recordDecisionOnChain({
+    mandateHash,
+    decisionHash: hashRevocationAuditPayload(revocation.audit_payload),
+    outcome: 4,
+  });
+
+  try {
+    await fastApiClient.attachMandateRevocationChain(mandateId, {
+      network: "base-sepolia",
+      tx_hash: txHash,
+    });
+    return {
+      mandate: mapMandate(await fastApiClient.getMandate(mandateId)),
+    };
+  } catch {
+    return {
+      mandate: {
+        ...mapMandate(await fastApiClient.getMandate(mandateId)),
+        revokeTxHash: txHash,
+        revokeBlockchainNetwork: "base-sepolia",
+        revokeChainSyncPending: true,
+      },
+    };
+  }
+}
+
+export const revokeMandateFn = createServerFn({ method: "POST" })
+  .validator(z.object({ mandateId: z.string().min(1) }))
+  .handler(async ({ data }) => {
+    await requireClampSession();
+    await fastApiClient.revokeMandate(data.mandateId);
+    return recordRevocationOnChain(data.mandateId);
+  });
+
+export const retryMandateRevocationFn = createServerFn({ method: "POST" })
+  .validator(z.object({ mandateId: z.string().min(1) }))
+  .handler(async ({ data }) => {
+    await requireClampSession();
+    return recordRevocationOnChain(data.mandateId);
+  });
+
+export const retryMandateRevocationChainSyncFn = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      mandateId: z.string().min(1),
+      txHash: z.string().regex(/^0x[0-9a-fA-F]+$/),
+    }),
+  )
+  .handler(async ({ data }) => {
+    await requireClampSession();
+    await fastApiClient.attachMandateRevocationChain(data.mandateId, {
+      network: "base-sepolia",
+      tx_hash: data.txHash,
+    });
+    return { mandate: mapMandate(await fastApiClient.getMandate(data.mandateId)) };
   });
