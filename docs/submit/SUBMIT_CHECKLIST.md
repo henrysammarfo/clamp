@@ -24,15 +24,16 @@ Deadline: 30 Sep 2026 12:00 noon KST = **03:00 AM Ghana GMT** (not midnight)
 | Booth Q and A | Ready | `docs/submit/BOOTH_PITCH_QA.md` |
 | Form submit | Song captain | Henry sends deck + video + field answers |
 | Live frontend (Vercel) | **Up** | https://clamp-eight.vercel.app |
-| Live FastAPI backend | **Not yet** | Neon cannot host it |
+| Live FastAPI backend (Render) | **Up** | https://clamp-api.onrender.com |
 
 ## Deploy notes (2026-09-29)
 
-- Vercel project: `teamtitanlink/clamp` → https://clamp-eight.vercel.app (public; SSO protection off)
-- Env on Vercel: contract, RPC, session secret, private key, `FASTAPI_BASE_URL` (still localhost until API is hosted)
-- **Neon:** Vercel Marketplace Neon = serverless **Postgres only**. CLAMP API is FastAPI + **SQLite**. Neon does not run uvicorn / Python app code.
-- Next for live API: Render free web service (see `backend/Dockerfile`) or Fly / Cloud Run, then point Vercel `FASTAPI_BASE_URL` at that URL and allow CORS from `https://clamp-eight.vercel.app`
-- Demo video can still be recorded on local full stack (`:3000` + `:8000`)
+- Vercel project: `teamtitanlink/clamp` → https://clamp-eight.vercel.app (public)
+- Render service: `clamp-api` → https://clamp-api.onrender.com (`/health` ok)
+- Vercel `FASTAPI_BASE_URL` points at Render; CORS allows the Vercel origin
+- **Neon:** Postgres only · not used (backend stays SQLite on Render free disk ephemeral)
+- Free Render cold starts after idle (~1 min wake). Fine for demo; hit `/health` once before recording if using the public pair.
+- Local stack still good for reliable demo recording
 
 ## Local demo stack (this machine)
 
