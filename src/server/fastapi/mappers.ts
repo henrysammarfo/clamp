@@ -17,7 +17,8 @@ export function mapMandate(source: FastApiMandate): Mandate {
     humanApprovalThreshold: Number(source.human_approval_threshold),
     status: source.status.toLowerCase() as Mandate["status"],
     mandateHash: hashMandate(source),
-    commitTxHash: null,
+    commitTxHash: source.tx_hash,
+    chainSyncPending: false,
     createdAt: source.created_at,
   };
 }
@@ -41,6 +42,7 @@ export function mapDecision(source: FastApiDecision): Decision {
     decisionHash: hashAuditPayload(source.audit_payload),
     txHash: source.tx_hash,
     blockchainNetwork: source.blockchain_network,
+    chainSyncPending: false,
     purpose: source.structured_request.purpose,
     auditPayload: source.audit_payload,
   };
