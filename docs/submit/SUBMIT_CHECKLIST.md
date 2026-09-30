@@ -47,7 +47,7 @@ Official package: challenge · GitHub · public demo video ≤3 min · pitch dec
 | Field | Value |
 | --- | --- |
 | Full name | Henry Sam Marfo |
-| Team location (country + city) | Ghana · _(Henry fill city)_ |
+| Team location (country + city) | Ghana · Accra |
 | GitHub | https://github.com/henrysammarfo/clamp |
 | Demo video (public YouTube / Drive / Notion) | https://youtu.be/oiPTtJqEstk |
 | Pitch deck | https://github.com/henrysammarfo/clamp/blob/main/docs/submit/view/CLAMP_Team14_Pitch.pdf |
