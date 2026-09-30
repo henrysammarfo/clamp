@@ -20,7 +20,7 @@ Deadline: 30 Sep 2026 12:00 noon KST = **03:00 AM Ghana GMT** (not midnight)
 | Submission evidence | Ready on main | https://github.com/henrysammarfo/clamp/blob/main/docs/SUBMISSION_EVIDENCE.md |
 | Pitch deck PPTX | Ready for Song form | `docs/submit/view/CLAMP_Team14_Pitch.pptx` |
 | Pitch deck PDF | Ready | `docs/submit/view/CLAMP_Team14_Pitch.pdf` |
-| Demo video ≤ 3 min | **Ready locally (~2:13)** | `/opt/cursor/artifacts/CLAMP_Team14_Demo.mp4` · Lily VO + cursor/zoom · upload for Song |
+| Demo video ≤ 3 min | **Uploaded (public)** | https://github.com/henrysammarfo/clamp/releases/download/gwdc-2026-submit/CLAMP_Team14_Demo.mp4 |
 | Booth Q and A | Ready | `docs/submit/BOOTH_PITCH_QA.md` |
 | Form submit | **Song captain** · deploy **not required** | Henry sends: full name, city/country, public video link, final deck |
 | Live frontend (Vercel) | Optional (done anyway) | https://clamp-eight.vercel.app |
@@ -49,9 +49,9 @@ Official package: challenge · GitHub · public demo video ≤3 min · pitch dec
 | Full name | Henry Sam Marfo |
 | Team location (country + city) | Ghana · _(Henry fill city)_ |
 | GitHub | https://github.com/henrysammarfo/clamp |
-| Demo video (public YouTube / Drive / Notion) | _(record + upload · anyone-with-link)_ |
-| Pitch deck | https://github.com/henrysammarfo/clamp/blob/cursor/clamp-henry-live-069f/docs/submit/view/CLAMP_Team14_Pitch.pdf |
-| Pitch PPTX | https://github.com/henrysammarfo/clamp/blob/cursor/clamp-henry-live-069f/docs/submit/view/CLAMP_Team14_Pitch.pptx |
+| Demo video (public YouTube / Drive / Notion) | https://github.com/henrysammarfo/clamp/releases/download/gwdc-2026-submit/CLAMP_Team14_Demo.mp4 |
+| Pitch deck | https://github.com/henrysammarfo/clamp/blob/main/docs/submit/view/CLAMP_Team14_Pitch.pdf |
+| Pitch PPTX | https://github.com/henrysammarfo/clamp/blob/main/docs/submit/view/CLAMP_Team14_Pitch.pptx |
 
 Video must show workflow + AI decision path. Keep under 3 minutes.
 
