@@ -81,12 +81,10 @@ export function AppShell({
 
   return (
     <div className="app-shell">
-      <aside className="app-sidebar desktop-only">{sidebar}</aside>
+      <aside className="sidebar desktop-sidebar">{sidebar}</aside>
       {open && (
-        <div className="mobile-overlay" onClick={() => setOpen(false)}>
-          <aside className="app-sidebar mobile-sheet" onClick={(e) => e.stopPropagation()}>
-            {sidebar}
-          </aside>
+        <div className="sidebar-overlay" onClick={() => setOpen(false)}>
+          <aside onClick={(e) => e.stopPropagation()}>{sidebar}</aside>
         </div>
       )}
       <div className="app-main">
@@ -94,17 +92,17 @@ export function AppShell({
           <Button
             variant="secondary"
             size="icon"
-            className="mobile-only rounded-full"
+            className="app-menu rounded-full"
             aria-label="Open navigation"
             onClick={() => setOpen(true)}
           >
             <Menu />
           </Button>
-          <div>
-            {eyebrow && <p className="eyebrow">{eyebrow}</p>}
-            <h1>{title}</h1>
+          <div className="min-w-0 flex-1">
+            {eyebrow && <p className="eyebrow truncate">{eyebrow}</p>}
+            <h1 className="truncate">{title}</h1>
           </div>
-          {action}
+          {action ? <div className="topbar-actions shrink-0">{action}</div> : null}
         </header>
         <main className="app-content">{children}</main>
       </div>

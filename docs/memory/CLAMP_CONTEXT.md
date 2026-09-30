@@ -21,8 +21,14 @@ Delete either and the entry is weak for Challenge B.
 
 | Owner | Owns |
 | --- | --- |
-| Song Hyewon | Kiln client, parse, explain, code gate, unit tests, token or latency metering, vs all AI baseline, AuditTrail shape. GitHub: [20223096](https://github.com/20223096) |
-| Henry Sam Marfo | On chain mandate or decision receipts, frontend mandate or watch or block or Needs human UI, metrics panel UI, demo video, pitch PDF, README |
+| Song Hyewon | Kiln, FastAPI source of truth, gate, budget, reject/revoke, purpose controls, benchmark, Verify on Base, final product docs + evidence on main. Final pitch if selected. GitHub: [20223096](https://github.com/20223096) |
+| Henry Sam Marfo | Product UI/session/chain foundation, pitch deck, demo video, submit form, 4 AM Zoom booth + Q and A |
+
+## Integration lock (2026-09-29)
+
+`React UI → thin TanStack adapters → FastAPI → ClampAudit v2 → confirmed tx → FastAPI /chain`
+
+Live E2E already green. Henry pauses integration file edits unless Song asks.
 
 ## Repo access
 
@@ -36,8 +42,9 @@ Delete either and the entry is weak for Challenge B.
 - Organiser deadline: **30 Sep 2026 at 12:00 noon (not midnight)**
 - Timezone for the event clock: **KST** (GWDC Korea / bible lock)
 - **Ghana (GMT):** form must be in by **30 Sep 2026 03:00 AM GMT**
-- Top 3 pitch that afternoon after review (bible: 30 Sep 15:00 KST = 06:00 AM GMT)
-- After close: judges pick three projects per ecosystem; selected teams present that afternoon for 1st/2nd/3rd
+- Day of (Song-confirmed): submit **12:00 KST** → booth Q and A **13:00 KST** (all teams, Zoom ok) → results **15:00 KST** → final pitch **16:00 KST** if selected (Song presents)
+- Ghana: submit 03:00 · booth 04:00 · results 06:00 · final 07:00
+- Henry wakes ~06:30 for intern work; booth at 04:00 is rough
 
 ## Honesty
 

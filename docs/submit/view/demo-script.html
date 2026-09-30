@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CLAMP · Demo video script · Team 14</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root { --ink:#0c0d10; --signal:#e23a28; --mist:#e8ebf0; --dim:#9aa3b2; --card:#161922; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body {
+      font-family: Manrope, sans-serif;
+      background: linear-gradient(165deg, #0c0d10, #151821 55%, #0a0b0e);
+      color: var(--mist);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+    h1 {
+      font-family: Syne, sans-serif;
+      font-weight: 800;
+      font-size: clamp(2rem, 5vw, 3rem);
+      letter-spacing: -0.03em;
+    }
+    .sub { color: var(--dim); margin: 0.6rem 0 1.5rem; font-weight: 500; line-height: 1.5; }
+    .kit {
+      background: var(--card);
+      border: 1px solid rgba(232,235,240,0.1);
+      border-radius: 16px;
+      padding: 1.1rem 1.2rem 1.25rem;
+      margin-bottom: 1.75rem;
+    }
+    .kit h2 {
+      font-family: Syne, sans-serif;
+      font-size: 1rem;
+      margin-bottom: 0.75rem;
+    }
+    .paste {
+      display: flex;
+      gap: 0.6rem;
+      align-items: stretch;
+      margin: 0.45rem 0;
+    }
+    .paste code {
+      flex: 1;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.86rem;
+      background: #0c0d10;
+      border: 1px solid rgba(232,235,240,0.12);
+      border-radius: 10px;
+      padding: 0.7rem 0.85rem;
+      color: #fff;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .paste button {
+      border: 0;
+      border-radius: 10px;
+      background: var(--signal);
+      color: #fff;
+      font-weight: 700;
+      padding: 0 0.9rem;
+      cursor: pointer;
+      font-family: Manrope, sans-serif;
+      font-size: 0.8rem;
+    }
+    .paste button:hover { filter: brightness(1.08); }
+    .label { color: var(--dim); font-size: 0.78rem; font-weight: 600; margin-top: 0.65rem; }
+    .beat {
+      display: grid;
+      grid-template-columns: 6.5rem 1fr;
+      gap: 1rem;
+      padding: 1.25rem 0;
+      border-top: 1px solid rgba(232,235,240,0.1);
+    }
+    .t {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      color: var(--signal);
+      text-transform: uppercase;
+    }
+    .beat h2 {
+      font-family: Syne, sans-serif;
+      font-size: 1.2rem;
+      margin-bottom: 0.45rem;
+    }
+    .beat p { color: var(--dim); line-height: 1.55; font-weight: 500; margin-bottom: 0.55rem; }
+    .voice {
+      color: var(--mist);
+      font-size: 1.05rem;
+      line-height: 1.5;
+      font-weight: 600;
+      border-left: 3px solid var(--signal);
+      padding-left: 0.9rem;
+      white-space: pre-line;
+    }
+    .do {
+      margin: 0.55rem 0 0.7rem;
+      padding: 0.7rem 0.85rem;
+      border-radius: 10px;
+      background: rgba(226,58,40,0.1);
+      color: #ffc4bc;
+      font-size: 0.92rem;
+      line-height: 1.45;
+      font-weight: 600;
+    }
+    a { color: #ff8b7a; font-weight: 600; text-decoration: none; }
+    .foot { margin-top: 2rem; color: var(--dim); font-size: 0.95rem; }
+    @media (max-width:640px) {
+      .beat { grid-template-columns: 1fr; }
+      .paste { flex-direction: column; }
+      .paste button { padding: 0.65rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Demo video script</h1>
+    <p class="sub">Under 3 minutes · soft, friendly, human · open on the refuse · paste when you reach each beat</p>
+
+    <div class="kit">
+      <h2>Paste kit</h2>
+      <p class="label">Sign in</p>
+      <div class="paste"><code id="p-email">judge@demo.clamp</code><button type="button" data-copy="p-email">Copy</button></div>
+      <p class="label">Block</p>
+      <div class="paste"><code id="p-block">Buy a $22 USB C hub on BestBuy</code><button type="button" data-copy="p-block">Copy</button></div>
+      <p class="label">Allow</p>
+      <div class="paste"><code id="p-allow">Buy $30 of printer paper on Amazon</code><button type="button" data-copy="p-allow">Copy</button></div>
+      <p class="label">Needs human</p>
+      <div class="paste"><code id="p-human">Buy a $120 monitor stand from Apple</code><button type="button" data-copy="p-human">Copy</button></div>
+      <p class="label">Purpose allow (optional)</p>
+      <div class="paste"><code id="p-purpose-ok">Buy $20 of printer paper on Amazon for the office</code><button type="button" data-copy="p-purpose-ok">Copy</button></div>
+      <p class="label">Purpose block (optional)</p>
+      <div class="paste"><code id="p-purpose-no">Buy $20 groceries on Amazon for a team lunch</code><button type="button" data-copy="p-purpose-no">Copy</button></div>
+      <p class="label" style="margin-top:0.9rem">Mandate dropdown: <strong style="color:#fff">Kiln smoke</strong></p>
+    </div>
+
+    <div class="beat">
+      <div class="t">0:00</div>
+      <div>
+        <h2>Open</h2>
+        <p class="do">Landing → hover CLAMP → click Open control room</p>
+        <p class="voice">Hey. This is CLAMP.
+
+Imagine an AI that can spend for you… but only inside a box you drew.
+
+That’s the whole idea. Soft prompts can be talked around. A mandate can’t.</p>
+      </div>
+    </div>
+
+    <div class="beat">
+      <div class="t">0:18</div>
+      <div>
+        <h2>Mandate</h2>
+        <p class="do">Paste email <code>judge@demo.clamp</code> → Mandates → open <strong>Kiln smoke</strong> → hover purpose, budget, merchants, threshold</p>
+        <p class="voice">You set the box. Purpose. Budget. Who they can buy from. When a human has to step in. When it expires.
+
+We commit that on Base Sepolia, so later you can prove what you actually allowed.</p>
+      </div>
+    </div>
+
+    <div class="beat">
+      <div class="t">0:40</div>
+      <div>
+        <h2>Block first</h2>
+        <p class="do">New request → mandate Kiln smoke → paste BestBuy line → Evaluate → zoom on Block</p>
+        <p class="voice">Watch this. The agent asks for BestBuy.
+
+BestBuy isn’t on the list… so code just says no.
+
+Nothing gets paid. And that little refusal? It’s on the trail.</p>
+      </div>
+    </div>
+
+    <div class="beat">
+      <div class="t">1:10</div>
+      <div>
+        <h2>Allow</h2>
+        <p class="do">Paste Amazon printer paper line → Evaluate → zoom on Allow</p>
+        <p class="voice">Same mandate. Now Amazon. Inside the box.
+
+The gate opens in code. Quiet. Clean. Done.</p>
+      </div>
+    </div>
+
+    <div class="beat">
+      <div class="t">1:30</div>
+      <div>
+        <h2>Needs human</h2>
+        <p class="do">Paste Apple $120 line → Evaluate → hover Awaiting a person</p>
+        <p class="voice">And when it’s fuzzy? Or a bit expensive?
+
+CLAMP doesn’t guess. It waits for a person.
+
+No payment until someone actually decides.</p>
+      </div>
+    </div>
+
+    <div class="beat">
+      <div class="t">1:55</div>
+      <div>
+        <h2>Purpose</h2>
+        <p class="do">Optional: paste purpose-allow then purpose-block, or skim Case studies cards</p>
+        <p class="voice">Merchant alone isn’t enough. Purpose has to match too.
+
+You’re not hoping the model behaves. You’re checking a rule.</p>
+      </div>
+    </div>
+
+    <div class="beat">
+      <div class="t">2:20</div>
+      <div>
+        <h2>Efficiency</h2>
+        <p class="do">Sidebar → Metrics → hover 44.4% fewer tokens</p>
+        <p class="voice">Parse once. Decide in code.
+
+Fewer tokens than asking the model to judge every single spend… and on our thirty case check, the decisions stay sharp.</p>
+      </div>
+    </div>
+
+    <div class="beat">
+      <div class="t">2:40</div>
+      <div>
+        <h2>Close</h2>
+        <p class="do">Audit flash → home → rest on CLAMP</p>
+        <p class="voice">Later, someone else can reconstruct the whole story from the trail.
+
+That’s CLAMP. Control before action.
+
+Thanks for watching.</p>
+      </div>
+    </div>
+
+    <p class="foot">Same soft persona as the spoken kit · <a href="../DEMO_VIDEO_SCRIPT.md">markdown source</a> · <a href="booth-cue.html">booth cue</a></p>
+  </div>
+  <script>
+    document.querySelectorAll("[data-copy]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const el = document.getElementById(btn.getAttribute("data-copy"));
+        const text = el?.textContent?.trim() || "";
+        try {
+          await navigator.clipboard.writeText(text);
+          const old = btn.textContent;
+          btn.textContent = "Copied";
+          setTimeout(() => (btn.textContent = old), 1200);
+        } catch {
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

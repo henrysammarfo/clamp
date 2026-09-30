@@ -82,24 +82,18 @@ function Index() {
         <div className="trust-row anim" style={{ "--d": ".05s" } as React.CSSProperties}>
           <div className="trust-pill">GWDC 2026 Korea · Team 14 · Challenge B</div>
         </div>
-        <h1 className="headline">
-          <span style={{ whiteSpace: "normal" }}>
-            Give AI spending authority without giving up control.
-          </span>
+        <h1 className="headline headline-wrap">
+          <span>Give AI spending authority without giving up control.</span>
         </h1>
         <p className="hero-copy anim" style={{ "--d": ".28s" } as React.CSSProperties}>
           CLAMP is an authorization and audit control plane for AI agents that spend. Delegate
           narrow, temporary authority while deterministic code enforces the boundaries.
         </p>
-        <div className="flex flex-wrap gap-3 anim" style={{ "--d": ".4s" } as React.CSSProperties}>
+        <div className="hero-actions anim" style={{ "--d": ".4s" } as React.CSSProperties}>
           <Link to="/sign-in" className="hero-cta">
             Open control room
           </Link>
-          <Link
-            to="/product"
-            className="hero-cta"
-            style={{ background: "transparent", border: "1px solid rgba(255,255,255,.35)" }}
-          >
+          <Link to="/product" className="hero-cta hero-cta-ghost">
             See how it works
           </Link>
         </div>
@@ -107,7 +101,6 @@ function Index() {
       <footer className="stats" ref={ref}>
         {stats.map((s, i) => (
           <div className="stat" style={{ animationDelay: `${0.5 + i * 0.08}s` }} key={s.label}>
-            <span className="stat-symbol">{s.symbol}</span>
             <strong>
               {values[i]}
               {s.suffix}

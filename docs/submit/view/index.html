@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CLAMP · Submit view pack</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      font-family: Manrope, sans-serif;
+      background: #111318;
+      color: #e8ebf0;
+      -webkit-font-smoothing: antialiased;
+    }
+    .rail { position: fixed; left: 0; top: 0; bottom: 0; width: 8px; background: #E62B1E; }
+    .wrap { max-width: 880px; margin: 0 auto; padding: 4rem 1.5rem; }
+    .brand { font-family: Syne, sans-serif; font-weight: 800; font-size: clamp(3rem, 10vw, 5rem); letter-spacing: -0.04em; }
+    .lead { margin: 1rem 0 0.5rem; max-width: 40ch; color: #9aa3b2; font-size: 1.1rem; line-height: 1.5; font-weight: 500; }
+    .inspo { margin-bottom: 2.2rem; color: #6b7382; font-size: 0.92rem; line-height: 1.5; max-width: 52ch; }
+    .grid { display: grid; gap: 0.85rem; }
+    a.card {
+      display: block; text-decoration: none; color: inherit;
+      border: 1px solid rgba(232,235,240,0.12); border-radius: 16px;
+      padding: 1.25rem 1.4rem; background: #1c1f26;
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+    a.card:hover { border-color: #E62B1E; transform: translateY(-2px); }
+    a.card.primary { border-color: rgba(230,43,30,0.55); }
+    .k { font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: #E62B1E; margin-bottom: 0.4rem; }
+    a.card h2 { font-family: Syne, sans-serif; font-size: 1.35rem; letter-spacing: -0.02em; margin-bottom: 0.3rem; }
+    a.card p { color: #9aa3b2; font-weight: 500; line-height: 1.45; }
+  </style>
+</head>
+<body>
+  <div class="rail"></div>
+  <div class="wrap">
+    <div class="brand">CLAMP</div>
+    <p class="lead">Submit view pack. Real PPTX is the source of truth now.</p>
+    <p class="inspo">Inspo used this pass: Helix dark + red SaaS decks, Tosea Spotlight (#E62B1E on charcoal/white, split columns), PaneFlow editorial accent discipline. Cool paper, not warm cream. No hyphens in spoken copy.</p>
+    <div class="grid">
+      <a class="card primary" href="./CLAMP_Team14_Pitch.pptx">
+        <div class="k">01 · PowerPoint</div>
+        <h2>CLAMP_Team14_Pitch.pptx</h2>
+        <p>Ten slides · 16:9 · download and open in PowerPoint / Keynote / Google Slides.</p>
+      </a>
+      <a class="card" href="./CLAMP_Team14_Pitch.pdf">
+        <div class="k">02 · PDF</div>
+        <h2>CLAMP_Team14_Pitch.pdf</h2>
+        <p>Export for quick viewing and form attach later.</p>
+      </a>
+      <a class="card" href="./slides/slide-01.png">
+        <div class="k">03 · PNG slides</div>
+        <h2>slides/slide-01.png … 10</h2>
+        <p>Raster previews rendered from the PPTX.</p>
+      </a>
+      <a class="card" href="./booth-cue.html">
+        <div class="k">04 · Voice</div>
+        <h2>Booth cue and Q and A</h2>
+        <p>Five minute spoken path plus calm answers.</p>
+      </a>
+      <a class="card" href="./demo-script.html">
+        <div class="k">05 · Video</div>
+        <h2>Demo video script</h2>
+        <p>Under three minutes. Open on the block.</p>
+      </a>
+    </div>
+  </div>
+</body>
+</html>

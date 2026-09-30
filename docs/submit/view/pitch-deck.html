@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CLAMP · Pitch deck · Team 14</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #0c0d10;
+      --ink-soft: #1a1c22;
+      --mist: #e8ebf0;
+      --mist-dim: #c5cad3;
+      --paper: #f3f5f8;
+      --signal: #e23a28;
+      --signal-soft: #ff6a55;
+      --allow: #2f9d6a;
+      --block: #e23a28;
+      --hold: #d4a017;
+      --line: rgba(232, 235, 240, 0.12);
+      --glow: rgba(226, 58, 40, 0.18);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: Manrope, sans-serif;
+      background: #050608;
+      color: var(--mist);
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .deck {
+      height: 100vh;
+      width: 100vw;
+      position: relative;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: clamp(2rem, 5vw, 4.5rem);
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      background:
+        radial-gradient(ellipse 80% 55% at 85% -10%, var(--glow), transparent 55%),
+        radial-gradient(ellipse 50% 40% at 0% 100%, rgba(47, 157, 106, 0.08), transparent 50%),
+        linear-gradient(160deg, #0c0d10 0%, #12141a 48%, #0a0b0e 100%);
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 0.45s ease, transform 0.45s ease;
+    }
+    .slide.active {
+      display: flex;
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .slide.light {
+      background:
+        radial-gradient(ellipse 70% 50% at 100% 0%, rgba(226, 58, 40, 0.08), transparent 50%),
+        linear-gradient(165deg, #f3f5f8 0%, #e7ebf1 100%);
+      color: var(--ink);
+    }
+    .slide.light .kicker,
+    .slide.light .meta,
+    .slide.light .foot { color: #5c6470; }
+    .slide.light .rule { background: rgba(12, 13, 16, 0.12); }
+    .slide.light .chip { background: rgba(12, 13, 16, 0.06); color: var(--ink); border-color: rgba(12, 13, 16, 0.1); }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+    .wordmark {
+      font-family: Syne, sans-serif;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      font-size: 0.85rem;
+      color: var(--signal);
+    }
+    .slide.light .wordmark { color: var(--signal); }
+    .meta {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--mist-dim);
+    }
+
+    .body { flex: 1; display: flex; flex-direction: column; justify-content: center; max-width: 1100px; }
+    .kicker {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.78rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--mist-dim);
+      margin-bottom: 1.25rem;
+    }
+    h1 {
+      font-family: Syne, sans-serif;
+      font-weight: 800;
+      font-size: clamp(3.2rem, 9vw, 7.2rem);
+      line-height: 0.95;
+      letter-spacing: -0.03em;
+    }
+    h2 {
+      font-family: Syne, sans-serif;
+      font-weight: 700;
+      font-size: clamp(2.2rem, 5.5vw, 4.2rem);
+      line-height: 1.05;
+      letter-spacing: -0.025em;
+      max-width: 16ch;
+    }
+    .lead {
+      margin-top: 1.5rem;
+      font-size: clamp(1.05rem, 2vw, 1.35rem);
+      line-height: 1.55;
+      max-width: 38ch;
+      color: var(--mist-dim);
+      font-weight: 500;
+    }
+    .slide.light .lead { color: #4a5160; }
+
+    .soft {
+      margin-top: 2rem;
+      padding-left: 1.1rem;
+      border-left: 3px solid var(--signal);
+      font-size: clamp(1.05rem, 2vw, 1.3rem);
+      line-height: 1.5;
+      max-width: 34ch;
+      font-weight: 600;
+    }
+
+    .rule {
+      height: 1px;
+      width: 100%;
+      background: var(--line);
+      margin: 0.5rem 0;
+    }
+
+    .foot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--mist-dim);
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+      margin-top: 2rem;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 2rem;
+      margin-top: 1.75rem;
+      align-items: stretch;
+    }
+    @media (max-width: 860px) {
+      .grid-3, .grid-2 { grid-template-columns: 1fr; }
+      h2 { max-width: none; }
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 18px;
+      padding: 1.35rem 1.4rem;
+      backdrop-filter: blur(6px);
+    }
+    .slide.light .panel {
+      background: #fff;
+      border-color: rgba(12, 13, 16, 0.08);
+      box-shadow: 0 18px 40px rgba(12, 13, 16, 0.06);
+    }
+    .panel h3 {
+      font-family: Syne, sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.45rem;
+    }
+    .panel p, .panel li {
+      color: var(--mist-dim);
+      font-size: 0.98rem;
+      line-height: 1.5;
+      font-weight: 500;
+    }
+    .slide.light .panel p,
+    .slide.light .panel li { color: #4a5160; }
+    .panel ul { list-style: none; display: grid; gap: 0.55rem; margin-top: 0.75rem; }
+    .panel li::before {
+      content: "";
+      display: inline-block;
+      width: 0.45rem;
+      height: 0.45rem;
+      border-radius: 999px;
+      background: var(--signal);
+      margin-right: 0.65rem;
+      transform: translateY(-2px);
+    }
+
+    .outcome {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      min-height: 180px;
+    }
+    .tag {
+      align-self: flex-start;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.35rem 0.65rem;
+      border-radius: 999px;
+      font-weight: 500;
+    }
+    .tag.allow { background: rgba(47, 157, 106, 0.18); color: #5ee0a0; }
+    .tag.block { background: rgba(226, 58, 40, 0.18); color: #ff8b7a; }
+    .tag.hold { background: rgba(212, 160, 23, 0.18); color: #f0c14b; }
+    .slide.light .tag.allow { color: #1f7a4f; background: rgba(47, 157, 106, 0.12); }
+    .slide.light .tag.block { color: #b5281a; background: rgba(226, 58, 40, 0.1); }
+    .slide.light .tag.hold { color: #8a6a00; background: rgba(212, 160, 23, 0.14); }
+
+    .flow {
+      display: grid;
+      gap: 0.7rem;
+      margin-top: 1.75rem;
+    }
+    .flow-step {
+      display: grid;
+      grid-template-columns: 3.2rem 1fr;
+      gap: 1rem;
+      align-items: center;
+      padding: 0.85rem 1rem;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.025);
+    }
+    .flow-step .n {
+      font-family: Syne, sans-serif;
+      font-weight: 800;
+      font-size: 1.2rem;
+      color: var(--signal);
+    }
+    .flow-step strong {
+      display: block;
+      font-size: 1.02rem;
+      margin-bottom: 0.15rem;
+    }
+    .flow-step span {
+      color: var(--mist-dim);
+      font-size: 0.9rem;
+    }
+
+    .beat {
+      display: grid;
+      gap: 0.85rem;
+      margin-top: 1.6rem;
+    }
+    .beat-row {
+      display: grid;
+      grid-template-columns: 7rem 1fr auto;
+      gap: 1rem;
+      align-items: center;
+      padding: 1rem 1.15rem;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+    }
+    .beat-row .merchant {
+      font-family: Syne, sans-serif;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+    .beat-row .why { color: var(--mist-dim); font-size: 0.95rem; }
+    @media (max-width: 720px) {
+      .beat-row { grid-template-columns: 1fr; gap: 0.4rem; }
+    }
+
+    .hash {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: clamp(0.78rem, 1.4vw, 0.95rem);
+      word-break: break-all;
+      line-height: 1.45;
+      color: var(--mist-dim);
+      margin-top: 1rem;
+      padding: 1rem 1.1rem;
+      border-radius: 12px;
+      border: 1px dashed rgba(232, 235, 240, 0.18);
+      background: rgba(0,0,0,0.25);
+    }
+    .chip-row { display: flex; flex-wrap: wrap; gap: 0.55rem; margin-top: 1.4rem; }
+    .chip {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.04em;
+      padding: 0.45rem 0.7rem;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.04);
+      color: var(--mist);
+    }
+
+    .hero-brand {
+      font-family: Syne, sans-serif;
+      font-weight: 800;
+      font-size: clamp(5rem, 16vw, 11rem);
+      letter-spacing: -0.04em;
+      line-height: 0.88;
+      background: linear-gradient(180deg, #fff 20%, #c8cdd6 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .tagline {
+      font-family: Syne, sans-serif;
+      font-weight: 700;
+      font-size: clamp(1.4rem, 3vw, 2.1rem);
+      margin-top: 1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .nav {
+      position: fixed;
+      right: 1.25rem;
+      bottom: 1.25rem;
+      display: flex;
+      gap: 0.5rem;
+      z-index: 20;
+    }
+    .nav button {
+      border: 1px solid rgba(232, 235, 240, 0.18);
+      background: rgba(12, 13, 16, 0.75);
+      color: var(--mist);
+      font-family: Manrope, sans-serif;
+      font-weight: 600;
+      font-size: 0.85rem;
+      padding: 0.65rem 0.95rem;
+      border-radius: 999px;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+    }
+    .nav button:hover { border-color: var(--signal); color: #fff; }
+    .hint {
+      position: fixed;
+      left: 1.25rem;
+      bottom: 1.35rem;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(197, 202, 211, 0.55);
+      z-index: 20;
+    }
+
+    .compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1.75rem;
+    }
+    .compare .panel h3 { font-size: 1.05rem; }
+    .compare .bad h3 { color: #ff8b7a; }
+    .compare .good h3 { color: #5ee0a0; }
+    @media (max-width: 720px) { .compare { grid-template-columns: 1fr; } }
+
+    .big-line {
+      font-family: Syne, sans-serif;
+      font-weight: 700;
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      line-height: 1.15;
+      max-width: 18ch;
+      letter-spacing: -0.02em;
+    }
+
+    .title-stage {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 2rem;
+      align-items: center;
+    }
+    @media (max-width: 900px) {
+      .title-stage { grid-template-columns: 1fr; }
+      .gate-art { display: none; }
+    }
+    .gate-art {
+      justify-self: end;
+      width: min(320px, 34vw);
+      aspect-ratio: 1;
+      position: relative;
+    }
+    .gate-art svg { width: 100%; height: 100%; display: block; }
+    .gate-pulse {
+      position: absolute;
+      inset: 18%;
+      border-radius: 50%;
+      border: 1px solid rgba(226, 58, 40, 0.35);
+      animation: pulse 3.2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(0.92); opacity: 0.35; }
+      50% { transform: scale(1.05); opacity: 0.85; }
+    }
+    .slide.active .hero-brand {
+      animation: rise 0.7s ease both;
+    }
+    .slide.active .tagline,
+    .slide.active .soft {
+      animation: rise 0.8s ease 0.08s both;
+    }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="deck" id="deck" aria-live="polite">
+
+    <!-- 01 Title -->
+    <section class="slide active" data-slide="1">
+      <div class="top">
+        <div class="wordmark">CLAMP</div>
+        <div class="meta">Team 14 · GWDC 2026 · Challenge B</div>
+      </div>
+      <div class="body">
+        <div class="title-stage">
+          <div>
+            <p class="kicker">FuriosaAI × Bricksum</p>
+            <div class="hero-brand">CLAMP</div>
+            <p class="tagline">Control before action.</p>
+            <p class="soft">You set a spending mandate. The agent asked outside it. Nothing paid. The refuse is on the audit trail.</p>
+          </div>
+          <div class="gate-art" aria-hidden="true">
+            <div class="gate-pulse"></div>
+            <svg viewBox="0 0 200 200" fill="none">
+              <circle cx="100" cy="100" r="88" stroke="rgba(232,235,240,0.12)" stroke-width="1.5"/>
+              <circle cx="100" cy="100" r="64" stroke="rgba(226,58,40,0.35)" stroke-width="1.5" stroke-dasharray="4 6"/>
+              <path d="M62 100h28M110 100h28" stroke="#e23a28" stroke-width="8" stroke-linecap="round"/>
+              <rect x="86" y="78" width="28" height="44" rx="6" stroke="#e8ebf0" stroke-width="3"/>
+              <path d="M100 78v-14" stroke="#e8ebf0" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="100" cy="100" r="4" fill="#e23a28"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="foot">
+        <span>Henry Sam Marfo · Song Hyewon</span>
+        <span>01 / 10</span>
+      </div>
+    </section>
+
+    <!-- 02 Problem -->
+    <section class="slide light" data-slide="2">
+      <div class="top">
+        <div class="wordmark">CLAMP</div>
+        <div class="meta">The problem</div>
+      </div>
+      <div class="body">
+        <p class="kicker">Why this exists</p>
+        <h2>AI agents can spend. Soft limits are not enough.</h2>
+        <div class="grid-3">
+          <article class="panel">
+            <h3>They talk around prompts</h3>
+            <p>If permission lives only in chat, a clever prompt can walk past it.</p>
+          </article>
+          <article class="panel">
+            <h3>Money needs a hard box</h3>
+            <p>Teams need a temporary mandate with purpose, budget, merchants, and an ending.</p>
+          </article>
+          <article class="panel">
+            <h3>Someone else must read it</h3>
+            <p>When something goes wrong, a second person should reconstruct the story from a trail.</p>
+          </article>
+        </div>
+      </div>
+      <div class="foot">
+        <span>Not a chatbot. Not a wallet clone.</span>
+        <span>02 / 10</span>
+      </div>
+    </section>
+
+    <!-- 03 What -->
+    <section class="slide" data-slide="3">
+      <div class="top">
+        <div class="wordmark">CLAMP</div>
+        <div class="meta">What it is</div>
+      </div>
+      <div class="body">
+        <p class="kicker">Product</p>
+        <h2>A delegation control layer for agents that spend.</h2>
+        <div class="grid-2">
+          <div>
+            <p class="lead">The agent may act alone only inside a temporary mandate you create. Outside that box, money does not move.</p>
+          </div>
+          <article class="panel">
+            <h3>Inside every mandate</h3>
+            <ul>
+              <li>purpose</li>
+              <li>budget including fees</li>
+              <li>allowed merchants</li>
+              <li>expiry</li>
+              <li>revocable anytime</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+      <div class="foot">
+        <span>Hard box. Clear story.</span>
+        <span>03 / 10</span>
+      </div>
+    </section>
+
+    <!-- 04 Decisions -->
+    <section class="slide light" data-slide="4">
+      <div class="top">
+        <div class="wordmark">CLAMP</div>
+        <div class="meta">Decision model</div>
+      </div>
+      <div class="body">
+        <p class="kicker">Three outcomes. No fog.</p>
+        <h2>The model parses. Code decides.</h2>
+        <div class="grid-3">
+          <article class="panel outcome">
+            <span class="tag allow">Allow</span>
+            <h3>Clearly inside</h3>
+            <p>Proceed. Record the settlement receipt.</p>
+          </article>
+          <article class="panel outcome">
+            <span class="tag block">Block</span>
+            <h3>Clearly outside</h3>
+            <p>Stop. Pay nothing. Write why on the trail.</p>
+          </article>
+          <article class="panel outcome">
+            <span class="tag hold">Needs human</span>
+            <h3>Borderline</h3>
+            <p>Hold. No pay until a person says yes or no.</p>
+          </article>
+        </div>
+      </div>
+      <div class="foot">
+        <span>Permission is not a vibe from the model</span>
+        <span>04 / 10</span>
+      </div>
+    </section>
+
+    <!-- 05 Architecture -->
+    <section class="slide" data-slide="5">
+      <div class="top">
+        <div class="wordmark">CLAMP</div>
+        <div class="meta">How it runs</div>
+      </div>
+      <div class="body">
+        <p class="kicker">Architecture</p>
+        <h2>Parse once. Gate in code. Leave a receipt.</h2>
+        <div class="flow">
+          <div class="flow-step"><div class="n">01</div><div><strong>Human UI</strong><span>Create the mandate. Review borderline cases.</span></div></div>
+          <div class="flow-step"><div class="n">02</div><div><strong>FastAPI policy</strong><span>Mandate, budget, and gate live here as source of truth.</span></div></div>
+          <div class="flow-step"><div class="n">03</div><div><strong>Kiln parse and explain</strong><span>qwen3 32b turns a sentence into a proposed buy, then explains.</span></div></div>
+          <div class="flow-step"><div class="n">04</div><div><strong>Deterministic gate</strong><span>Zero inference. Allow, Block, or Needs human.</span></div></div>
+          <div class="flow-step"><div class="n">05</div><div><strong>ClampAudit on Base Sepolia</strong><span>Mandate commits and decision receipts on chain.</span></div></div>
+        </div>
+      </div>
+      <div class="foot">
+        <span>Kiln energy by flow · on chain stop or settle hash</span>
+        <span>05 / 10</span>
+      </div>
+    </section>
+
+    <!-- 06 Demo -->
+    <section class="slide" data-slide="6">
+      <div class="top">
+        <div class="wordmark">CLAMP</div>
+        <div class="meta">Live demo beat</div>
+      </div>
+      <div class="body">
+        <p class="kicker">Open on the block</p>
+        <h2>Same mandate. Three real paths.</h2>
+        <div class="beat">
+          <div class="beat-row">
+            <div class="merchant">BestBuy $20</div>
+            <div class="why">Not on the merchant list</div>
+            <span class="tag block">Block</span>
+          </div>
+          <div class="beat-row">
+            <div class="merchant">Amazon $65</div>
+            <div class="why">Inside purpose, merchant, and budget</div>
+            <span class="tag allow">Allow</span>
+          </div>
+          <div class="beat-row">
+            <div class="merchant">Apple $120</div>
+            <div class="why">Near the edge · person approves · then Allow</div>
+            <span class="tag hold">Needs human</span>
+          </div>
+        </div>
+        <p class="lead" style="margin-top:1.4rem;max-width:42ch;">Hand the audit trail to another person. They should reconstruct the story without your chat history.</p>
+      </div>
+      <div class="foot">
+        <span>Nothing paid on the refuse</span>
+        <span>06 / 10</span>
+      </div>
+    </section>
+
+    <!-- 07 Efficiency -->
+    <section class="slide light" data-slide="7">
+      <div class="top">
+        <div class="wordmark">CLAMP</div>
+        <div class="meta">Efficiency</div>
+      </div>
+      <div class="body">
+        <p class="kicker">Do not ask the model every time</p>
+        <h2>Fewer calls. Cleaner control.</h2>
+        <div class="compare">
+          <article class="panel bad">
+            <h3>All AI path</h3>
+            <p>Ask a model “is this allowed?” on every spend. More tokens. More delay. Easier to talk around.</p>
+          </article>
+          <article class="panel good">
+            <h3>CLAMP path</h3>
+            <p>Parse once. Decide in code. Explain once. The gate does not burn inference to say no.</p>
+          </article>
+        </div>
+        <p class="lead" style="margin-top:1.5rem;">Benchmark numbers drop in when Song locks the metering slide.</p>
+      </div>
+      <div class="foot">
+        <span>Code decides. The model explains.</span>
+        <span>07 / 10</span>
+      </div>
+    </section>
+
+    <!-- 08 Chain -->
+    <section class="slide" data-slide="8">
+      <div class="top">
+        <div class="wordmark">CLAMP</div>
+        <div class="meta">On chain evidence</div>
+      </div>
+      <div class="body">
+        <p class="kicker">Base Sepolia · ClampAudit v2</p>
+        <h2>Real receipts. Real hashes.</h2>
+        <div class="chip-row">
+          <span class="chip">Allow = 1</span>
+          <span class="chip">Block = 2</span>
+          <span class="chip">Needs human = 3</span>
+          <span class="chip">Revoke = 4</span>
+        </div>
+        <div class="hash">contract 0x4648520fe2b192791c9ae13e46e0cba9544c42d6</div>
+        <p class="lead">Live E2E already wrote mandate, Allow, Needs human final, and Block receipts. Song sends verified Basescan links before form lock.</p>
+      </div>
+      <div class="foot">
+        <span>Writers are access controlled</span>
+        <span>08 / 10</span>
+      </div>
+    </section>
+
+    <!-- 09 Honesty -->
+    <section class="slide light" data-slide="9">
+      <div class="top">
+        <div class="wordmark">CLAMP</div>
+        <div class="meta">Honesty</div>
+      </div>
+      <div class="body">
+        <p class="kicker">What we claim · what we do not</p>
+        <h2>Hard controls. Inspectable trail. No fairy tales.</h2>
+        <div class="grid-3" style="margin-top:2rem;">
+          <article class="panel"><h3>Live where it matters</h3><p>Kiln for parse and explain. Base Sepolia for mandate and decision receipts.</p></article>
+          <article class="panel"><h3>Testnet labeled</h3><p>No fake pays. No pretend chain. Residual risk stays visible.</p></article>
+          <article class="panel"><h3>Not unhackable</h3><p>We ship control and records for Challenge B. We do not sell invincibility.</p></article>
+        </div>
+      </div>
+      <div class="foot">
+        <span>Judges can reconstruct it</span>
+        <span>09 / 10</span>
+      </div>
+    </section>
+
+    <!-- 10 Close -->
+    <section class="slide" data-slide="10">
+      <div class="top">
+        <div class="wordmark">CLAMP</div>
+        <div class="meta">Team 14</div>
+      </div>
+      <div class="body">
+        <p class="kicker">Ask</p>
+        <p class="big-line">Ship the control layer agents use before money moves.</p>
+        <p class="soft">You set a spending mandate. The agent asked outside it. Nothing paid. The refuse is on the audit trail.</p>
+        <div class="chip-row">
+          <span class="chip">github.com/henrysammarfo/clamp</span>
+          <span class="chip">Henry Sam Marfo</span>
+          <span class="chip">Song Hyewon</span>
+        </div>
+      </div>
+      <div class="foot">
+        <span>Control before action.</span>
+        <span>10 / 10</span>
+      </div>
+    </section>
+  </div>
+
+  <div class="hint">← → or space · F fullscreen</div>
+  <div class="nav">
+    <button type="button" id="prev">Back</button>
+    <button type="button" id="next">Next</button>
+  </div>
+
+  <script>
+    const slides = [...document.querySelectorAll(".slide")];
+    let i = 0;
+    function show(n) {
+      i = (n + slides.length) % slides.length;
+      slides.forEach((s, idx) => s.classList.toggle("active", idx === i));
+    }
+    document.getElementById("prev").onclick = () => show(i - 1);
+    document.getElementById("next").onclick = () => show(i + 1);
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") { e.preventDefault(); show(i + 1); }
+      if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); show(i - 1); }
+      if (e.key === "Home") show(0);
+      if (e.key === "End") show(slides.length - 1);
+      if (e.key === "f" || e.key === "F") {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+        else document.exitFullscreen?.();
+      }
+    });
+  </script>
+</body>
+</html>

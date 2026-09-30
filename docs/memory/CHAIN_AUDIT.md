@@ -50,6 +50,17 @@ Do **not** use v1 style `ALLOW=0, BLOCK=1, REVIEW=2, REVOKE=3`. That mapping is 
 6. **Read after write** — client retries read back after mining to survive public RPC lag.
 7. **ABI source of truth** — runtime ABI is compiled solc output, not a hand copied mismatch.
 
+## Team live E2E (Song FastAPI + ClampAudit v2 · 2026-09-29)
+
+Confirmed by Song after recorder grant:
+
+- Mandate create committed on Base Sepolia
+- Amazon $65 ALLOW with on chain receipt
+- Apple $120 NEEDS_HUMAN then approved to ALLOW with on chain receipt
+- BestBuy $20 BLOCK with on chain receipt
+- FastAPI `/api/decisions` surfaces real base-sepolia tx hashes
+- Budget state survived reload
+
 ## Live verification (`bun scripts/audit-clamp-live.ts`)
 
 All passed on 2026-09-29:
